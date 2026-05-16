@@ -6504,8 +6504,9 @@ function showApp() {
   document.getElementById('app').classList.remove('hidden');
   // Reset bill paid state if it's a new month
   resetBillsPaidIfNewMonth();
-  // Always open on Dashboard for a fresh load; route persistence applies after first navigation
-  navigate('dashboard');
+  const savedRoute = localStorage.getItem('alika-route');
+  const initialRoute = PERSIST_ROUTES.includes(savedRoute) ? savedRoute : 'dashboard';
+  navigate(initialRoute);
 }
 
 // ── Monthly bills reset ──────────────────────────────────────
