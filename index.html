@@ -293,6 +293,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .wstatus-in-laundry{background:#FEF3E2;color:#C47B1A}
 .wstatus-packed{background:var(--accent-light);color:var(--text)}
 .wstatus-archived{background:var(--accent-light);color:var(--text3)}
+.wstatus-discarded{background:var(--danger-light);color:var(--danger)}
 /* wardrobe home dashboard */
 .wd-snap-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
 .wd-snap{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:16px 14px;text-align:center}
@@ -895,9 +896,10 @@ async function renderDashboard() {
   const actInProg    = actOpen.filter(a => (a.status||'').toLowerCase() === 'in progress').length;
 
   // ── Wardrobe ──
-  const wAvail   = inventory.filter(i => i.status === 'Available').length;
-  const wLaundry = inventory.filter(i => i.status === 'In Laundry').length;
-  const wPacked  = inventory.filter(i => i.status === 'Packed').length;
+  const activeWardrobe = inventory.filter(i => !isWardDiscarded(i));
+  const wAvail   = activeWardrobe.filter(i => i.status === 'Available').length;
+  const wLaundry = activeWardrobe.filter(i => i.status === 'In Laundry').length;
+  const wPacked  = activeWardrobe.filter(i => i.status === 'Packed').length;
   const wOutfits = outfits.length;
   const wPacks   = packs.length;
 
@@ -3398,7 +3400,7 @@ async function showEditActionModal(id) {
 // WARDROBE
 // ════════════════════════════════════════════════════════════
 
-const WARD_STATUSES  = ['Available','In Laundry','Packed','Archived'];
+const WARD_STATUSES  = ['Available','In Laundry','Packed','Archived','Discarded'];
 const WARD_STYLE_TYPES = ['Core','Statement','Support'];
 const VIBE_MODES     = ['Core / Everyday','Freelance / Authority','Artist / Visible'];
 
@@ -3411,8 +3413,12 @@ function setVibeMode(v) {
 
 function wardStatusClass(s) {
   if (!s) return '';
-  const map = {'Available':'wstatus-available','In Laundry':'wstatus-in-laundry','Packed':'wstatus-packed','Archived':'wstatus-archived'};
+  const map = {'Available':'wstatus-available','In Laundry':'wstatus-in-laundry','Packed':'wstatus-packed','Archived':'wstatus-archived','Discarded':'wstatus-discarded'};
   return map[s] || ('status-' + s.toLowerCase().replace(/ /g,'-'));
+}
+
+function isWardDiscarded(item) {
+  return item?.status === 'Discarded';
 }
 
 // ── Tags helpers ──
@@ -3462,10 +3468,11 @@ async function renderWardrobeHome() {
     dbFetch(T.OUTFITS, {order:['created_at',false]}),
   ]);
 
-  const total     = items.length;
-  const available = items.filter(i => i.status === 'Available').length;
-  const laundry   = items.filter(i => i.status === 'In Laundry').length;
-  const packed    = items.filter(i => i.status === 'Packed').length;
+  const activeItems = items.filter(i => !isWardDiscarded(i));
+  const total     = activeItems.length;
+  const available = activeItems.filter(i => i.status === 'Available').length;
+  const laundry   = activeItems.filter(i => i.status === 'In Laundry').length;
+  const packed    = activeItems.filter(i => i.status === 'Packed').length;
   const cats      = [...new Set(items.map(r=>r.category).filter(Boolean))].sort();
   const vibeMode  = window._vibeMode || '';
 
@@ -3776,10 +3783,12 @@ async function renderWardrobeItems(params={}) {
   const fVibe   = window._vibeMode || '';
   window._wardFilters = {fCat, fColour, fStatus, fTag, fSort};
   window._wardItems   = items;
+  const searchQuery = window._wardSearchQuery || '';
   const activeFilterCount = [fCat, fColour, fStatus, fTag, fVibe].filter(Boolean).length;
   const panelOpen = window._wardFilterPanelOpen ?? !!activeFilterCount;
 
   const filtered = items.filter(i => {
+    if (!fStatus && isWardDiscarded(i)) return false;
     if (fCat    && i.category !== fCat) return false;
     if (fColour && i.colour   !== fColour) return false;
     if (fStatus && i.status   !== fStatus) return false;
@@ -3822,7 +3831,7 @@ async function renderWardrobeItems(params={}) {
          </div>`
       : `<div class="item-img-placeholder"${isLaundry?' style="opacity:.5"':''}>👗</div>`;
     const itemTags = parseTags(item.tags);
-    return `<div class="item-card"${isLaundry?' style="opacity:.75"':''}>
+    return `<div class="item-card" data-item-id="${safeId}"${isLaundry?' style="opacity:.75"':''}>
       <div onclick="showEditItemModal('${safeId}')">
         ${imgBlock}
       </div>
@@ -3852,7 +3861,7 @@ async function renderWardrobeItems(params={}) {
     <div class="toolbar-row">
       <div class="toolbar-grow search-wrap" style="margin-bottom:0">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input class="search-input" placeholder="Search items or tags…" oninput="filterWardItems(this.value)"/>
+        <input class="search-input" value="${searchQuery.replace(/"/g,'&quot;')}" placeholder="Search items or tags…" oninput="filterWardItems(this.value)"/>
       </div>
       <div class="fg" style="margin-bottom:0;min-width:0;width:138px">
         <label>Sort</label>
@@ -3901,6 +3910,7 @@ async function renderWardrobeItems(params={}) {
       : `<div class="muted" style="grid-column:1/-1;text-align:center;padding:32px">No items found — try clearing filters</div>`}
   </div>
 </div>`;
+  if (searchQuery) filterWardItems(searchQuery);
 }
 
 // ── Item outfit actions ──
@@ -3986,9 +3996,29 @@ function clearWardFilters() {
 }
 
 function filterWardItems(q) {
+  window._wardSearchQuery = q;
   const lq = q.toLowerCase();
   document.querySelectorAll('.item-card').forEach(card => {
     card.style.display = card.textContent.toLowerCase().includes(lq) ? '' : 'none';
+  });
+}
+
+async function refreshWardrobeItemsInPlace() {
+  const page = root();
+  const prevScrollTop = page ? page.scrollTop : 0;
+  const filters = {...(window._wardFilters || {})};
+  const searchQuery = window._wardSearchQuery || '';
+  await renderWardrobeItems(filters);
+  const nextPage = root();
+  if (nextPage) nextPage.scrollTop = prevScrollTop;
+  if (searchQuery) {
+    const input = document.querySelector('.search-input');
+    if (input) input.value = searchQuery;
+    filterWardItems(searchQuery);
+  }
+  requestAnimationFrame(() => {
+    const finalPage = root();
+    if (finalPage) finalPage.scrollTop = prevScrollTop;
   });
 }
 
@@ -4064,7 +4094,7 @@ async function showItemModal(editId) {
       if (error) throw error;
     } else await dbInsert(T.INVENTORY, row);
     const f = window._wardFilters;
-    if (f) renderWardrobeItems({...f});
+    if (f) await refreshWardrobeItemsInPlace();
     else   renderWardrobeHome();
   });
 }
@@ -4074,7 +4104,7 @@ async function delItem(id) {
   if (!confirm('Delete this item?')) return;
   const {error} = await getDB().from(T.INVENTORY).delete().eq('item_id', id);
   if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
-  renderWardrobeItems({...(window._wardFilters||{})});
+  await refreshWardrobeItemsInPlace();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4904,10 +4934,11 @@ async function renderProgress() {
   const inboxProcessed  = inboxItems.filter(i => i.status?.toLowerCase() === 'processed').length;
 
   // ── Wardrobe ──
-  const wTotal   = inventory.length;
-  const wAvail   = inventory.filter(i => i.status === 'Available').length;
-  const wLaundry = inventory.filter(i => i.status === 'In Laundry').length;
-  const wPacked  = inventory.filter(i => i.status === 'Packed').length;
+  const activeWardrobe = inventory.filter(i => !isWardDiscarded(i));
+  const wTotal   = activeWardrobe.length;
+  const wAvail   = activeWardrobe.filter(i => i.status === 'Available').length;
+  const wLaundry = activeWardrobe.filter(i => i.status === 'In Laundry').length;
+  const wPacked  = activeWardrobe.filter(i => i.status === 'Packed').length;
   const wOutfits = outfits.length;
   const wPacks   = packs.length;
 
