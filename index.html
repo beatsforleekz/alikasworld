@@ -4059,7 +4059,7 @@ async function showItemModal(editId) {
       ${WARD_STYLE_TYPES.map(s=>`<option value="${s}" ${currentStyleType===s?'selected':''}>${s}</option>`).join('')}
     </select></div>
     <div class="fg"><label>Tags <span style="font-weight:400;color:var(--text3)">(comma-separated)</span></label><input id="f-wi-tags" value="${(ex?.tags||'').replace(/"/g,'&quot;')}" placeholder="e.g. summer, beach, casual"/></div>
-    <div class="fg"><label>Image URL</label><input id="f-wi-img" value="${(ex?.image||'').replace(/"/g,'&quot;')}" placeholder="https://…" type="url"/></div>
+    <div class="fg"><label>Image URL</label><input id="f-wi-img" value="${(ex?.image||'').replace(/"/g,'&quot;')}" placeholder="https://…" type="text" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"/></div>
     <div class="fg"><label>Vibe</label>${dlInput('f-wi-vibe','dl-wi-vibe',ex?.vibe||'','e.g. Core Everyday, Artist / Visible')}</div>
     <div class="fg"><label>Shoot Level</label>${dlInput('f-wi-shoot','dl-wi-shoot',ex?.shoot_level||'')}</div>
     <div class="fg"><label>Season</label>${dlInput('f-wi-season','dl-wi-season',ex?.season||'','e.g. Spring/Summer')}</div>
