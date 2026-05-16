@@ -2752,7 +2752,20 @@ function showModal(title, bodyHTML, onSave) {
   document.body.appendChild(el);
   el.addEventListener('click', e=>{ if(e.target===el) el.remove(); });
   document.getElementById('modal-save-btn').addEventListener('click', async()=>{
-    try{ await onSave(); el.remove(); } catch(e){ alert(e.message||'Error saving'); }
+    const page = root();
+    const prevScrollTop = page ? page.scrollTop : 0;
+    try{
+      await onSave();
+      el.remove();
+      const restoreScroll = () => {
+        const nextPage = root();
+        if (nextPage) nextPage.scrollTop = prevScrollTop;
+      };
+      requestAnimationFrame(() => {
+        restoreScroll();
+        requestAnimationFrame(restoreScroll);
+      });
+    } catch(e){ alert(e.message||'Error saving'); }
   });
 }
 
