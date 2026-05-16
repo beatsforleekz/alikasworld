@@ -172,6 +172,13 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .search-wrap{position:relative;margin-bottom:16px}
 .search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2}
 .search-input{width:100%;min-width:0;padding:12px 12px 12px 38px;border-radius:12px;border:none;background:var(--input-bg);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none}
+.toolbar-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 12px 10px;margin-bottom:14px}
+.toolbar-row{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.toolbar-grow{flex:1;min-width:0}
+.filter-toggle-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 12px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.filter-summary{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.filter-section{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.filter-section-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
 
 /* ── Page header ── */
 .ph{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:20px 0 12px}
@@ -3769,6 +3776,8 @@ async function renderWardrobeItems(params={}) {
   const fVibe   = window._vibeMode || '';
   window._wardFilters = {fCat, fColour, fStatus, fTag, fSort};
   window._wardItems   = items;
+  const activeFilterCount = [fCat, fColour, fStatus, fTag, fVibe].filter(Boolean).length;
+  const panelOpen = window._wardFilterPanelOpen ?? !!activeFilterCount;
 
   const filtered = items.filter(i => {
     if (fCat    && i.category !== fCat) return false;
@@ -3790,6 +3799,10 @@ async function renderWardrobeItems(params={}) {
 
   function wchip(label, active, fn) {
     return `<button class="filter-chip${active?' active':''}" onclick="${fn}">${label.replace(/</g,'&lt;')}</button>`;
+  }
+  function summaryChip(label, key) {
+    const safe = label.replace(/</g,'&lt;');
+    return `<button class="filter-chip active" style="font-size:11px" onclick="wardFilter('${key}','')">${safe} ×</button>`;
   }
 
   function itemCard(item) {
@@ -3835,41 +3848,52 @@ async function renderWardrobeItems(params={}) {
   </div>
   ${wardTabBar('wardrobe')}
 
-  ${vibeModeBarHtml("wardFilter('_vibe',window._vibeMode)")}
-
-  <div class="filter-bar">
-    ${wchip('All cats', !fCat, "wardFilter('fCat','')")}
-    ${cats.map(c=>wchip(c, fCat===c, `wardFilter('fCat','${c.replace(/'/g,"\\'")}')`) ).join('')}
-  </div>
-  <div class="filter-bar">
-    ${wchip('All status', !fStatus, "wardFilter('fStatus','')")}
-    ${WARD_STATUSES.map(s=>wchip(s, fStatus===s, `wardFilter('fStatus','${s.replace(/'/g,"\\'")}')`) ).join('')}
-  </div>
-  ${colours.length ? `<div class="filter-bar">
-    ${wchip('All colours', !fColour, "wardFilter('fColour','')")}
-    ${colours.map(c=>wchip(c, fColour===c, `wardFilter('fColour','${c.replace(/'/g,"\\'")}')`) ).join('')}
-  </div>` : ''}
-
-  <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px">
-    <div class="fg" style="margin-bottom:0;min-width:0;width:160px">
-      <label>Sort</label>
-      <select onchange="wardFilter('fSort',this.value)">
-        <option value="item_id" ${fSort==='item_id'?'selected':''}>Item ID</option>
-        <option value="az" ${fSort==='az'?'selected':''}>A–Z</option>
-        <option value="za" ${fSort==='za'?'selected':''}>Z–A</option>
-      </select>
+  <div class="toolbar-card">
+    <div class="toolbar-row">
+      <div class="toolbar-grow search-wrap" style="margin-bottom:0">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input class="search-input" placeholder="Search items or tags…" oninput="filterWardItems(this.value)"/>
+      </div>
+      <div class="fg" style="margin-bottom:0;min-width:0;width:138px">
+        <label>Sort</label>
+        <select onchange="wardFilter('fSort',this.value)">
+          <option value="item_id" ${fSort==='item_id'?'selected':''}>Item ID</option>
+          <option value="az" ${fSort==='az'?'selected':''}>A–Z</option>
+          <option value="za" ${fSort==='za'?'selected':''}>Z–A</option>
+        </select>
+      </div>
+      <button class="filter-toggle-btn" onclick="toggleWardFilterPanel()">${panelOpen ? 'Hide' : 'Show'} Filters${activeFilterCount ? ` (${activeFilterCount})` : ''}</button>
     </div>
-  </div>
 
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input class="search-input" placeholder="Search items or tags…" oninput="filterWardItems(this.value)"/>
-  </div>
+    ${activeFilterCount ? `<div class="filter-summary">
+      ${fCat ? summaryChip(`Category: ${fCat}`,'fCat') : ''}
+      ${fStatus ? summaryChip(`Status: ${fStatus}`,'fStatus') : ''}
+      ${fColour ? summaryChip(`Colour: ${fColour}`,'fColour') : ''}
+      ${fTag ? summaryChip(`Tag: ${fTag}`,'fTag') : ''}
+      ${fVibe ? `<button class="filter-chip active" style="font-size:11px" onclick="setVibeMode('${fVibe.replace(/'/g,"\\'")}');renderWardrobeItems(window._wardFilters||{})">Mode: ${fVibe.replace(/</g,'&lt;')} ×</button>` : ''}
+      <button class="filter-chip" style="font-size:11px" onclick="clearWardFilters()">Clear All</button>
+    </div>` : ''}
 
-  ${fVibe ? `<div style="margin-bottom:10px;font-size:12px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:6px">
-    <span>🎨 Mode: ${fVibe.replace(/</g,'&lt;')}</span>
-    <button onclick="setVibeMode('${fVibe.replace(/'/g,"\\'")}');renderWardrobeItems(window._wardFilters||{})" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer">✕ clear</button>
-  </div>` : ''}
+    ${panelOpen ? `<div class="filter-section">
+      <div class="filter-section-label">Styling Mode</div>
+      ${vibeModeBarHtml("wardFilter('_vibe',window._vibeMode)")}
+      <div class="filter-section-label">Category</div>
+      <div class="filter-bar" style="margin-bottom:10px">
+        ${wchip('All cats', !fCat, "wardFilter('fCat','')")}
+        ${cats.map(c=>wchip(c, fCat===c, `wardFilter('fCat','${c.replace(/'/g,"\\'")}')`) ).join('')}
+      </div>
+      <div class="filter-section-label">Status</div>
+      <div class="filter-bar" style="margin-bottom:${colours.length?'10px':'0'}">
+        ${wchip('All status', !fStatus, "wardFilter('fStatus','')")}
+        ${WARD_STATUSES.map(s=>wchip(s, fStatus===s, `wardFilter('fStatus','${s.replace(/'/g,"\\'")}')`) ).join('')}
+      </div>
+      ${colours.length ? `<div class="filter-section-label">Colour</div>
+      <div class="filter-bar" style="margin-bottom:0">
+        ${wchip('All colours', !fColour, "wardFilter('fColour','')")}
+        ${colours.map(c=>wchip(c, fColour===c, `wardFilter('fColour','${c.replace(/'/g,"\\'")}')`) ).join('')}
+      </div>` : ''}
+    </div>` : ''}
+  </div>
 
   <div class="item-grid" id="ward-grid">
     ${sorted.length
@@ -3950,6 +3974,15 @@ function wardFilter(key, val) {
   if (key === '_vibe') { renderWardrobeItems({...(window._wardFilters||{})}); return; }
   const f = window._wardFilters || {};
   renderWardrobeItems({fCat:f.fCat||'', fColour:f.fColour||'', fStatus:f.fStatus||'', fTag:f.fTag||'', fSort:f.fSort||'item_id', [key]:val});
+}
+
+function toggleWardFilterPanel() {
+  window._wardFilterPanelOpen = !(window._wardFilterPanelOpen ?? false);
+  renderWardrobeItems({...(window._wardFilters||{})});
+}
+
+function clearWardFilters() {
+  renderWardrobeItems({fSort:(window._wardFilters||{}).fSort || 'item_id'});
 }
 
 function filterWardItems(q) {
