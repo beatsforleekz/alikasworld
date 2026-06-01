@@ -27,7 +27,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
   --teal:#4A7C6F;--teal-light:#E8F0EE;
   --danger:#C0533A;--danger-light:#F9EDE9;
   --amber:#A07840;--amber-light:#F5EFE4;
-  --nav-h:64px;--r:14px;--rs:8px;
+  --nav-h:64px;--r:14px;--rs:8px;--shell-max:480px;
 
   /* ── Tab / input backgrounds ── */
   --tab-bg:#EDE9E3;--input-bg:#EDE9E3;
@@ -59,13 +59,13 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 /* theme-switcher moved to settings page */.theme-swatch{width:14px;height:14px;border-radius:50%;border:1px solid var(--border);flex-shrink:0}
 
 /* ── Shell ── */
-#shell{width:100%;max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+#shell{width:100%;max-width:var(--shell-max);margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
 #page-root{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h) + 16px)}
 
 /* ── Bottom Nav ── */
 #bottom-nav{
   position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:480px;height:var(--nav-h);
+  width:100%;max-width:var(--shell-max);height:var(--nav-h);
   background:var(--card);border-top:1px solid var(--border);
   display:grid;grid-auto-flow:column;grid-auto-columns:minmax(64px,1fr);
   align-items:center;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;
@@ -461,6 +461,24 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
   [style*="display:grid"][style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
   [style*="display:grid"][style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
   [style*="display:flex;justify-content:space-between;align-items:center"]{flex-wrap:wrap}
+}
+
+@media (min-width:900px){
+  :root{--shell-max:min(1180px,calc(100vw - 64px))}
+  #shell{
+    border-left:1px solid var(--border);
+    border-right:1px solid var(--border);
+    box-shadow:0 10px 30px rgba(0,0,0,.04);
+  }
+  .page{padding:0 24px 32px}
+  .topbar,.topbar-centered{padding-left:24px;padding-right:24px}
+  .snap-grid,.wd-snap-grid{gap:10px;background:none;border:none}
+  .snap-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .wd-snap-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .risk-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .item-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .picker-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .wd-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 </style>
 </head>
@@ -3431,6 +3449,314 @@ function tagsHtml(tags, onclickFn) {
   return `<div class="tag-bar">${tags.map(t=>`<button class="tag-pill" onclick="${onclickFn}(event,'${t.replace(/'/g,"\\'")}')">${t.replace(/</g,'&lt;')}</button>`).join('')}</div>`;
 }
 
+function wardNormalizeTokens(...parts) {
+  return [...new Set(parts
+    .flatMap(part => String(part || '')
+      .toLowerCase()
+      .split(/[,/;&]| and |\s+/)
+      .map(t => t.trim())
+      .filter(Boolean)
+    )
+  )];
+}
+
+function wardDistinctCategories(items = []) {
+  return [...new Set((items || []).map(i => i?.category).filter(Boolean))].sort();
+}
+
+function wardCategoryMatches(item, keywords = []) {
+  const src = ((item?.category || '') + ' ' + (item?.tags || '')).toLowerCase();
+  return keywords.some(k => src.includes(k));
+}
+
+function wardCategoryGroupMap(items = []) {
+  const categories = wardDistinctCategories(items);
+  const byPattern = (patterns) => categories.filter(cat => {
+    const lc = String(cat || '').toLowerCase();
+    return patterns.some(p => lc.includes(p));
+  });
+  return {
+    categories,
+    dress: byPattern(['dress','jumpsuit','co-ord','onepiece','one piece']),
+    top: byPattern(['top','shirt','blouse','tee','knitwear','jumper','crop','bodysuit','tank','camisole','vest']),
+    bottom: byPattern(['bottom','trouser','jean','short','skirt','mini','midi','maxi','legging']),
+    outer: byPattern(['outer','jacket','coat','blazer','cardigan','hoodie']),
+    shoes: byPattern(['shoe','boot','trainer','heel','sandal','sneaker','flat','mule']),
+    accessory: byPattern(['accessor','hat','bag','jewell','belt','scarf','hair']),
+  };
+}
+
+function wardCategorySlot(item) {
+  const c = ((item?.category || '') + ' ' + (item?.tags || '')).toLowerCase();
+  if (['dress','jumpsuit','co-ord','onepiece','one piece'].some(k => c.includes(k))) return 'dress';
+  if (['top','shirt','blouse','tee','knitwear','jumper','crop','bodysuit','tank','camisole','vest'].some(k => c.includes(k))) return 'top';
+  if (['bottom','trouser','jean','short','skirt','mini','midi','maxi','legging'].some(k => c.includes(k))) return 'bottom';
+  if (['outer','jacket','coat','blazer','cardigan','hoodie'].some(k => c.includes(k))) return 'outer';
+  if (['shoe','boot','trainer','heel','sandal','sneaker','flat','mule'].some(k => c.includes(k))) return 'shoes';
+  if (['accessor','hat','bag','jewell','belt','scarf','hair'].some(k => c.includes(k))) return 'accessory';
+  return 'other';
+}
+
+function wardColourFamily(item) {
+  const src = `${item?.colour || ''} ${item?.tags || ''} ${item?.item_name || ''}`.toLowerCase();
+  const groups = {
+    neutral: ['black','white','cream','ivory','beige','camel','tan','taupe','stone','grey','gray','charcoal','brown','mocha','nude'],
+    blue: ['blue','navy','cobalt','indigo','denim'],
+    green: ['green','olive','sage','khaki','mint','emerald'],
+    red: ['red','burgundy','maroon','wine'],
+    pink: ['pink','rose','fuchsia','blush'],
+    purple: ['purple','lilac','plum','violet'],
+    yellow: ['yellow','mustard','gold'],
+    orange: ['orange','rust','terracotta','peach','coral'],
+    metallic: ['silver','gold','metallic','chrome','bronze'],
+  };
+  for (const [family, tokens] of Object.entries(groups)) {
+    if (tokens.some(t => src.includes(t))) return family;
+  }
+  return '';
+}
+
+function wardShapeProfile(item) {
+  const src = `${item?.silhouette || ''} ${item?.tags || ''} ${item?.item_name || ''} ${item?.category || ''}`.toLowerCase();
+  return {
+    oversized: src.includes('oversized') || src.includes('boxy') || src.includes('slouchy'),
+    fitted: src.includes('fitted') || src.includes('slim') || src.includes('bodycon') || src.includes('tailored'),
+    structured: src.includes('structured') || src.includes('tailored') || src.includes('sharp'),
+    flowy: src.includes('flowy') || src.includes('soft') || src.includes('floaty') || src.includes('drap'),
+  };
+}
+
+function wardItemMeta(item) {
+  return {
+    slot: wardCategorySlot(item),
+    tags: wardNormalizeTokens(item?.tags),
+    vibe: wardNormalizeTokens(item?.vibe),
+    season: wardNormalizeTokens(item?.season),
+    colourFamily: wardColourFamily(item),
+    styleType: item?.style_type || '',
+    shape: wardShapeProfile(item),
+  };
+}
+
+function wardIsSuggestable(item) {
+  return !!item && !isWardDiscarded(item) && item.status !== 'Archived' && (item.status === 'Available' || item.status === 'Packed');
+}
+
+function wardReasonAdd(reasons, reason) {
+  if (!reason || reasons.includes(reason)) return;
+  reasons.push(reason);
+}
+
+function wardReasonSummary(reasons) {
+  return reasons.slice(0, 2).join(' · ');
+}
+
+function wardCompatibilityScore(candidate, selectedItems = [], vibeMode = '') {
+  if (!wardIsSuggestable(candidate)) return {score:-999, reasons:[]};
+  const meta = wardItemMeta(candidate);
+  const reasons = [];
+  let score = candidate.status === 'Available' ? 10 : 7;
+
+  if (vibeMode && `${candidate.vibe || ''} ${candidate.tags || ''}`.toLowerCase().includes(vibeMode.toLowerCase())) {
+    score += 5;
+    wardReasonAdd(reasons, 'matches current vibe');
+  }
+  if (!selectedItems.length) {
+    if (meta.slot === 'top' || meta.slot === 'dress') score += 4;
+    if (meta.colourFamily === 'neutral') {
+      score += 2;
+      wardReasonAdd(reasons, 'matches neutral palette');
+    }
+    if (meta.styleType === 'Core') score += 1;
+    return {score, reasons};
+  }
+
+  selectedItems.forEach(item => {
+    const sMeta = wardItemMeta(item);
+    if (item.item_id === candidate.item_id) { score -= 100; return; }
+    if (meta.slot === sMeta.slot && !['outer','accessory','shoes'].includes(meta.slot)) score -= 5;
+    if ((meta.slot === 'dress' && ['top','bottom'].includes(sMeta.slot)) || (sMeta.slot === 'dress' && ['top','bottom'].includes(meta.slot))) score -= 8;
+
+    if (meta.colourFamily && sMeta.colourFamily) {
+      if (meta.colourFamily === 'neutral' || sMeta.colourFamily === 'neutral') {
+        score += 3;
+        wardReasonAdd(reasons, 'matches neutral palette');
+      } else if (meta.colourFamily === sMeta.colourFamily) {
+        score += 3;
+        wardReasonAdd(reasons, 'keeps a tonal palette');
+      }
+    }
+
+    if ((sMeta.shape.oversized && meta.shape.fitted) || (meta.shape.oversized && sMeta.shape.fitted)) {
+      score += 4;
+      wardReasonAdd(reasons, sMeta.slot === 'top' || meta.slot === 'top' ? 'balances oversized top' : 'balances oversized shape');
+    } else if ((sMeta.shape.structured && meta.shape.flowy) || (meta.shape.structured && sMeta.shape.flowy)) {
+      score += 3;
+      wardReasonAdd(reasons, 'balances soft and structured shapes');
+    }
+
+    if ((sMeta.styleType === 'Statement' && meta.styleType === 'Core') || (meta.styleType === 'Statement' && sMeta.styleType === 'Core')) {
+      score += 3;
+      wardReasonAdd(reasons, 'balances statement piece');
+    }
+
+    const sharedTags = meta.tags.filter(t => sMeta.tags.includes(t)).filter(t => !['and','with','look'].includes(t));
+    if (sharedTags.length) {
+      score += 2;
+      wardReasonAdd(reasons, `same ${sharedTags[0]} vibe`);
+    }
+
+    const sharedSeason = meta.season.find(t => sMeta.season.includes(t));
+    if (sharedSeason) {
+      score += 2;
+      wardReasonAdd(reasons, `works for ${sharedSeason}`);
+    }
+  });
+
+  if (meta.slot === 'shoes' && selectedItems.some(i => ['dress','top','bottom'].includes(wardItemMeta(i).slot))) score += 2;
+  if (meta.slot === 'outer' && selectedItems.some(i => ['dress','top'].includes(wardItemMeta(i).slot))) score += 1;
+  if (meta.slot === 'accessory' && selectedItems.length >= 2) score += 1;
+
+  return {score, reasons};
+}
+
+function wardScoreSavedOutfit(outfit, outfitItems, vibeMode = '') {
+  if (!outfitItems.length || outfitItems.some(i => !wardIsSuggestable(i))) return {score:-999, reasons:[]};
+  let score = outfitItems.length * 2;
+  const reasons = [];
+  const slots = outfitItems.map(i => wardItemMeta(i).slot);
+  if (slots.includes('dress') || (slots.includes('top') && slots.includes('bottom'))) score += 5;
+  if (slots.includes('shoes')) score += 2;
+  if (slots.includes('outer')) score += 1;
+
+  if (vibeMode) {
+    const vibeText = `${outfit.tags || ''} ${outfit.occasion || ''} ${outfit.notes || ''} ${outfitItems.map(i => i.vibe || '').join(' ')}`.toLowerCase();
+    if (vibeText.includes(vibeMode.toLowerCase())) {
+      score += 6;
+      wardReasonAdd(reasons, 'matches current vibe');
+    }
+  }
+
+  for (let i = 1; i < outfitItems.length; i++) {
+    const pair = wardCompatibilityScore(outfitItems[i], outfitItems.slice(0, i), vibeMode);
+    score += Math.max(0, pair.score - 7);
+    pair.reasons.forEach(r => wardReasonAdd(reasons, r));
+  }
+
+  return {score, reasons};
+}
+
+function wardSuggestionThumbs(items, limit = 5, compact = false) {
+  const width = compact ? 50 : 56;
+  const height = compact ? 64 : 72;
+  return items.slice(0, limit).map(i => {
+    const safeItemId = (i.item_id||'').toString().replace(/'/g,"\\'");
+    const name = (i.item_name||i.category||'').replace(/</g,'&lt;');
+    return compact
+      ? (i.image
+        ? `<img src="${i.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" onclick="event.stopPropagation();showEditItemModal('${safeItemId}')" style="width:${width}px;height:${height}px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer" onerror="this.style.display='none'" title="${name}">`
+        : `<div onclick="event.stopPropagation();showEditItemModal('${safeItemId}')" style="width:${width}px;height:${height}px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;cursor:pointer">👗</div>`)
+      : `<div onclick="showEditItemModal('${safeItemId}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:${width}px;max-width:68px;cursor:pointer">
+          ${i.image
+            ? `<img src="${i.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" style="width:${width}px;height:${height}px;object-fit:cover;border-radius:8px" onerror="this.style.display='none'">`
+            : `<div style="width:${width}px;height:${height}px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px">👗</div>`}
+          <div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.2;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+        </div>`;
+  }).join('');
+}
+
+function buildWardrobeSuggestionHtml(items, outfits, vibeMode, skipOutfit = 0, skipSlotSeed = 0) {
+  const usable = items.filter(wardIsSuggestable);
+  const categoryGroups = wardCategoryGroupMap(items);
+  const refreshBtn = `<button id="wsiwRefreshBtn" onclick="event.stopPropagation();refreshWardrobeSuggestion()" title="New suggestion" style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--text3);display:inline-flex;align-items:center;border-radius:4px;transition:opacity .15s;line-height:1" onmouseover="this.style.opacity='.6'" onmouseout="this.style.opacity='1'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>`;
+
+  const outfitCandidates = outfits.map(outfit => {
+    let ids = [];
+    try { ids = Array.isArray(outfit.item_ids) ? outfit.item_ids : JSON.parse(outfit.item_ids||'[]'); } catch(e){}
+    const outfitItems = ids.map(id => items.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
+    const scored = wardScoreSavedOutfit(outfit, outfitItems, vibeMode);
+    return { outfit, outfitItems, score: scored.score, reasons: scored.reasons };
+  }).filter(c => c.score > -999).sort((a, b) => b.score - a.score);
+
+  if (outfitCandidates.length) {
+    const picked = outfitCandidates[skipOutfit % outfitCandidates.length];
+    const safeOutfitId = String(picked.outfit.id).replace(/"/g,'&quot;');
+    const reasonText = wardReasonSummary(picked.reasons);
+    const hint = vibeMode
+      ? `<div style="font-size:11px;color:var(--accent);font-weight:500;margin-bottom:6px;letter-spacing:.02em">✦ Based on current vibe · ${picked.outfitItems.length} piece${picked.outfitItems.length!==1?'s':''}</div>`
+      : `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Saved outfit · ${picked.outfitItems.length} piece${picked.outfitItems.length!==1?'s':''}${outfitCandidates.length>1?' · '+outfitCandidates.length+' options':''}</div>`;
+    return `
+  <div class="sec-label" style="display:flex;align-items:center;justify-content:center;gap:6px">What Should I Wear? ${refreshBtn}</div>
+  <div class="card" style="padding:16px;cursor:pointer" onclick="showEditOutfitModal('${safeOutfitId}')">
+    ${hint}
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:${reasonText ? '6px' : '10px'}">${(picked.outfit.name||'Untitled').replace(/</g,'&lt;')}</div>
+    ${reasonText ? `<div style="font-size:12px;color:var(--text2);margin-bottom:10px">${reasonText}</div>` : ''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">${wardSuggestionThumbs(picked.outfitItems, 5, true)}${picked.outfitItems.length>5?`<div style="font-size:11px;color:var(--text3);padding:0 4px;align-self:center">+${picked.outfitItems.length-5}</div>`:''}</div>
+    <div style="margin-top:10px;font-size:12px;color:var(--accent);font-weight:500">Edit outfit →</div>
+  </div>`;
+  }
+
+  function slotMatches(item, categories, fallbackKeywords = []) {
+    const cat = item?.category || '';
+    if (categories.includes(cat)) return true;
+    return wardCategoryMatches(item, fallbackKeywords);
+  }
+  function pickBest(candidates, selected, seed) {
+    if (!candidates.length) return null;
+    const scored = candidates.map(item => ({item, ...wardCompatibilityScore(item, selected, vibeMode)}))
+      .filter(r => r.score > -999)
+      .sort((a, b) => b.score - a.score);
+    if (!scored.length) return null;
+    return scored[seed % Math.min(scored.length, 3)];
+  }
+
+  const dressPick = pickBest(usable.filter(i => slotMatches(i, categoryGroups.dress, ['dress','jumpsuit','co-ord','onepiece','one piece'])), [], skipSlotSeed);
+  const topPick = pickBest(usable.filter(i => slotMatches(i, categoryGroups.top, ['top','shirt','blouse','tee','knitwear','jumper','crop','bodysuit','tank','camisole','vest'])), [], skipSlotSeed);
+  const picks = [];
+  const reasons = [];
+
+  if (dressPick && (!topPick || dressPick.score >= topPick.score + 2)) {
+    picks.push(dressPick.item);
+    dressPick.reasons.forEach(r => wardReasonAdd(reasons, r));
+  } else if (topPick) {
+    picks.push(topPick.item);
+    topPick.reasons.forEach(r => wardReasonAdd(reasons, r));
+    const bottomPick = pickBest(usable.filter(i => slotMatches(i, categoryGroups.bottom, ['bottom','trouser','jean','short','skirt','mini','midi','maxi','legging'])), picks, skipSlotSeed);
+    if (bottomPick) {
+      picks.push(bottomPick.item);
+      bottomPick.reasons.forEach(r => wardReasonAdd(reasons, r));
+    }
+  }
+
+  [
+    ['outer', categoryGroups.outer, ['outer','jacket','coat','blazer','cardigan','hoodie']],
+    ['shoes', categoryGroups.shoes, ['shoe','boot','trainer','heel','sandal','sneaker','flat','mule']],
+    ['accessory', categoryGroups.accessory, ['accessor','hat','bag','jewell','belt','scarf','hair']]
+  ].forEach(([slot, categories, fallbackKeywords], idx) => {
+    const pick = pickBest(usable.filter(i => slotMatches(i, categories, fallbackKeywords)), picks, skipSlotSeed + idx);
+    if (pick) {
+      picks.push(pick.item);
+      pick.reasons.forEach(r => wardReasonAdd(reasons, r));
+    }
+  });
+
+  if (!picks.length) return '';
+  const fallbackNote = vibeMode
+    ? `<div style="font-size:11px;color:var(--accent);font-weight:500;margin-bottom:6px;letter-spacing:.02em">✦ Item suggestions based on current vibe</div>`
+    : `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">No saved outfit matched — item suggestions</div>`;
+  const reasonText = wardReasonSummary(reasons);
+  return `
+  <div class="sec-label" style="display:flex;align-items:center;justify-content:center;gap:6px">What Should I Wear? ${refreshBtn}</div>
+  <div class="card" style="padding:16px">
+    ${fallbackNote}
+    ${reasonText ? `<div style="font-size:12px;color:var(--text2);margin-bottom:10px">${reasonText}</div>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">${wardSuggestionThumbs(picks, 6, false)}</div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text3)">
+      Tap any item to edit · <button onclick="renderWardrobeItems({})" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;padding:0">browse wardrobe →</button>
+    </div>
+  </div>`;
+}
+
 // ── Vibe mode bar HTML ──
 function vibeModeBarHtml(onchange) {
   return `<div class="vibe-mode-bar">
@@ -3462,7 +3788,7 @@ async function renderWardrobeHome() {
   window._wsiwSkipSlot   = 0;
   const [items, outfits] = await Promise.all([
     dbFetch(T.INVENTORY, {
-      select: 'item_id,category,colour,item_name,status,vibe,image,style_type,tags,user_id',
+      select: 'item_id,category,colour,item_name,status,vibe,image,style_type,tags,season,silhouette,notes,user_id',
       order: ['item_name', true]
     }),
     dbFetch(T.OUTFITS, {order:['created_at',false]}),
@@ -3485,116 +3811,7 @@ async function renderWardrobeHome() {
   // skipOutfit: index into validCandidates to skip (for refresh cycling)
   // skipSlotSeed: seed offset for fallback slot picks
   function buildSuggestionHtml(skipOutfit, skipSlotSeed) {
-    skipOutfit   = skipOutfit   || 0;
-    skipSlotSeed = skipSlotSeed || 0;
-    const usable = items.filter(i => i.status === 'Available' || i.status === 'Packed');
-
-    // shared refresh SVG button
-    const refreshBtn = `<button id="wsiwRefreshBtn" onclick="event.stopPropagation();refreshWardrobeSuggestion()" title="New suggestion" style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--text3);display:inline-flex;align-items:center;border-radius:4px;transition:opacity .15s;line-height:1" onmouseover="this.style.opacity='.6'" onmouseout="this.style.opacity='1'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>`;
-
-    // 1. Try to find a saved outfit (prefer vibe-matching, prefer mostly-available items)
-    let candidates = [...outfits];
-    if (vibeMode) {
-      const vm = vibeMode.toLowerCase();
-      candidates.sort((a, b) => {
-        const aHit = ((a.tags||'') + ' ' + (a.occasion||'')).toLowerCase().includes(vm) ? 0 : 1;
-        const bHit = ((b.tags||'') + ' ' + (b.occasion||'')).toLowerCase().includes(vm) ? 0 : 1;
-        return aHit - bHit;
-      });
-    }
-    // Collect ALL valid candidates so we can cycle through them
-    const validCandidates = [];
-    for (const o of candidates) {
-      let ids = [];
-      try { ids = Array.isArray(o.item_ids) ? o.item_ids : JSON.parse(o.item_ids||'[]'); } catch(e){}
-      if (!ids.length) continue;
-      const oItems  = ids.map(id => items.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
-      const usableN = oItems.filter(i => i.status==='Available'||i.status==='Packed').length;
-      if (oItems.length > 0 && usableN / oItems.length >= 0.5) {
-        validCandidates.push({ outfit: o, oItems });
-      }
-    }
-
-    if (validCandidates.length) {
-      const idx = skipOutfit % validCandidates.length;
-      const { outfit, oItems } = validCandidates[idx];
-      const safeOutfitId = String(outfit.id).replace(/"/g,'&quot;');
-      const thumbs = oItems.slice(0,5).map(i => {
-        const safeItemId = (i.item_id||'').toString().replace(/'/g,"\\'");
-        return i.image
-          ? `<img src="${i.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" onclick="event.stopPropagation();showEditItemModal('${safeItemId}')" style="width:50px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer" onerror="this.style.display='none'" title="${(i.item_name||'').replace(/"/g,'&quot;')}">`
-          : `<div onclick="event.stopPropagation();showEditItemModal('${safeItemId}')" style="width:50px;height:64px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;cursor:pointer">👗</div>`;
-      }).join('');
-      const hint = vibeMode
-        ? `<div style="font-size:11px;color:var(--accent);font-weight:500;margin-bottom:6px;letter-spacing:.02em">✦ Based on current vibe · ${oItems.length} piece${oItems.length!==1?'s':''}</div>`
-        : `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Saved outfit · ${oItems.length} piece${oItems.length!==1?'s':''}${validCandidates.length>1?' · '+validCandidates.length+' options':''}</div>`;
-      return `
-  <div class="sec-label" style="display:flex;align-items:center;justify-content:center;gap:6px">What Should I Wear? ${refreshBtn}</div>
-  <div class="card" style="padding:16px;cursor:pointer" onclick="showEditOutfitModal('${safeOutfitId}')">
-    ${hint}
-    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:10px">${(outfit.name||'Untitled').replace(/</g,'&lt;')}</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">${thumbs}${oItems.length>5?`<div style="font-size:11px;color:var(--text3);padding:0 4px;align-self:center">+${oItems.length-5}</div>`:''}</div>
-    <div style="margin-top:10px;font-size:12px;color:var(--accent);font-weight:500">Edit outfit →</div>
-  </div>`;
-    }
-
-    // 2. Fallback: pick individual items per slot (use skipSlotSeed to vary picks)
-    const pool = vibeMode
-      ? usable.filter(i => (i.vibe||'').toLowerCase().includes(vibeMode.toLowerCase()))
-      : usable;
-    const slotKeys = {
-      top:    ['top','shirt','blouse','tee','knitwear','jumper','crop'],
-      bottom: ['trousers','jeans','shorts','skirt','mini','midi','maxi'],
-      dress:  ['dress','jumpsuit','co-ord'],
-      outer:  ['jacket','coat','blazer','cardigan','hoodie','outerwear'],
-      shoes:  ['shoes','boots','trainers','heels','sandals','sneakers','flats','mules'],
-      hair:   ['accessories','hair','bag','jewellery','hat'],
-    };
-    function matchSlot(item, keys) {
-      const c = (item.category||'').toLowerCase();
-      return keys.some(k => c.includes(k));
-    }
-    const pick = {};
-    for (const [slot, keys] of Object.entries(slotKeys)) {
-      if (slot==='bottom' && pick.dress) continue;
-      if (slot==='top'    && pick.dress) continue;
-      if (slot==='dress'  && (pick.top||pick.bottom)) continue;
-      const matches = pool.filter(i => matchSlot(i, keys));
-      if (!matches.length) continue;
-      // Sort by style priority then use seed offset to cycle through options
-      const sorted = [...matches].sort((a,b) => {
-        const r = s => s==='Statement'?0:s==='Core'?1:2;
-        return r(a.style_type) - r(b.style_type);
-      });
-      pick[slot] = sorted[skipSlotSeed % sorted.length];
-    }
-    const picks = Object.values(pick).filter(Boolean);
-    if (!picks.length) return '';
-
-    const thumbs = picks.map(i => {
-      const name = (i.item_name||i.category||'').replace(/</g,'&lt;');
-      const safeItemId = (i.item_id||'').toString().replace(/'/g,"\\'");
-      return `<div onclick="showEditItemModal('${safeItemId}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:56px;max-width:68px;cursor:pointer">
-        ${i.image
-          ? `<img src="${i.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" style="width:56px;height:72px;object-fit:cover;border-radius:8px;transition:transform .12s" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform=''" onerror="this.style.display='none'">`
-          : `<div style="width:56px;height:72px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px">👗</div>`}
-        <div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.2;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-      </div>`;
-    }).join('');
-
-    const fallbackNote = vibeMode
-      ? `<div style="font-size:11px;color:var(--accent);font-weight:500;margin-bottom:10px;letter-spacing:.02em">✦ Item suggestions based on current vibe</div>`
-      : `<div style="font-size:11px;color:var(--text3);margin-bottom:10px">No saved outfit matched — item suggestions</div>`;
-
-    return `
-  <div class="sec-label" style="display:flex;align-items:center;justify-content:center;gap:6px">What Should I Wear? ${refreshBtn}</div>
-  <div class="card" style="padding:16px">
-    ${fallbackNote}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">${thumbs}</div>
-    <div style="margin-top:12px;font-size:12px;color:var(--text3)">
-      Tap any item to edit · <button onclick="renderWardrobeItems({})" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;padding:0">browse wardrobe →</button>
-    </div>
-  </div>`;
+    return buildWardrobeSuggestionHtml(items, outfits, vibeMode, skipOutfit, skipSlotSeed);
   }
 
   // Expose data needed for in-place refresh (no full page reload)
@@ -3662,103 +3879,13 @@ function refreshWardrobeSuggestion() {
 
   const { items, outfits } = d;
   const vibeMode = window._vibeMode || '';
-
-  // ── replicate buildSuggestionHtml inline so we can call it without a full re-render ──
   const skipOutfit   = window._wsiwSkipOutfit;
   const skipSlotSeed = window._wsiwSkipSlot;
-  const usable = items.filter(i => i.status === 'Available' || i.status === 'Packed');
-
-  const refreshBtnHtml = `<button id="wsiwRefreshBtn" onclick="event.stopPropagation();refreshWardrobeSuggestion()" title="New suggestion" style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--text3);display:inline-flex;align-items:center;border-radius:4px;transition:opacity .15s;line-height:1" onmouseover="this.style.opacity='.6'" onmouseout="this.style.opacity='1'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>`;
-
-  let candidates = [...outfits];
-  if (vibeMode) {
-    const vm = vibeMode.toLowerCase();
-    candidates.sort((a,b) => {
-      const aHit = ((a.tags||'')+' '+(a.occasion||'')).toLowerCase().includes(vm)?0:1;
-      const bHit = ((b.tags||'')+' '+(b.occasion||'')).toLowerCase().includes(vm)?0:1;
-      return aHit-bHit;
-    });
-  }
-  const validCandidates = [];
-  for (const o of candidates) {
-    let ids=[]; try{ids=Array.isArray(o.item_ids)?o.item_ids:JSON.parse(o.item_ids||'[]');}catch(e){}
-    if(!ids.length) continue;
-    const oItems=ids.map(id=>items.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
-    const usableN=oItems.filter(i=>i.status==='Available'||i.status==='Packed').length;
-    if(oItems.length>0 && usableN/oItems.length>=0.5) validCandidates.push({outfit:o,oItems});
-  }
-
-  let newHtml = '';
-
-  if (validCandidates.length) {
-    const idx = skipOutfit % validCandidates.length;
-    const {outfit,oItems} = validCandidates[idx];
-    const safeOutfitId = String(outfit.id).replace(/"/g,'&quot;');
-    const thumbs = oItems.slice(0,5).map(i=>{
-      const safeItemId=(i.item_id||'').toString().replace(/'/g,"\\'");
-      return i.image
-        ? `<img src="${i.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" onclick="event.stopPropagation();showEditItemModal('${safeItemId}')" style="width:50px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer" onerror="this.style.display='none'" title="${(i.item_name||'').replace(/"/g,'&quot;')}">`
-        : `<div onclick="event.stopPropagation();showEditItemModal('${safeItemId}')" style="width:50px;height:64px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;cursor:pointer">👗</div>`;
-    }).join('');
-    const hint = vibeMode
-      ? `<div style="font-size:11px;color:var(--accent);font-weight:500;margin-bottom:6px;letter-spacing:.02em">✦ Based on current vibe · ${oItems.length} piece${oItems.length!==1?'s':''}</div>`
-      : `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Saved outfit · ${oItems.length} piece${oItems.length!==1?'s':''}${validCandidates.length>1?' · '+validCandidates.length+' options':''}</div>`;
-    newHtml = `
-  <div class="sec-label" style="display:flex;align-items:center;justify-content:center;gap:6px">What Should I Wear? ${refreshBtnHtml}</div>
-  <div class="card" style="padding:16px;cursor:pointer" onclick="showEditOutfitModal('${safeOutfitId}')">
-    ${hint}
-    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:10px">${(outfit.name||'Untitled').replace(/</g,'&lt;')}</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">${thumbs}${oItems.length>5?`<div style="font-size:11px;color:var(--text3);padding:0 4px;align-self:center">+${oItems.length-5}</div>`:''}</div>
-    <div style="margin-top:10px;font-size:12px;color:var(--accent);font-weight:500">Edit outfit →</div>
-  </div>`;
-  } else {
-    const pool = vibeMode ? usable.filter(i=>(i.vibe||'').toLowerCase().includes(vibeMode.toLowerCase())) : usable;
-    const slotKeys = {
-      top:    ['top','shirt','blouse','tee','knitwear','jumper','crop'],
-      bottom: ['trousers','jeans','shorts','skirt','mini','midi','maxi'],
-      dress:  ['dress','jumpsuit','co-ord'],
-      outer:  ['jacket','coat','blazer','cardigan','hoodie','outerwear'],
-      shoes:  ['shoes','boots','trainers','heels','sandals','sneakers','flats','mules'],
-      hair:   ['accessories','hair','bag','jewellery','hat'],
-    };
-    const pick = {};
-    for (const [slot,keys] of Object.entries(slotKeys)) {
-      if (slot==='bottom'&&pick.dress) continue;
-      if (slot==='top'&&pick.dress) continue;
-      if (slot==='dress'&&(pick.top||pick.bottom)) continue;
-      const matches = pool.filter(i=>keys.some(k=>(i.category||'').toLowerCase().includes(k)));
-      if (!matches.length) continue;
-      const sorted = [...matches].sort((a,b)=>{const r=s=>s==='Statement'?0:s==='Core'?1:2;return r(a.style_type)-r(b.style_type);});
-      pick[slot] = sorted[skipSlotSeed % sorted.length];
-    }
-    const picks = Object.values(pick).filter(Boolean);
-    if (!picks.length) return;
-    const thumbs = picks.map(i=>{
-      const name=(i.item_name||i.category||'').replace(/</g,'&lt;');
-      const safeItemId=(i.item_id||'').toString().replace(/'/g,"\\'");
-      return `<div onclick="showEditItemModal('${safeItemId}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:56px;max-width:68px;cursor:pointer">
-        ${i.image?`<img src="${i.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" style="width:56px;height:72px;object-fit:cover;border-radius:8px" onerror="this.style.display='none'">`:
-        `<div style="width:56px;height:72px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px">👗</div>`}
-        <div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.2;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-      </div>`;
-    }).join('');
-    const fallbackNote = vibeMode
-      ? `<div style="font-size:11px;color:var(--accent);font-weight:500;margin-bottom:10px;letter-spacing:.02em">✦ Item suggestions based on current vibe</div>`
-      : `<div style="font-size:11px;color:var(--text3);margin-bottom:10px">No saved outfit matched — item suggestions</div>`;
-    newHtml = `
-  <div class="sec-label" style="display:flex;align-items:center;justify-content:center;gap:6px">What Should I Wear? ${refreshBtnHtml}</div>
-  <div class="card" style="padding:16px">
-    ${fallbackNote}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">${thumbs}</div>
-    <div style="margin-top:12px;font-size:12px;color:var(--text3)">
-      Tap any item to edit · <button onclick="renderWardrobeItems({})" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;padding:0">browse wardrobe →</button>
-    </div>
-  </div>`;
-  }
+  const newHtml = buildWardrobeSuggestionHtml(items, outfits, vibeMode, skipOutfit, skipSlotSeed);
 
   // Swap the suggestion block in the DOM without touching the rest of the page
   const container = document.querySelector('#ward-suggestion-wrap');
-  if (container) {
+  if (container && newHtml) {
     container.innerHTML = newHtml;
   }
 }
@@ -3830,7 +3957,6 @@ async function renderWardrobeItems(params={}) {
              onerror="this.style.display='none'">
          </div>`
       : `<div class="item-img-placeholder"${isLaundry?' style="opacity:.5"':''}>👗</div>`;
-    const itemTags = parseTags(item.tags);
     return `<div class="item-card" data-item-id="${safeId}"${isLaundry?' style="opacity:.75"':''}>
       <div onclick="showEditItemModal('${safeId}')">
         ${imgBlock}
@@ -3844,7 +3970,6 @@ async function renderWardrobeItems(params={}) {
           </div>
           <button onclick="event.stopPropagation();ctxItemOutfit(event,'${safeId}')" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;margin-top:-2px" title="Outfit options">···</button>
         </div>
-        ${itemTags.length ? `<div class="tag-bar" style="margin-top:4px" onclick="event.stopPropagation()">${itemTags.map(t=>`<button class="tag-pill" style="font-size:10px;padding:2px 6px" onclick="wardFilter('fTag','${t.replace(/'/g,"\\'")}');event.stopPropagation()">${t.replace(/</g,'&lt;')}</button>`).join('')}</div>` : ''}
       </div>
     </div>`;
   }
@@ -4224,11 +4349,11 @@ async function showOutfitModal(editId) {
 
   // Apply vibe mode filter to picker if active
   const vibeMode = window._vibeMode || '';
+  const selectedInFull = selIds.map(id => inventory.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
   let pickerItems = inventory;
   if (vibeMode) {
     const vibeFiltered = inventory.filter(i => (i.vibe||'').toLowerCase().includes(vibeMode.toLowerCase()));
     // always show selected items regardless
-    const selectedInFull = selIds.map(id => inventory.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
     pickerItems = [...new Map([...vibeFiltered,...selectedInFull].map(i=>[i.item_id||i.id,i])).values()];
   }
 
@@ -4238,12 +4363,15 @@ async function showOutfitModal(editId) {
   const projTitles      = allProjects.map(r => r.title).filter(Boolean);
 
   function pickerGrid(inv) {
-    // Sort: selected first, then vibe-match, then rest
+    // Sort: selected first, then best styling fit, then vibe-match, then rest
     const vm = vibeMode.toLowerCase();
     const sorted = [...inv].sort((a, b) => {
       const aSel   = selIds.includes(a.item_id||a.id) ? 0 : 1;
       const bSel   = selIds.includes(b.item_id||b.id) ? 0 : 1;
       if (aSel !== bSel) return aSel - bSel;
+      const aFit = wardCompatibilityScore(a, selectedInFull, vibeMode).score;
+      const bFit = wardCompatibilityScore(b, selectedInFull, vibeMode).score;
+      if (aFit !== bFit) return bFit - aFit;
       if (vm) {
         const aM = (a.vibe||'').toLowerCase().includes(vm) ? 0 : 1;
         const bM = (b.vibe||'').toLowerCase().includes(vm) ? 0 : 1;
