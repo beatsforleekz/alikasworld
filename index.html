@@ -437,6 +437,23 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .back-btn:hover{opacity:.7}
 .picker-item{transition:border-color var(--transition),transform .12s ease}
 .picker-item:hover{transform:scale(1.02)}
+.pk-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.pk-summary-chip{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pk-summary-name{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-summary-val{font-size:18px;font-weight:600;color:var(--text)}
+.pk-packed-group{margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.pk-packed-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.02)}
+.pk-packed-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
+.pk-packed-count{font-size:12px;font-weight:600;color:var(--text3)}
+.pk-packed-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.pk-packed-row:last-child{border-bottom:none}
+.pk-packed-thumb,.pk-packed-thumb-ph{width:44px;height:56px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--bg)}
+.pk-packed-thumb{object-fit:cover;display:block}
+.pk-packed-thumb-ph{display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:18px}
+.pk-packed-meta{min-width:0;flex:1}
+.pk-packed-name{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-packed-sub{font-size:12px;color:var(--text2);margin-top:2px;overflow-wrap:anywhere}
+.pk-packed-notes{font-size:12px;color:var(--text3);margin-top:3px;overflow-wrap:anywhere}
 /* consistent card padding */
 .pk-group{margin-bottom:12px}
 /* clickable affordance for pack/outfit cards */
@@ -458,6 +475,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
   .pk-baggage-limit{white-space:normal}
   .pk-group-header,.row{padding-left:12px;padding-right:12px}
   .pk-check-row{align-items:flex-start}
+  .pk-summary-grid{grid-template-columns:1fr}
   [style*="display:grid"][style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
   [style*="display:grid"][style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
   [style*="display:flex;justify-content:space-between;align-items:center"]{flex-wrap:wrap}
@@ -3464,6 +3482,26 @@ function wardDistinctCategories(items = []) {
   return [...new Set((items || []).map(i => i?.category).filter(Boolean))].sort();
 }
 
+const WARD_CATEGORY_ORDER = ['Dress','Set','Top','Bodysuit','OnePiece','Bottom','Skirt','Shorts','Outer','Bag','Shoes','Hat','Hair','Sunglasses','Accessories'];
+
+function normalizeWardCategory(category) {
+  return (category || '').toString().trim().toLowerCase();
+}
+
+function wardCategorySortValue(category) {
+  const normalized = normalizeWardCategory(category);
+  const idx = WARD_CATEGORY_ORDER.findIndex(c => c.toLowerCase() === normalized);
+  return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
+}
+
+function sortWardCategories(categories = []) {
+  return [...categories].sort((a, b) => {
+    const orderDiff = wardCategorySortValue(a) - wardCategorySortValue(b);
+    if (orderDiff !== 0) return orderDiff;
+    return (a || '').localeCompare(b || '', undefined, {sensitivity:'base'});
+  });
+}
+
 function wardCategoryMatches(item, keywords = []) {
   const src = ((item?.category || '') + ' ' + (item?.tags || '')).toLowerCase();
   return keywords.some(k => src.includes(k));
@@ -4518,6 +4556,43 @@ async function renderPacking() {
     dbFetch(T.INVENTORY, {order:['item_name',true]}),
   ]);
   window._invCache = inventory;
+  const packedQuery = (window._packedSearchQuery || '').trim();
+  const packedItems = inventory.filter(i => (i?.status || '').toString().trim().toLowerCase() === 'packed');
+  const packedCategoryLabels = {};
+  function packedCategoryKey(item) {
+    const raw = (item?.category || 'Uncategorised').toString().trim() || 'Uncategorised';
+    const normalized = normalizeWardCategory(raw) || 'uncategorised';
+    if (!packedCategoryLabels[normalized]) packedCategoryLabels[normalized] = raw;
+    return normalized;
+  }
+  const packedCountsMap = packedItems.reduce((acc, item) => {
+    const key = packedCategoryKey(item);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const packedCategories = sortWardCategories(Object.keys(packedCountsMap).map(key => packedCategoryLabels[key] || key));
+
+  const packedSearchNeedle = packedQuery.toLowerCase();
+  const packedFiltered = packedItems.filter(item => {
+    if (!packedSearchNeedle) return true;
+    const haystack = [
+      item?.item_name,
+      item?.category,
+      item?.colour,
+      item?.silhouette,
+      item?.vibe,
+      item?.tags,
+      item?.notes,
+    ].map(v => (v || '').toString().toLowerCase()).join(' ');
+    return haystack.includes(packedSearchNeedle);
+  });
+  const packedGrouped = packedFiltered.reduce((acc, item) => {
+    const key = packedCategoryKey(item);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+  const packedVisibleCategories = sortWardCategories(Object.keys(packedGrouped).map(key => packedCategoryLabels[key] || key));
 
   // Sort: upcoming trips (start_date >= today) first by nearest date,
   // then past trips (start_date < today) sorted most-recent first,
@@ -4529,6 +4604,49 @@ async function renderPacking() {
     .sort((a,b) => new Date(b.start_date) - new Date(a.start_date));
   const undated = rawPacks.filter(p => !p.start_date);
   const packs = [...upcoming, ...past, ...undated];
+
+  function packedItemRow(item) {
+    const safeName = (item?.item_name || item?.item_id || 'Untitled').replace(/</g,'&lt;');
+    const safeSub = [item?.colour, item?.silhouette, item?.vibe].filter(Boolean).join(' · ').replace(/</g,'&lt;');
+    const safeNotes = (item?.notes || '').replace(/</g,'&lt;');
+    const imageUrl = (item?.image || '').replace(/"/g,'&quot;');
+    return `<div class="pk-packed-row">
+      ${item?.image
+        ? `<img class="pk-packed-thumb" src="${imageUrl}" alt="${safeName}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="pk-packed-thumb-ph" style="display:none">👗</div>`
+        : `<div class="pk-packed-thumb-ph">👗</div>`}
+      <div class="pk-packed-meta">
+        <div class="pk-packed-name">${safeName}</div>
+        ${safeSub ? `<div class="pk-packed-sub">${safeSub}</div>` : ''}
+        ${safeNotes ? `<div class="pk-packed-notes">${safeNotes}</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  const packedSummaryHtml = packedCategories.length
+    ? `<div class="pk-summary-grid">
+        ${packedCategories.map(category => `<div class="pk-summary-chip">
+          <span class="pk-summary-name">${category.replace(/</g,'&lt;')}</span>
+          <span class="pk-summary-val">${packedCountsMap[normalizeWardCategory(category) || 'uncategorised'] || 0}</span>
+        </div>`).join('')}
+      </div>`
+    : `<div class="card"><div class="row"><div class="muted">No packed items yet.</div></div></div>`;
+
+  const packedGroupsHtml = packedVisibleCategories.length
+    ? packedVisibleCategories.map(category => {
+        const rows = [...(packedGrouped[normalizeWardCategory(category) || 'uncategorised'] || [])].sort((a, b) => {
+          const aName = (a?.item_name || a?.item_id || '').toString();
+          const bName = (b?.item_name || b?.item_id || '').toString();
+          return aName.localeCompare(bName, undefined, {sensitivity:'base'});
+        });
+        return `<div class="pk-packed-group">
+          <div class="pk-packed-head">
+            <span class="pk-packed-title">${category.replace(/</g,'&lt;')}</span>
+            <span class="pk-packed-count">${rows.length}</span>
+          </div>
+          ${rows.map(packedItemRow).join('')}
+        </div>`;
+      }).join('')
+    : `<div class="card"><div class="row"><div class="muted">${packedQuery ? 'No packed items match your search.' : 'No packed items to browse yet.'}</div></div></div>`;
 
   function packCard(p) {
     let ids = [];
@@ -4566,8 +4684,26 @@ async function renderPacking() {
     <button class="icon-btn topbar-centered-right" onclick="showAddPackModal()">+</button>
   </div>
   ${wardTabBar('packing')}
+  <div class="sec-label">Packed Category Counts</div>
+  ${packedSummaryHtml}
+  <div class="sec-label">Packed Items</div>
+  <div class="toolbar-card">
+    <div class="toolbar-row">
+      <div class="toolbar-grow search-wrap" style="margin-bottom:0">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input class="search-input" value="${packedQuery.replace(/"/g,'&quot;')}" placeholder="Search packed items…" oninput="filterPackedItems(this.value)"/>
+      </div>
+    </div>
+  </div>
+  ${packedGroupsHtml}
+  <div class="sec-label">Trips</div>
   ${packs.length ? packs.map(packCard).join('') : '<div class="card"><div class="row"><div class="muted">No packs yet — tap + to create one</div></div></div>'}
 </div>`;
+}
+
+function filterPackedItems(query) {
+  window._packedSearchQuery = query || '';
+  renderPacking();
 }
 
 // ── Pack detail page ──
