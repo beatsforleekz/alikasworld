@@ -221,6 +221,10 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px calc(40px + env(safe-area-inset-bottom,0px));width:100%;max-width:480px;max-height:88vh;overflow-y:auto;overflow-x:hidden}
 .modal-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 20px}
 .modal-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;margin-bottom:20px}
+.modal-head{position:relative;padding-right:36px}
+.modal-close{position:absolute;top:-2px;right:0;width:32px;height:32px;border:none;border-radius:999px;background:var(--accent-light);color:var(--text2);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif}
+.modal-actions{display:flex;gap:10px;margin-top:16px}
+.modal-actions .btn{margin-bottom:0}
 .fg{margin-bottom:14px}
 .fg label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin-bottom:5px}
 .fg input,.fg select{width:100%;min-width:0;padding:11px 13px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none}
@@ -446,6 +450,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .pk-selected-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px}
 .pk-selected-grid .picker-item img,.pk-selected-grid .picker-item .picker-ph{aspect-ratio:3/4}
 .pk-selected-grid .picker-label{font-size:9px;padding:3px 2px 4px}
+.pk-item-remove{position:absolute;top:6px;left:6px;width:22px;height:22px;border:none;border-radius:999px;background:rgba(17,17,17,.78);color:#fff;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
 /* consistent card padding */
 .pk-group{margin-bottom:12px}
 /* clickable affordance for pack/outfit cards */
@@ -2782,14 +2787,24 @@ function showModal(title, bodyHTML, onSave) {
   document.querySelector('.overlay')?.remove();
   const el = document.createElement('div');
   el.className = 'overlay';
+  const hasSave = typeof onSave === 'function';
   el.innerHTML = `<div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">${title}</div>
+    <div class="modal-head">
+      <div class="modal-title">${title}</div>
+      <button class="modal-close" type="button" id="modal-close-btn" aria-label="Close">×</button>
+    </div>
     ${bodyHTML}
-    <button class="btn btn-primary mt16" id="modal-save-btn">Save</button>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" id="modal-cancel-btn">${hasSave ? 'Cancel' : 'Close'}</button>
+      ${hasSave ? '<button class="btn btn-primary" type="button" id="modal-save-btn">Save</button>' : ''}
+    </div>
   </div>`;
   document.body.appendChild(el);
   el.addEventListener('click', e=>{ if(e.target===el) el.remove(); });
+  document.getElementById('modal-close-btn')?.addEventListener('click', ()=> el.remove());
+  document.getElementById('modal-cancel-btn')?.addEventListener('click', ()=> el.remove());
+  if (!hasSave) return;
   document.getElementById('modal-save-btn').addEventListener('click', async()=>{
     const page = root();
     const prevScrollTop = page ? page.scrollTop : 0;
@@ -4741,6 +4756,7 @@ function _renderPackDetailUI(pack, inventory) {
                 const key = esc(i.item_id || i.id || '');
                 const pid = esc(packId);
                 return `<div class="picker-item selected" data-action="remove-clothing" data-itemid="${key}" data-packid="${pid}" style="cursor:pointer">
+                  <button class="pk-item-remove" type="button" data-action="remove-clothing" data-itemid="${key}" data-packid="${pid}" aria-label="Remove ${esc(i.item_name||i.item_id||'item')}">×</button>
                   ${i.image ? `<img src="${esc(i.image)}" alt="" loading="lazy" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block" onerror="this.style.display='none'">` : `<div class="picker-ph">👗</div>`}
                   <div class="picker-check">✓</div>
                   <div class="picker-label">${esc(i.item_name||i.item_id||'')}</div>
