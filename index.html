@@ -437,6 +437,15 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .back-btn:hover{opacity:.7}
 .picker-item{transition:border-color var(--transition),transform .12s ease}
 .picker-item:hover{transform:scale(1.02)}
+.pk-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.pk-summary-chip{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pk-summary-name{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-summary-val{font-size:18px;font-weight:600;color:var(--text)}
+.pk-selected-group{margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.pk-selected-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.02)}
+.pk-selected-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px}
+.pk-selected-grid .picker-item img,.pk-selected-grid .picker-item .picker-ph{aspect-ratio:3/4}
+.pk-selected-grid .picker-label{font-size:9px;padding:3px 2px 4px}
 /* consistent card padding */
 .pk-group{margin-bottom:12px}
 /* clickable affordance for pack/outfit cards */
@@ -455,6 +464,8 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
   .risk-grid{grid-template-columns:1fr}
   .item-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pk-summary-grid{grid-template-columns:1fr}
+  .pk-selected-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
   .pk-baggage-limit{white-space:normal}
   .pk-group-header,.row{padding-left:12px;padding-right:12px}
   .pk-check-row{align-items:flex-start}
@@ -478,6 +489,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
   .risk-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .item-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .picker-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .pk-selected-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
   .wd-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 </style>
@@ -3464,6 +3476,26 @@ function wardDistinctCategories(items = []) {
   return [...new Set((items || []).map(i => i?.category).filter(Boolean))].sort();
 }
 
+const WARD_CATEGORY_ORDER = ['Dress','Set','Top','Bodysuit','OnePiece','Bottom','Skirt','Shorts','Outer','Bag','Shoes','Hat','Hair','Sunglasses','Accessories'];
+
+function normalizeWardCategory(category) {
+  return (category || '').toString().trim().toLowerCase();
+}
+
+function wardCategorySortValue(category) {
+  const normalized = normalizeWardCategory(category);
+  const idx = WARD_CATEGORY_ORDER.findIndex(c => c.toLowerCase() === normalized);
+  return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
+}
+
+function sortWardCategories(categories = []) {
+  return [...categories].sort((a, b) => {
+    const orderDiff = wardCategorySortValue(a) - wardCategorySortValue(b);
+    if (orderDiff !== 0) return orderDiff;
+    return (a || '').localeCompare(b || '', undefined, {sensitivity:'base'});
+  });
+}
+
 function wardCategoryMatches(item, keywords = []) {
   const src = ((item?.category || '') + ' ' + (item?.tags || '')).toLowerCase();
   return keywords.some(k => src.includes(k));
@@ -4573,6 +4605,8 @@ async function renderPacking() {
 // ── Pack detail page ──
 async function renderPackDetail(packId) {
   root().innerHTML = '<div class="spinner"></div>';
+  window._pkActiveTab = 'checklist';
+  window._pkPackedSearchQuery = '';
   const [packs, inventory] = await Promise.all([
     dbFetch(T.PACKS, {eq:{id:packId}}),
     dbFetch(T.INVENTORY, {order:['item_name',true]}),
@@ -4590,6 +4624,7 @@ async function renderPackDetail(packId) {
 function _renderPackDetailUI(pack, inventory) {
   const packId = pack.id;
   const state  = getPackState(packId);
+  const packedQuery = (window._pkPackedSearchQuery || '').trim();
 
   const allCheckItems = CHECKLIST_DEF.flatMap(g => g.items);
   const totalCount   = allCheckItems.length;
@@ -4598,6 +4633,40 @@ function _renderPackDetailUI(pack, inventory) {
   let clothingIds = [];
   try { clothingIds = Array.isArray(pack.item_ids) ? pack.item_ids : JSON.parse(pack.item_ids||'[]'); } catch(e){}
   const clothingItems = clothingIds.map(id => inventory.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
+  const selectedCategoryLabels = {};
+  function selectedCategoryKey(item) {
+    const raw = (item?.category || 'Uncategorised').toString().trim() || 'Uncategorised';
+    const normalized = normalizeWardCategory(raw) || 'uncategorised';
+    if (!selectedCategoryLabels[normalized]) selectedCategoryLabels[normalized] = raw;
+    return normalized;
+  }
+  const selectedCountsMap = clothingItems.reduce((acc, item) => {
+    const key = selectedCategoryKey(item);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const selectedCategories = sortWardCategories(Object.keys(selectedCountsMap).map(key => selectedCategoryLabels[key] || key));
+  const packedNeedle = packedQuery.toLowerCase();
+  const selectedFiltered = clothingItems.filter(item => {
+    if (!packedNeedle) return true;
+    const haystack = [
+      item?.item_name,
+      item?.category,
+      item?.colour,
+      item?.silhouette,
+      item?.vibe,
+      item?.tags,
+      item?.notes,
+    ].map(v => (v || '').toString().toLowerCase()).join(' ');
+    return haystack.includes(packedNeedle);
+  });
+  const selectedGrouped = selectedFiltered.reduce((acc, item) => {
+    const key = selectedCategoryKey(item);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+  const selectedVisibleCategories = sortWardCategories(Object.keys(selectedGrouped).map(key => selectedCategoryLabels[key] || key));
 
   // ── Safe HTML escape ──
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -4646,18 +4715,55 @@ function _renderPackDetailUI(pack, inventory) {
 
   // ── Clothing HTML ──
   function buildClothing() {
-    if (!clothingItems.length) return `<div style="padding:24px 16px;text-align:center;font-size:13px;color:var(--text3)">No clothing selected yet.<br>Tap <strong>Edit clothing</strong> to choose from your wardrobe.</div>`;
-    return `<div class="picker-grid" style="max-height:none;padding-bottom:8px">
-      ${clothingItems.map(i => {
-        const key = esc(i.item_id || i.id || '');
-        const pid = esc(packId);
-        return `<div class="picker-item selected" data-action="remove-clothing" data-itemid="${key}" data-packid="${pid}" style="cursor:pointer">
-          ${i.image ? `<img src="${esc(i.image)}" alt="" loading="lazy" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block" onerror="this.style.display='none'">` : `<div class="picker-ph">👗</div>`}
-          <div class="picker-check">✓</div>
-          <div class="picker-label">${esc(i.item_name||i.item_id||'')}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
+    const selectedSummaryHtml = selectedCategories.length
+      ? `<div class="pk-summary-grid">
+          ${selectedCategories.map(category => `<div class="pk-summary-chip">
+            <span class="pk-summary-name">${esc(category)}</span>
+            <span class="pk-summary-val">${selectedCountsMap[normalizeWardCategory(category) || 'uncategorised'] || 0}</span>
+          </div>`).join('')}
+        </div>`
+      : `<div class="card"><div class="row"><div class="muted">No clothing selected yet.</div></div></div>`;
+
+    const selectedGroupsHtml = selectedVisibleCategories.length
+      ? selectedVisibleCategories.map(category => {
+          const rows = [...(selectedGrouped[normalizeWardCategory(category) || 'uncategorised'] || [])].sort((a, b) => {
+            const aName = (a?.item_name || a?.item_id || '').toString();
+            const bName = (b?.item_name || b?.item_id || '').toString();
+            return aName.localeCompare(bName, undefined, {sensitivity:'base'});
+          });
+          return `<div class="pk-selected-group">
+            <div class="pk-selected-head">
+              <span class="pk-group-name">${esc(category)}</span>
+              <span class="pk-group-count">${rows.length}</span>
+            </div>
+            <div class="pk-selected-grid">
+              ${rows.map(i => {
+                const key = esc(i.item_id || i.id || '');
+                const pid = esc(packId);
+                return `<div class="picker-item selected" data-action="remove-clothing" data-itemid="${key}" data-packid="${pid}" style="cursor:pointer">
+                  ${i.image ? `<img src="${esc(i.image)}" alt="" loading="lazy" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block" onerror="this.style.display='none'">` : `<div class="picker-ph">👗</div>`}
+                  <div class="picker-check">✓</div>
+                  <div class="picker-label">${esc(i.item_name||i.item_id||'')}</div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="card"><div class="row"><div class="muted">${packedQuery ? 'No packed items match your search.' : 'No clothing selected yet.'}</div></div></div>`;
+
+    return `
+      <div class="sec-label" style="margin-top:0">Packed Category Counts</div>
+      ${selectedSummaryHtml}
+      <div class="sec-label">Packed Items</div>
+      <div class="toolbar-card" style="margin-top:0">
+        <div class="toolbar-row">
+          <div class="toolbar-grow search-wrap" style="margin-bottom:0">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input class="search-input" value="${esc(packedQuery)}" placeholder="Search packed items…" oninput="pkFilterPackedItems(this.value)"/>
+          </div>
+        </div>
+      </div>
+      ${selectedGroupsHtml}`;
   }
 
   root().innerHTML = `
@@ -4715,6 +4821,9 @@ function _renderPackDetailUI(pack, inventory) {
   </div>
 </div>`;
 
+  const activeTab = window._pkActiveTab || 'checklist';
+  if (activeTab !== 'checklist') pkSwitchTab(activeTab);
+
   // ── Single delegated listener on detail page ──
   document.getElementById('pk-detail-page').addEventListener('click', function(e) {
     const actionEl = e.target.closest('[data-action]');
@@ -4743,12 +4852,22 @@ function _renderPackDetailUI(pack, inventory) {
 }
 
 function pkSwitchTab(tab) {
+  window._pkActiveTab = tab;
   document.getElementById('pk-tab-check').classList.toggle('active', tab === 'checklist');
   document.getElementById('pk-tab-toget').classList.toggle('active', tab === 'toget');
   document.getElementById('pk-tab-clothing').classList.toggle('active', tab === 'clothing');
   document.getElementById('pk-panel-checklist').classList.toggle('hidden', tab !== 'checklist');
   document.getElementById('pk-panel-toget').classList.toggle('hidden', tab !== 'toget');
   document.getElementById('pk-panel-clothing').classList.toggle('hidden', tab !== 'clothing');
+}
+
+function pkFilterPackedItems(query) {
+  window._pkPackedSearchQuery = query || '';
+  const pack = window._pkCurrentPack;
+  const inventory = window._pkCurrentInventory;
+  if (!pack || !inventory) return;
+  _renderPackDetailUI(pack, inventory);
+  pkSwitchTab('clothing');
 }
 
 function pkToggleCheck(item) {
