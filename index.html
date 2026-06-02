@@ -3835,7 +3835,7 @@ async function renderWardrobeHome() {
   window._wsiwSkipSlot   = 0;
   const [items, outfits] = await Promise.all([
     dbFetch(T.INVENTORY, {
-      select: 'item_id,category,colour,item_name,status,vibe,image,style_type,tags,season,silhouette,notes,user_id',
+      select: 'id,item_id,category,colour,item_name,status,vibe,image,style_type,tags,season,silhouette,notes,user_id',
       order: ['item_name', true]
     }),
     dbFetch(T.OUTFITS, {order:['created_at',false]}),
@@ -3941,7 +3941,7 @@ function refreshWardrobeSuggestion() {
 async function renderWardrobeItems(params={}) {
   root().innerHTML = '<div class="spinner"></div>';
   const items = await dbFetch(T.INVENTORY, {
-    select: 'item_id,category,colour,item_name,status,image,set_name,vibe,shoot_level,travel_friendly,season,silhouette,notes,style_type,tags,user_id',
+    select: 'id,item_id,category,colour,item_name,status,image,set_name,vibe,shoot_level,travel_friendly,season,silhouette,notes,style_type,tags,user_id',
     order: ['item_name', true]
   });
 
@@ -4578,9 +4578,14 @@ async function savePackChecklistState(packId) {
     notes:   s.notes,
     qty:     s.qty,
   };
-  try {
-    await getDB().from(T.PACKS).update({ checklist_state: JSON.stringify(payload) }).eq('id', packId);
-  } catch(e) { /* best-effort */ }
+  const { error } = await getDB().from(T.PACKS).update({ checklist_state: payload }).eq('id', packId);
+  if (error) {
+    showToast('Checklist save failed: ' + error.message, 'error');
+    throw error;
+  }
+  if (window._pkCurrentPack && String(window._pkCurrentPack.id) === String(packId)) {
+    window._pkCurrentPack.checklist_state = payload;
+  }
 }
 
 // ── Pack list ──
@@ -4911,14 +4916,14 @@ function pkFilterPackedItems(query) {
   pkSwitchTab('clothing');
 }
 
-function pkToggleCheck(item) {
+async function pkToggleCheck(item) {
   const packId = window._currentPackId;
   const state  = getPackState(packId);
   if (state.toGet.has(item)) return;
   if (state.checked.has(item)) state.checked.delete(item);
   else state.checked.add(item);
   pkRefreshUI();
-  savePackChecklistState(packId);
+  try { await savePackChecklistState(packId); } catch(e) {}
 }
 
 function pkRefreshUI() {
@@ -4953,22 +4958,22 @@ function pkShowItemMenu(e, item) {
   ]);
 }
 
-function pkMoveToGet(item) {
+async function pkMoveToGet(item) {
   const packId = window._currentPackId;
   const state  = getPackState(packId);
   state.toGet.add(item);
   state.checked.delete(item);
   pkRefreshUI();
-  savePackChecklistState(packId);
+  try { await savePackChecklistState(packId); } catch(e) {}
   pkSwitchTab('toget');
 }
 
-function pkMarkGot(item) {
+async function pkMarkGot(item) {
   const packId = window._currentPackId;
   const state  = getPackState(packId);
   state.toGet.delete(item);
   pkRefreshUI();
-  savePackChecklistState(packId);
+  try { await savePackChecklistState(packId); } catch(e) {}
 }
 
 function pkEditMeta(item) {
@@ -4986,7 +4991,7 @@ function pkEditMeta(item) {
     if (qty)  state.qty[item]   = qty;   else delete state.qty[item];
     if (note) state.notes[item] = note;  else delete state.notes[item];
     pkRefreshUI();
-    savePackChecklistState(packId);
+    await savePackChecklistState(packId);
   });
 }
 
@@ -4995,7 +5000,7 @@ function pkResetChecked(packId) {
   const state = getPackState(packId);
   state.checked.clear();
   pkRefreshUI();
-  savePackChecklistState(packId);
+  savePackChecklistState(packId).catch(()=>{});
 }
 
 async function pkRemoveClothing(itemId, packId) {
