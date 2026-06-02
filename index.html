@@ -3989,7 +3989,7 @@ async function renderWardrobeItems(params={}) {
   }
 
   function itemCard(item) {
-    const safeId   = (item.item_id||'').toString().replace(/'/g,"\\'");
+    const safeId   = inventoryItemRef(item).replace(/'/g,"\\'");
     const safeName = (item.item_name||item.item_id||'—').toString().replace(/</g,'&lt;');
     const safeCat  = (item.category||'').toString().replace(/</g,'&lt;');
     const safeCol  = (item.colour||'').toString().replace(/</g,'&lt;');
@@ -4091,6 +4091,7 @@ function ctxItemOutfit(e, itemId) {
     {label:'✏ Edit item',       fn: () => showEditItemModal(itemId)},
     {label:'➕ Add to outfit',   fn: () => addItemToOutfit(itemId)},
     {label:'🎨 Create outfit',   fn: () => createOutfitFromItem(itemId)},
+    {label:'🗑 Delete item', danger:true, fn: () => delItem(itemId)},
   ]);
 }
 
@@ -4167,6 +4168,24 @@ function clearWardFilters() {
   renderWardrobeItems({fSort:(window._wardFilters||{}).fSort || 'item_id'});
 }
 
+function inventoryItemRef(item) {
+  if (!item) return '';
+  if (item.item_id) return `item:${String(item.item_id)}`;
+  if (item.id !== undefined && item.id !== null) return `db:${String(item.id)}`;
+  return '';
+}
+
+async function loadInventoryItemByRef(ref) {
+  if (!ref) return null;
+  if (String(ref).startsWith('db:')) {
+    const r = await dbFetch(T.INVENTORY, {eq:{id:String(ref).slice(3)}});
+    return r[0] || null;
+  }
+  const key = String(ref).startsWith('item:') ? String(ref).slice(5) : String(ref);
+  const r = await dbFetch(T.INVENTORY, {eq:{item_id:key}});
+  return r[0] || null;
+}
+
 function filterWardItems(q) {
   window._wardSearchQuery = q;
   const lq = q.toLowerCase();
@@ -4199,7 +4218,7 @@ async function showEditItemModal(id) { showItemModal(id); }
 
 async function showItemModal(editId) {
   let ex = null;
-  if (editId) { const r = await dbFetch(T.INVENTORY, {eq:{item_id:editId}}); ex=r[0]||null; }
+  if (editId) ex = await loadInventoryItemByRef(editId);
   const title    = editId ? 'Edit Item' : 'Add Item';
   const allItems = await dbFetch(T.INVENTORY, {});
   const cats     = [...new Set(allItems.map(r=>r.category).filter(Boolean))].sort();
@@ -4242,7 +4261,7 @@ async function showItemModal(editId) {
       <label class="tog"><input type="checkbox" id="f-wi-travel" ${ex?.travel_friendly?'checked':''}/><span class="tog-slider"></span></label>
     </div>
     <div class="fg"><label>Notes</label><input id="f-wi-notes" value="${(ex?.notes||'').replace(/"/g,'&quot;')}"/></div>
-    ${editId ? `<button class="btn" style="background:var(--danger-light);color:var(--danger);margin-bottom:4px" onclick="delItem('${editId}')">Delete Item</button>` : ''}
+    ${editId ? `<button class="btn" style="background:var(--danger-light);color:var(--danger);margin-bottom:4px" onclick="delItem('${String(editId).replace(/'/g,"\\'")}')">Delete Item</button>` : ''}
   `, async () => {
     const row = {
       item_id:         v('f-wi-id')        || null,
@@ -4262,7 +4281,10 @@ async function showItemModal(editId) {
       notes:           v('f-wi-notes')     || null,
     };
     if (editId) {
-      const {error} = await getDB().from(T.INVENTORY).update(row).eq('item_id', editId);
+      let q = getDB().from(T.INVENTORY).update(row);
+      if (String(editId).startsWith('db:')) q = q.eq('id', String(editId).slice(3));
+      else q = q.eq('item_id', String(editId).startsWith('item:') ? String(editId).slice(5) : String(editId));
+      const {error} = await q;
       if (error) throw error;
     } else await dbInsert(T.INVENTORY, row);
     const f = window._wardFilters;
@@ -4274,7 +4296,10 @@ async function showItemModal(editId) {
 async function delItem(id) {
   document.querySelector('.overlay')?.remove();
   if (!confirm('Delete this item?')) return;
-  const {error} = await getDB().from(T.INVENTORY).delete().eq('item_id', id);
+  let q = getDB().from(T.INVENTORY).delete();
+  if (String(id).startsWith('db:')) q = q.eq('id', String(id).slice(3));
+  else q = q.eq('item_id', String(id).startsWith('item:') ? String(id).slice(5) : String(id));
+  const {error} = await q;
   if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
   await refreshWardrobeItemsInPlace();
 }
