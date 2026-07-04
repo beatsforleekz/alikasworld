@@ -286,6 +286,17 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .lookbook-row input{flex:1;min-width:0}
 .lookbook-row button{flex-shrink:0}
 .lookbook-note{font-size:12px;color:var(--text3);line-height:1.5}
+.wishlist-card{padding:14px}
+.wishlist-media{
+  width:min(100%, 320px);aspect-ratio:1/1;object-fit:contain;border-radius:14px;background:var(--bg);
+  display:block;margin:0 auto 12px
+}
+.wishlist-media-ph{
+  width:min(100%, 320px);aspect-ratio:1/1;border-radius:14px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:34px;margin:0 auto 12px
+}
+.wishlist-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.wishlist-actions .btn{width:auto;margin-bottom:0;padding:10px 14px}
 .outfit-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px}
 .outfit-detail-thumb,.outfit-detail-ph{
   width:100%;aspect-ratio:3/4;border-radius:10px;background:var(--bg);display:block
@@ -665,6 +676,7 @@ const T = {
   INBOX:              'inbox',
   ACTIONS:            'actions',
   INVENTORY:          'inventory',
+  WISHLIST:           'wardrobe_wishlist',
   OUTFITS:            'outfits',
   PACKS:              'packs',
   IDEAS:              'ideas',
@@ -4015,7 +4027,13 @@ function vibeModeBarHtml(onchange) {
 
 // ── 4-tab header shared across all wardrobe pages ──
 function wardTabBar(active) {
-  const tabs = [{id:'home',label:'Home'},{id:'wardrobe',label:'Items'},{id:'outfits',label:'Outfits'},{id:'packing',label:'Packing'}];
+  const tabs = [
+    {id:'home',label:'Home'},
+    {id:'wardrobe',label:'Items'},
+    {id:'outfits',label:'Outfits'},
+    {id:'packing',label:'Packing'},
+    {id:'wishlist',label:'Wishlist'}
+  ];
   return `<div class="tabs" style="overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none">
     ${tabs.map(t=>`<button class="tab${active===t.id?' active':''}" style="white-space:nowrap" onclick="renderWardrobe({tab:'${t.id}'})">${t.label}</button>`).join('')}
   </div>`;
@@ -4027,6 +4045,7 @@ async function renderWardrobe(params={}) {
   if (tab === 'home')    return renderWardrobeHome();
   if (tab === 'outfits') return renderOutfits();
   if (tab === 'packing') return renderPacking();
+  if (tab === 'wishlist') return renderWishlist();
   return renderWardrobeItems(params);
 }
 
@@ -4791,6 +4810,95 @@ async function showOutfitModal(editId) {
     renderOutfits();
   });
   initTagAutocomplete('f-out-tags', tagOptions);
+}
+
+// ════════════════════════════════════════════════════════════
+// WISHLIST
+// ════════════════════════════════════════════════════════════
+async function renderWishlist() {
+  root().innerHTML = '<div class="spinner"></div>';
+  const items = await dbFetch(T.WISHLIST, {order:['created_at',false]});
+
+  function safeHref(url) {
+    const raw = String(url || '').trim();
+    if (!raw) return '#';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return 'https://' + raw.replace(/^\/+/, '');
+  }
+
+  function wishlistCard(item) {
+    const title = String(item?.title || 'Untitled').replace(/</g,'&lt;');
+    const notes = String(item?.notes || '').replace(/</g,'&lt;');
+    const imgSrc = normalizeDropboxImageUrl(item?.image_url || '');
+    const safeId = String(item?.id || '').replace(/'/g,"\\'");
+    return `<div class="card wishlist-card">
+      ${imgSrc
+        ? `<img class="wishlist-media" src="${imgSrc.replace(/"/g,'&quot;')}" alt="${title}" loading="lazy" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=&quot;wishlist-media-ph&quot;>♡</div>')">`
+        : `<div class="wishlist-media-ph">♡</div>`}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div class="row-title">${title}</div>
+          ${notes ? `<div class="row-sub" style="margin-top:6px">${notes}</div>` : ''}
+        </div>
+      </div>
+      <div class="wishlist-actions">
+        <a class="btn btn-primary" href="${safeHref(item?.product_url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer">Open Link</a>
+        <button class="btn btn-ghost" type="button" onclick="showWishlistModal('${safeId}')">Edit</button>
+        <button class="btn" type="button" style="background:var(--danger-light);color:var(--danger)" onclick="deleteWishlistItem('${safeId}')">Delete</button>
+      </div>
+    </div>`;
+  }
+
+  root().innerHTML = `
+<div class="page">
+  <div class="topbar-centered">
+    <div class="topbar-centered-title">Wishlist</div>
+    <button class="icon-btn topbar-centered-right" onclick="showWishlistModal()">+</button>
+  </div>
+  ${wardTabBar('wishlist')}
+
+  ${items.length
+    ? items.map(wishlistCard).join('')
+    : `<div class="card">
+        <div class="empty-state">
+          <div class="empty-state-icon">♡</div>
+          <div class="empty-state-msg">Your wardrobe wishlist is empty.</div>
+          <div>Save fashion pieces you'd love to own in the future.</div>
+        </div>
+      </div>`}
+</div>`;
+}
+
+async function showWishlistModal(editId) {
+  let ex = null;
+  if (editId) {
+    const rows = await dbFetch(T.WISHLIST, {eq:{id:editId}});
+    ex = rows[0] || null;
+  }
+  showModal(editId ? 'Edit Wishlist Item' : 'Add Wishlist Item', `
+    <div class="fg"><label>Title</label><input id="f-wish-title" value="${(ex?.title||'').replace(/"/g,'&quot;')}" placeholder="e.g. Gold mesh heels" autocomplete="off"/></div>
+    <div class="fg"><label>Product URL</label><input id="f-wish-url" value="${(ex?.product_url||'').replace(/"/g,'&quot;')}" placeholder="https://…" type="text" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"/></div>
+    <div class="fg"><label>Image URL <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input id="f-wish-img" value="${(ex?.image_url||'').replace(/"/g,'&quot;')}" placeholder="https://…" type="text" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"/></div>
+    <div class="fg"><label>Notes <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input id="f-wish-notes" value="${(ex?.notes||'').replace(/"/g,'&quot;')}" placeholder="Why you want it, styling notes, sizing reminder…" autocomplete="off"/></div>
+  `, async () => {
+    const row = {
+      title: v('f-wish-title') || null,
+      product_url: v('f-wish-url') || null,
+      image_url: v('f-wish-img') || null,
+      notes: v('f-wish-notes') || null,
+    };
+    if (!row.title) return alert('Enter a title.');
+    if (!row.product_url) return alert('Enter a product URL.');
+    if (editId) await dbUpdate(T.WISHLIST, editId, row);
+    else        await dbInsert(T.WISHLIST, row);
+    renderWishlist();
+  });
+}
+
+async function deleteWishlistItem(id) {
+  if (!confirm('Delete this wishlist item?')) return;
+  await dbDelete(T.WISHLIST, id);
+  renderWishlist();
 }
 
 function togglePickerItem(el, key) {
