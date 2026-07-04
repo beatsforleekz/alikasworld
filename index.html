@@ -219,6 +219,13 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 /* ── Modal ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 .modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px calc(40px + env(safe-area-inset-bottom,0px));width:100%;max-width:480px;max-height:88vh;overflow-y:auto;overflow-x:hidden}
+.overlay-elevated{align-items:center;padding:18px 14px}
+.overlay-elevated .modal{
+  max-width:min(720px, calc(100vw - 28px));
+  max-height:min(84vh, 920px);
+  border-radius:24px;
+  padding:22px 22px calc(34px + env(safe-area-inset-bottom,0px));
+}
 .modal-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 20px}
 .modal-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;margin-bottom:20px}
 .modal-head{position:relative;padding-right:36px}
@@ -265,6 +272,26 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .thumb-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
 .thumb{width:44px;height:56px;object-fit:cover;border-radius:6px;background:var(--bg)}
 .thumb-placeholder{width:44px;height:56px;border-radius:6px;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:16px;color:var(--text3)}
+.outfit-cover{
+  width:min(100%, 420px);aspect-ratio:1/1;object-fit:contain;border-radius:14px;background:var(--bg);display:block;margin:0 auto
+}
+.outfit-cover-ph{
+  width:min(100%, 420px);aspect-ratio:1/1;border-radius:14px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:34px
+}
+.outfit-hero{
+  width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:16px;background:var(--bg);display:block;margin-bottom:14px
+}
+.lookbook-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lookbook-row input{flex:1;min-width:0}
+.lookbook-row button{flex-shrink:0}
+.lookbook-note{font-size:12px;color:var(--text3);line-height:1.5}
+.outfit-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px}
+.outfit-detail-thumb,.outfit-detail-ph{
+  width:100%;aspect-ratio:3/4;border-radius:10px;background:var(--bg);display:block
+}
+.outfit-detail-thumb{object-fit:cover}
+.outfit-detail-ph{display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px}
 /* item picker grid */
 .picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:320px;overflow-y:auto;padding:4px}
 .picker-item{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color var(--transition),box-shadow var(--transition);position:relative}
@@ -308,6 +335,14 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .wd-action-btn:active{opacity:.8}
 .wd-action-btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
 .wd-action-btn .wd-btn-icon{font-size:18px;display:block;margin-bottom:4px}
+@media (max-width: 640px){
+  .overlay-elevated{align-items:flex-start;padding:24px 12px}
+  .overlay-elevated .modal{
+    margin-top:max(18px, env(safe-area-inset-top, 0px));
+    max-width:100%;
+    max-height:calc(100vh - 36px);
+  }
+}
 /* vibe mode selector */
 .vibe-mode-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .vibe-mode-btn{flex:1;min-width:0;padding:10px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;text-align:center;transition:all .15s;line-height:1.3}
@@ -340,6 +375,18 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .combo-wrap{position:relative}
 .combo-wrap input{width:100%;min-width:0;padding:11px 13px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none}
 .combo-wrap input:focus{border-color:var(--accent)}
+.tag-suggest-wrap{position:relative}
+.tag-suggest-menu{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:24;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 10px 24px rgba(0,0,0,.08);padding:6px;display:flex;flex-direction:column;gap:4px;
+  max-height:220px;overflow:auto
+}
+.tag-suggest-btn{
+  width:100%;text-align:left;padding:9px 10px;border:none;border-radius:8px;
+  background:none;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;cursor:pointer
+}
+.tag-suggest-btn.active,.tag-suggest-btn:hover{background:var(--accent-light)}
 
 /* empty state */
 .empty-state{padding:28px 16px;text-align:center;color:var(--text3);font-size:14px}
@@ -451,6 +498,21 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .pk-selected-grid .picker-item img,.pk-selected-grid .picker-item .picker-ph{aspect-ratio:3/4}
 .pk-selected-grid .picker-label{font-size:9px;padding:3px 2px 4px}
 .pk-item-remove{position:absolute;top:6px;left:6px;width:22px;height:22px;border:none;border-radius:999px;background:rgba(17,17,17,.78);color:#fff;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.pk-outfit-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.pk-outfit-head{display:flex;gap:12px;align-items:flex-start}
+.pk-outfit-thumb,.pk-outfit-thumb-ph{width:64px;height:82px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--bg)}
+.pk-outfit-thumb{object-fit:cover;display:block}
+.pk-outfit-thumb-ph{display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:22px}
+.pk-outfit-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.pk-outfit-sub{font-size:12px;color:var(--text2);overflow-wrap:anywhere}
+.pk-outfit-items{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.pk-outfit-item{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:var(--accent-light);font-size:11px;color:var(--text2)}
+.pk-outfit-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:12px}
+.pk-outfit-check{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:10px;background:var(--accent-light);font-size:11px;color:var(--text)}
+.pk-outfit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pk-outfit-mini{width:30px;height:38px;border-radius:6px;overflow:hidden;object-fit:cover;background:var(--bg);display:block}
+.pk-outfit-mini-ph{width:30px;height:38px;border-radius:6px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px}
+.pk-empty-note{padding:24px 16px;text-align:center;font-size:13px;color:var(--text3)}
 /* consistent card padding */
 .pk-group{margin-bottom:12px}
 /* clickable affordance for pack/outfit cards */
@@ -663,6 +725,13 @@ async function dbDelete(table, id) {
   if (error) throw error;
 }
 
+async function outfitLookbooksSupported() {
+  if (typeof window._outfitLookbooksSupported === 'boolean') return window._outfitLookbooksSupported;
+  const { error } = await getDB().from(T.OUTFITS).select('lookbook_urls').limit(1);
+  window._outfitLookbooksSupported = !(error && /lookbook_urls/i.test(error.message || ''));
+  return window._outfitLookbooksSupported;
+}
+
 // ════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════
@@ -772,6 +841,38 @@ document.addEventListener('keydown', e => {
 // Top-level routes that should be persisted on refresh
 const PERSIST_ROUTES = ['finance','dashboard','inbox','actions','wardrobe','ideas','projects','content','habits'];
 
+function saveViewState(view) {
+  try {
+    localStorage.setItem('alika-view', JSON.stringify(view));
+  } catch (e) {}
+}
+
+function loadViewState() {
+  try {
+    const raw = localStorage.getItem('alika-view');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setActiveNav(route) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const navId = {finance:'nav-finance', dashboard:'nav-dashboard', inbox:'nav-inbox', actions:'nav-actions', wardrobe:'nav-wardrobe', ideas:'nav-ideas', projects:'nav-projects', content:'nav-content', habits:'nav-habits', progress:'nav-dashboard'}[route];
+  const topLevel = ['finance','dashboard','inbox','actions','wardrobe','ideas','projects','content','habits','progress','settings'];
+  if (navId) {
+    const activeBtn = document.getElementById(navId);
+    activeBtn?.classList.add('active');
+    scrollIntoViewIfNeeded(activeBtn);
+  } else if (!topLevel.includes(route)) {
+    const wardrobeScoped = ['wardrobe-pack-detail'];
+    const fallbackId = wardrobeScoped.includes(route) ? 'nav-wardrobe' : 'nav-finance';
+    const activeBtn = document.getElementById(fallbackId);
+    activeBtn?.classList.add('active');
+    scrollIntoViewIfNeeded(activeBtn);
+  }
+}
+
 // Helper: navigate to a project detail page by title
 async function openProjectByTitle(title) {
   if (!title) return;
@@ -786,22 +887,10 @@ async function navigate(route, params = {}) {
   if (PERSIST_ROUTES.includes(route)) {
     localStorage.setItem('alika-route', route);
   }
+  saveViewState({ route, params });
 
   // Update nav
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const navId = {finance:'nav-finance', dashboard:'nav-dashboard', inbox:'nav-inbox', actions:'nav-actions', wardrobe:'nav-wardrobe', ideas:'nav-ideas', projects:'nav-projects', content:'nav-content', habits:'nav-habits', progress:'nav-dashboard'}[route];
-  const topLevel = ['finance','dashboard','inbox','actions','wardrobe','ideas','projects','content','habits','progress','settings'];
-  if (navId) {
-    const activeBtn = document.getElementById(navId);
-    activeBtn?.classList.add('active');
-    scrollIntoViewIfNeeded(activeBtn);
-  }
-  else if (!topLevel.includes(route)) {
-    // sub-page: keep finance active
-    const financeBtn = document.getElementById('nav-finance');
-    financeBtn?.classList.add('active');
-    scrollIntoViewIfNeeded(financeBtn);
-  }
+  setActiveNav(route);
 
   // Destroy any existing chart
   if (window._debtChart) { window._debtChart.destroy(); window._debtChart = null; }
@@ -2882,6 +2971,119 @@ function dlInput(fieldId, listId, currentVal, placeholder='') {
   return `<input id="${fieldId}" list="${listId}" value="${(currentVal||'').replace(/"/g,'&quot;')}" placeholder="${placeholder}" autocomplete="off"/>`;
 }
 
+function collectDistinctTags(rows) {
+  const seen = new Set();
+  return (rows || [])
+    .flatMap(row => parseTags(row?.tags))
+    .filter(tag => {
+      const clean = String(tag || '').trim();
+      if (!clean) return false;
+      const key = clean.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function initTagAutocomplete(inputId, suggestions) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const values = (suggestions || []).filter(Boolean);
+  const wrap = input.parentElement;
+  if (!wrap) return;
+  wrap.classList.add('tag-suggest-wrap');
+  let menu = null;
+  let activeIndex = -1;
+
+  const closeMenu = () => {
+    if (menu) menu.remove();
+    menu = null;
+    activeIndex = -1;
+  };
+
+  const getState = () => {
+    const rawParts = String(input.value || '').split(',');
+    const currentRaw = rawParts[rawParts.length - 1] || '';
+    const chosen = rawParts
+      .slice(0, -1)
+      .map(part => part.trim().toLowerCase())
+      .filter(Boolean);
+    return {
+      currentRaw,
+      current: currentRaw.trim().toLowerCase(),
+      chosen
+    };
+  };
+
+  const getMatches = () => {
+    const { current, chosen } = getState();
+    return values.filter(tag => {
+      const key = tag.toLowerCase();
+      if (chosen.includes(key)) return false;
+      if (!current) return true;
+      return key.includes(current);
+    }).slice(0, 8);
+  };
+
+  const applySuggestion = (tag) => {
+    const rawParts = String(input.value || '').split(',');
+    const before = rawParts
+      .slice(0, -1)
+      .map(part => part.trim())
+      .filter(Boolean);
+    input.value = [...before, tag].join(', ') + ', ';
+    closeMenu();
+    input.focus();
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  const renderMenu = () => {
+    const matches = getMatches();
+    if (!matches.length) {
+      closeMenu();
+      return;
+    }
+    if (!menu) {
+      menu = document.createElement('div');
+      menu.className = 'tag-suggest-menu';
+      wrap.appendChild(menu);
+    }
+    if (activeIndex >= matches.length) activeIndex = 0;
+    menu.innerHTML = matches.map((tag, idx) => `
+      <button class="tag-suggest-btn${idx===activeIndex?' active':''}" type="button" data-tag="${String(tag).replace(/"/g,'&quot;')}">${String(tag).replace(/</g,'&lt;')}</button>
+    `).join('');
+    [...menu.querySelectorAll('.tag-suggest-btn')].forEach(btn => {
+      btn.addEventListener('mousedown', e => {
+        e.preventDefault();
+        applySuggestion(btn.dataset.tag || '');
+      });
+    });
+  };
+
+  input.addEventListener('focus', renderMenu);
+  input.addEventListener('input', renderMenu);
+  input.addEventListener('keydown', e => {
+    const matches = getMatches();
+    if (!matches.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = activeIndex < matches.length - 1 ? activeIndex + 1 : 0;
+      renderMenu();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = activeIndex > 0 ? activeIndex - 1 : matches.length - 1;
+      renderMenu();
+    } else if (e.key === 'Enter' && menu) {
+      e.preventDefault();
+      applySuggestion(matches[activeIndex >= 0 ? activeIndex : 0]);
+    } else if (e.key === 'Escape') {
+      closeMenu();
+    }
+  });
+  input.addEventListener('blur', () => setTimeout(closeMenu, 120));
+}
+
 // Derive a Date this month from a due_day integer
 function dueDateThisMonth(dueDay) {
   if (!dueDay) return null;
@@ -3821,6 +4023,7 @@ function wardTabBar(active) {
 
 async function renderWardrobe(params={}) {
   const tab = params.tab || 'home';
+  saveViewState({ route: 'wardrobe', params: { tab } });
   if (tab === 'home')    return renderWardrobeHome();
   if (tab === 'outfits') return renderOutfits();
   if (tab === 'packing') return renderPacking();
@@ -4005,14 +4208,14 @@ async function renderWardrobeItems(params={}) {
          </div>`
       : `<div class="item-img-placeholder"${isLaundry?' style="opacity:.5"':''}>👗</div>`;
     return `<div class="item-card" data-item-id="${safeId}"${isLaundry?' style="opacity:.75"':''}>
-      <div onclick="showEditItemModal('${safeId}')">
+      <div onclick="showItemDetailModal('${safeId}')">
         ${imgBlock}
       </div>
       <div class="item-info">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">
           <div style="flex:1;min-width:0">
             ${item.status ? `<span class="status-badge ${stCls}" style="font-size:9px;padding:2px 6px;margin-bottom:2px;display:inline-block">${item.status}</span>` : ''}
-            <div class="item-name" onclick="showEditItemModal('${safeId}')" style="cursor:pointer">${safeName}</div>
+            <div class="item-name" onclick="showItemDetailModal('${safeId}')" style="cursor:pointer">${safeName}</div>
             <div class="item-sub">${[safeCat,safeCol].filter(Boolean).join(' · ')}</div>
           </div>
           <button onclick="event.stopPropagation();ctxItemOutfit(event,'${safeId}')" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;margin-top:-2px" title="Outfit options">···</button>
@@ -4104,7 +4307,7 @@ async function addItemToOutfit(itemId) {
   // Show a picker modal listing existing outfits
   const listHtml = outfits.map(o => {
     let ids = []; try { ids = Array.isArray(o.item_ids)?o.item_ids:JSON.parse(o.item_ids||'[]'); } catch(e){}
-    const already = ids.includes(itemId);
+    const already = ids.some(id => String(id) === String(itemId));
     // Use data-attributes to avoid quote conflicts in onclick
     const oId = String(o.id);
     const name = (o.name||'Untitled').replace(/</g,'&lt;');
@@ -4120,9 +4323,17 @@ async function addItemToOutfit(itemId) {
       + addBtn
       + '</div>';
   }).join('');
-  showModal('Add to Outfit', '<div class="card" style="margin-bottom:0">' + listHtml + '</div>', null);
+  const bodyHtml = ''
+    + '<button class="btn btn-primary" type="button" id="create-outfit-from-item-btn" style="margin-bottom:12px">Create New Outfit</button>'
+    + '<div class="card" style="margin-bottom:0">' + listHtml + '</div>';
+  showModal('Add to Outfit', bodyHtml, null);
   // Attach delegated click handler after modal renders
   requestAnimationFrame(() => {
+    document.getElementById('create-outfit-from-item-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelector('.overlay')?.remove();
+      createOutfitFromItem(itemId);
+    });
     document.querySelectorAll('.add-to-outfit-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -4215,6 +4426,44 @@ async function refreshWardrobeItemsInPlace() {
 
 async function showAddItemModal() { showItemModal(null); }
 async function showEditItemModal(id) { showItemModal(id); }
+async function showItemDetailModal(id) {
+  const item = await loadInventoryItemByRef(id);
+  if (!item) {
+    showToast('Item details not found', 'error');
+    return;
+  }
+  const tags = parseTags(item.tags || '');
+  const stCls = wardStatusClass(item.status);
+  const fields = [
+    ['Item ID', item.item_id || '—'],
+    ['Category', item.category || '—'],
+    ['Colour', item.colour || '—'],
+    ['Status', item.status || '—'],
+    ['Style Type', item.style_type || '—'],
+    ['Vibe', item.vibe || '—'],
+    ['Season', item.season || '—'],
+    ['Silhouette', item.silhouette || '—'],
+    ['Set Name', item.set_name || '—'],
+    ['Shoot Level', item.shoot_level || '—'],
+    ['Travel Friendly', item.travel_friendly ? 'Yes' : 'No'],
+  ];
+  showModal((item.item_name || item.item_id || 'Wardrobe Item').replace(/</g,'&lt;'), `
+    <div style="margin-bottom:16px">
+      ${item.image
+        ? `<img src="${String(item.image).replace(/"/g,'&quot;')}" alt="${String(item.item_name || item.item_id || 'Wardrobe item').replace(/"/g,'&quot;')}" loading="lazy" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;background:var(--bg)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="item-img-placeholder" style="display:none;border-radius:14px">👗</div>`
+        : `<div class="item-img-placeholder" style="border-radius:14px">👗</div>`}
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${item.status ? `<span class="status-badge ${stCls}" style="font-size:10px;padding:4px 8px">${String(item.status).replace(/</g,'&lt;')}</span>` : ''}
+      ${tags.length ? tags.map(tag => `<span class="tag-pill" style="font-size:10px;padding:3px 8px;cursor:default">${String(tag).replace(/</g,'&lt;')}</span>`).join('') : ''}
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      ${fields.map(([label, value]) => `<div class="row"><div class="row-left"><div class="row-tag">${label}</div><div class="row-title">${String(value).replace(/</g,'&lt;')}</div></div></div>`).join('')}
+    </div>
+    ${item.notes ? `<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row-tag" style="margin-bottom:6px">Notes</div><div class="row-sub" style="margin-top:0;font-size:14px;color:var(--text)">${String(item.notes).replace(/</g,'&lt;')}</div></div>` : ''}
+    <button class="btn btn-primary" type="button" onclick="document.querySelector('.overlay')?.remove();showEditItemModal('${String(id).replace(/'/g,"\\'")}')">Edit Item</button>
+  `, null);
+}
 
 async function showItemModal(editId) {
   let ex = null;
@@ -4227,6 +4476,7 @@ async function showItemModal(editId) {
   const silos    = [...new Set(allItems.map(r=>r.silhouette).filter(Boolean))].sort();
   const shoots   = [...new Set(allItems.map(r=>r.shoot_level).filter(Boolean))].sort();
   const setNames = [...new Set(allItems.map(r=>r.set_name).filter(Boolean))].sort();
+  const tagOptions = collectDistinctTags(allItems);
 
   const currentStatus    = ex?.status    || 'Available';
   const currentStyleType = ex?.style_type || '';
@@ -4249,7 +4499,7 @@ async function showItemModal(editId) {
       <option value="">— select —</option>
       ${WARD_STYLE_TYPES.map(s=>`<option value="${s}" ${currentStyleType===s?'selected':''}>${s}</option>`).join('')}
     </select></div>
-    <div class="fg"><label>Tags <span style="font-weight:400;color:var(--text3)">(comma-separated)</span></label><input id="f-wi-tags" value="${(ex?.tags||'').replace(/"/g,'&quot;')}" placeholder="e.g. summer, beach, casual"/></div>
+    <div class="fg"><label>Tags <span style="font-weight:400;color:var(--text3)">(comma-separated)</span></label><input id="f-wi-tags" value="${(ex?.tags||'').replace(/"/g,'&quot;')}" placeholder="e.g. summer, beach, casual" autocomplete="off"/></div>
     <div class="fg"><label>Image URL</label><input id="f-wi-img" value="${(ex?.image||'').replace(/"/g,'&quot;')}" placeholder="https://…" type="text" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"/></div>
     <div class="fg"><label>Vibe</label>${dlInput('f-wi-vibe','dl-wi-vibe',ex?.vibe||'','e.g. Core Everyday, Artist / Visible')}</div>
     <div class="fg"><label>Shoot Level</label>${dlInput('f-wi-shoot','dl-wi-shoot',ex?.shoot_level||'')}</div>
@@ -4291,6 +4541,7 @@ async function showItemModal(editId) {
     if (f) await refreshWardrobeItemsInPlace();
     else   renderWardrobeHome();
   });
+  initTagAutocomplete('f-wi-tags', tagOptions);
 }
 
 async function delItem(id) {
@@ -4338,28 +4589,30 @@ async function renderOutfits() {
   function outfitCard(o) {
     let ids = [];
     try { ids = Array.isArray(o.item_ids) ? o.item_ids : JSON.parse(o.item_ids||'[]'); } catch(e){}
-    const items = ids.map(id => inventory.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
+    const items = ids.map(id => inventoryFindByRef(inventory, id)).filter(Boolean);
+    const heroLookbook = outfitHeroLookbookUrl(o);
     const thumbs = items.slice(0,6).map(i => i.image
       ? `<img class="thumb" src="${i.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" style="width:52px;height:66px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`
       : `<div class="thumb-placeholder" style="width:52px;height:66px">👗</div>`
     ).join('');
     const oTags = parseTags(o.tags);
     const safeId = String(o.id).replace(/"/g,'&quot;');
-    return `<div class="card" style="padding:16px;margin-bottom:10px;cursor:pointer" onclick="showEditOutfitModal('${safeId}')">
+    return `<div class="card" style="padding:16px;margin-bottom:10px;cursor:pointer" onclick="showOutfitDetailModal('${safeId}')">
+      ${heroLookbook ? `<img class="outfit-cover" src="${heroLookbook.replace(/"/g,'&quot;')}" alt="" loading="lazy" style="margin-bottom:12px" onerror="this.style.display='none'">` : ''}
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1;min-width:0">
           <div class="row-title">${(o.name||'Untitled').replace(/</g,'&lt;')}</div>
           <div class="row-sub" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px">
             <span>${items.length} item${items.length!==1?'s':''}</span>
             ${o.occasion ? `<span class="status-badge" style="background:var(--teal-light);color:var(--teal);font-size:9px;padding:2px 6px">${o.occasion.replace(/</g,'&lt;')}</span>` : ''}
+            ${heroLookbook ? `<span class="status-badge" style="background:var(--accent-light);color:var(--text);font-size:9px;padding:2px 6px">Lookbook</span>` : `<span class="row-sub" style="font-size:11px;color:var(--text3)">No lookbook added yet</span>`}
           </div>
-          ${o.project ? `<div class="row-sub" style="margin-top:3px;cursor:pointer;color:var(--accent)" onclick="event.stopPropagation();openProjectByTitle('${o.project.replace(/'/g,"\\'")}')">📁 ${o.project.replace(/</g,'&lt;')}</div>` : ''}
           ${o.notes ? `<div class="row-sub" style="margin-top:2px">${o.notes.replace(/</g,'&lt;')}</div>` : ''}
           ${oTags.length ? `<div class="tag-bar" style="margin-top:4px" onclick="event.stopPropagation()">${oTags.map(t=>`<button class="tag-pill" style="font-size:10px;padding:2px 6px" onclick="window._outfitFilterTag='${t.replace(/'/g,"\\'")}';renderOutfits()">${t.replace(/</g,'&lt;')}</button>`).join('')}</div>` : ''}
         </div>
         <button class="menu-btn" onclick="event.stopPropagation();ctxOutfit(event,'${safeId}')">···</button>
       </div>
-      ${thumbs ? `<div class="thumb-row" style="margin-top:10px;gap:6px;flex-wrap:wrap">${thumbs}</div>` : ''}
+      ${!heroLookbook && thumbs ? `<div class="thumb-row" style="margin-top:10px;gap:6px;flex-wrap:wrap">${thumbs}</div>` : ''}
     </div>`;
   }
 
@@ -4406,11 +4659,49 @@ function ctxOutfit(e, id) {
 
 async function showAddOutfitModal()     { showOutfitModal(null); }
 async function showEditOutfitModal(id)  { showOutfitModal(id); }
+async function showOutfitDetailModal(id) {
+  const [rows, inventory] = await Promise.all([
+    dbFetch(T.OUTFITS, {eq:{id:id}}),
+    dbFetch(T.INVENTORY, {order:['item_name',true]}),
+  ]);
+  const outfit = rows[0];
+  if (!outfit) {
+    showToast('Outfit not found', 'error');
+    return;
+  }
+  let ids = [];
+  try { ids = Array.isArray(outfit.item_ids) ? outfit.item_ids : JSON.parse(outfit.item_ids||'[]'); } catch(e){}
+  const items = ids.map(itemId => inventoryFindByRef(inventory, itemId)).filter(Boolean);
+  const tags = parseTags(outfit.tags || '');
+  const lookbooks = outfitLookbookUrls(outfit);
+  const rawHeroLookbook = lookbooks[0] || outfit?.primary_lookbook_url || outfit?.hero_lookbook_url || '';
+  const heroLookbook = outfitHeroLookbookUrl(outfit);
+  showModal((outfit.name || 'Outfit').replace(/</g,'&lt;'), `
+    ${heroLookbook ? `<a href="${String(rawHeroLookbook || heroLookbook).replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none" title="Open lookbook image"><img class="outfit-hero" src="${heroLookbook.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.style.display='none'"></a>` : ''}
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${outfit.occasion ? `<span class="status-badge" style="background:var(--teal-light);color:var(--teal);font-size:10px;padding:4px 8px">${String(outfit.occasion).replace(/</g,'&lt;')}</span>` : ''}
+      ${heroLookbook ? `<span class="status-badge" style="background:var(--accent-light);color:var(--text);font-size:10px;padding:4px 8px">Lookbook</span>` : ''}
+      ${tags.length ? tags.map(tag => `<span class="tag-pill" style="font-size:10px;padding:3px 8px;cursor:default">${String(tag).replace(/</g,'&lt;')}</span>`).join('') : ''}
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="row"><div class="row-left"><div class="row-tag">Items</div><div class="row-title">${items.length}</div></div></div>
+      <div class="row"><div class="row-left"><div class="row-tag">Lookbook</div><div class="row-sub" style="margin-top:0;font-size:14px;color:var(--text)">${lookbooks.length ? `${lookbooks.length} image${lookbooks.length!==1?'s':''} added` : 'No lookbook added yet'}</div></div></div>
+      ${outfit.notes ? `<div class="row"><div class="row-left"><div class="row-tag">Notes</div><div class="row-sub" style="margin-top:0;font-size:14px;color:var(--text)">${String(outfit.notes).replace(/</g,'&lt;')}</div></div></div>` : ''}
+    </div>
+    ${items.length ? `<div class="card" style="padding:16px 16px 14px;margin-bottom:12px"><div class="row-tag" style="margin-bottom:10px">Linked Wardrobe Items</div>${!heroLookbook ? `<div class="outfit-detail-grid">${items.map(i => `<button type="button" onclick="document.querySelector('.overlay')?.remove();showItemDetailModal('${inventoryItemRef(i).replace(/'/g,"\\'")}')" style="border:none;background:none;padding:0;cursor:pointer">${i.image ? `<img class="outfit-detail-thumb" src="${String(i.image).replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.style.display='none'">` : `<div class="outfit-detail-ph">👗</div>`}</button>`).join('')}</div>` : ''}<div style="display:flex;gap:6px;flex-wrap:wrap;${heroLookbook?'margin-top:0':'margin-top:12px'}">${items.map(i => `<button type="button" class="pk-outfit-item" onclick="document.querySelector('.overlay')?.remove();showItemDetailModal('${inventoryItemRef(i).replace(/'/g,"\\'")}')" style="border:none;cursor:pointer;font-family:inherit">${String(i.item_name||i.item_id||'Item').replace(/</g,'&lt;')}</button>`).join('')}</div></div>` : '<div class="card"><div class="row"><div class="muted">No wardrobe items linked yet.</div></div></div>'}
+    <button class="btn btn-primary" type="button" onclick="document.querySelector('.overlay')?.remove();showEditOutfitModal('${String(id).replace(/'/g,"\\'")}')">Edit Outfit</button>
+  `, null);
+  document.querySelector('.overlay')?.classList.add('overlay-elevated');
+}
 
 async function showOutfitModal(editId) {
   let ex = null;
   if (editId) { const r = await dbFetch(T.OUTFITS, {eq:{id:editId}}); ex=r[0]||null; }
   let inventory = window._invCache || await dbFetch(T.INVENTORY, {order:['item_name',true]});
+  const allOutfits = await dbFetch(T.OUTFITS, {order:['created_at',false]});
+  const lookbooksSupported = await outfitLookbooksSupported();
+  const tagOptions = collectDistinctTags(allOutfits);
+  const lookbookUrls = outfitLookbookUrls(ex);
   let selIds = [];
   if (ex?.item_ids) { try { selIds = Array.isArray(ex.item_ids) ? ex.item_ids : JSON.parse(ex.item_ids); } catch(e){} }
   // honour preselectItemId from createOutfitFromItem
@@ -4421,7 +4712,7 @@ async function showOutfitModal(editId) {
 
   // Apply vibe mode filter to picker if active
   const vibeMode = window._vibeMode || '';
-  const selectedInFull = selIds.map(id => inventory.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
+  const selectedInFull = selIds.map(id => inventoryFindByRef(inventory, id)).filter(Boolean);
   let pickerItems = inventory;
   if (vibeMode) {
     const vibeFiltered = inventory.filter(i => (i.vibe||'').toLowerCase().includes(vibeMode.toLowerCase()));
@@ -4430,10 +4721,6 @@ async function showOutfitModal(editId) {
   }
 
   const currentOccasion = ex?.occasion || '';
-  const currentProject  = ex?.project  || '';
-  const allProjects     = await dbFetch(T.PROJECTS, {});
-  const projTitles      = allProjects.map(r => r.title).filter(Boolean);
-
   function pickerGrid(inv) {
     // Sort: selected first, then best styling fit, then vibe-match, then rest
     const vm = vibeMode.toLowerCase();
@@ -4466,12 +4753,16 @@ async function showOutfitModal(editId) {
 
   showModal(editId?'Edit Outfit':'Create Outfit', `
     ${datalist('dl-out-occasion', OUTFIT_OCCASIONS)}
-    ${datalist('dl-out-project', projTitles)}
     <div class="fg"><label>Name</label><input id="f-out-name" value="${(ex?.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Event look"/></div>
     <div class="fg"><label>Occasion</label>${dlInput('f-out-occasion','dl-out-occasion', currentOccasion, 'e.g. Casual, Event, Work…')}</div>
-    <div class="fg"><label>Project <span style="font-weight:400;color:var(--text3)">(optional)</span></label>${dlInput('f-out-project','dl-out-project', currentProject, 'Link to a project…')}</div>
-    <div class="fg"><label>Tags <span style="font-weight:400;color:var(--text3)">(comma-separated)</span></label><input id="f-out-tags" value="${(ex?.tags||'').replace(/"/g,'&quot;')}" placeholder="e.g. summer, casual, date"/></div>
+    <div class="fg"><label>Tags <span style="font-weight:400;color:var(--text3)">(comma-separated)</span></label><input id="f-out-tags" value="${(ex?.tags||'').replace(/"/g,'&quot;')}" placeholder="e.g. summer, casual, date" autocomplete="off"/></div>
     <div class="fg"><label>Notes</label><input id="f-out-notes" value="${(ex?.notes||'').replace(/"/g,'&quot;')}"/></div>
+    <div class="card" style="padding:14px 16px;margin-bottom:14px">
+      <div class="row-tag" style="margin-bottom:10px">Lookbook</div>
+      <div id="out-lookbook-rows">${renderLookbookEditorRows(lookbookUrls.length ? lookbookUrls : [''])}</div>
+      <button class="btn btn-ghost" type="button" style="margin-bottom:10px" onclick="addLookbookInputRow('out-lookbook-rows')">Add Link</button>
+      <div class="lookbook-note">Paste one or more Dropbox image links. The first link becomes the main outfit hero image.${lookbooksSupported ? '' : ' Run the Supabase SQL first to save these links.'}</div>
+    </div>
     <div class="fg"><label>Select Items${vibeMode ? ` <span style="font-size:11px;color:var(--accent);font-weight:400">· showing ${vibeMode.replace(/</g,'&lt;')} vibe</span>` : ''}</label>
       <input id="outfit-picker-search" type="search" placeholder="Search items…" autocomplete="off"
         style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;outline:none;margin-bottom:8px"
@@ -4482,18 +4773,24 @@ async function showOutfitModal(editId) {
     const name = v('f-out-name');
     if (!name) return alert('Enter a name.');
     const picked = [...document.querySelectorAll('#outfit-picker .picker-item.selected')].map(el=>el.dataset.key);
+    const lookbooks = collectLookbookInputValues('out-lookbook-rows');
+    if (lookbooks.length && !lookbooksSupported) {
+      alert('Run the Supabase lookbook SQL first, then save again.');
+      return;
+    }
     const row = {
       name,
       item_ids: JSON.stringify(picked),
       occasion: v('f-out-occasion') || null,
-      project:  v('f-out-project')  || null,
       tags:     v('f-out-tags')     || null,
       notes:    v('f-out-notes')    || null,
     };
+    if (lookbooksSupported) row.lookbook_urls = JSON.stringify(lookbooks);
     if (editId) await dbUpdate(T.OUTFITS, editId, row);
     else        await dbInsert(T.OUTFITS, row);
     renderOutfits();
   });
+  initTagAutocomplete('f-out-tags', tagOptions);
 }
 
 function togglePickerItem(el, key) {
@@ -4542,9 +4839,17 @@ window._packCheckState = window._packCheckState || {};
 
 function getPackState(packId) {
   if (!window._packCheckState[packId]) {
-    window._packCheckState[packId] = { checked: new Set(), toGet: new Set(), notes: {}, qty: {} };
+    window._packCheckState[packId] = { checked: new Set(), toGet: new Set(), notes: {}, qty: {}, outfit_ids: [] };
   }
   return window._packCheckState[packId];
+}
+
+function packStateOutfitIds(packId) {
+  return Array.isArray(getPackState(packId).outfit_ids) ? getPackState(packId).outfit_ids : [];
+}
+
+function setPackStateOutfitIds(packId, outfitIds) {
+  getPackState(packId).outfit_ids = [...new Set((outfitIds || []).filter(Boolean).map(String))];
 }
 
 // ── Load/save checklist state to Supabase packs row (checklist_state JSON column) ──
@@ -4561,12 +4866,13 @@ async function loadPackChecklistState(pack) {
         toGet:   new Set(stored.toGet   || []),
         notes:   stored.notes || {},
         qty:     stored.qty   || {},
+        outfit_ids: Array.isArray(stored.outfit_ids) ? stored.outfit_ids.map(String) : [],
       };
     } else {
-      window._packCheckState[packId] = { checked: new Set(), toGet: new Set(), notes: {}, qty: {} };
+      window._packCheckState[packId] = { checked: new Set(), toGet: new Set(), notes: {}, qty: {}, outfit_ids: [] };
     }
   } catch(e) {
-    window._packCheckState[packId] = { checked: new Set(), toGet: new Set(), notes: {}, qty: {} };
+    window._packCheckState[packId] = { checked: new Set(), toGet: new Set(), notes: {}, qty: {}, outfit_ids: [] };
   }
 }
 
@@ -4577,6 +4883,7 @@ async function savePackChecklistState(packId) {
     toGet:   [...s.toGet],
     notes:   s.notes,
     qty:     s.qty,
+    outfit_ids: Array.isArray(s.outfit_ids) ? s.outfit_ids.map(String) : [],
   };
   const { error } = await getDB().from(T.PACKS).update({ checklist_state: payload }).eq('id', packId);
   if (error) {
@@ -4588,11 +4895,182 @@ async function savePackChecklistState(packId) {
   }
 }
 
+function parseStoredIdList(raw) {
+  try {
+    if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String).filter(Boolean) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function parseStoredStringList(raw) {
+  try {
+    if (Array.isArray(raw)) return raw.map(v => String(v || '').trim()).filter(Boolean);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(v => String(v || '').trim()).filter(Boolean) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function outfitLookbookUrls(outfit) {
+  return parseStoredStringList(outfit?.lookbook_urls);
+}
+
+// Keep the original Dropbox share URL stored, but convert to a direct image URL for display.
+function normalizeDropboxImageUrl(url) {
+  const raw = String(url || '').trim();
+  if (!raw) return '';
+  try {
+    const parsed = new URL(raw);
+    if (/dropbox\.com$/i.test(parsed.hostname)) {
+      parsed.searchParams.delete('dl');
+      parsed.searchParams.set('raw', '1');
+      return parsed.toString();
+    }
+    return raw;
+  } catch (e) {
+    return raw
+      .replace(/[?&]dl=\d/g, '')
+      .replace(/[?&]raw=\d/g, '')
+      .replace(/[?&]$/, '')
+      + (raw.includes('?') ? '&raw=1' : '?raw=1');
+  }
+}
+
+function outfitHeroLookbookUrl(outfit) {
+  const first = outfitLookbookUrls(outfit)[0] || outfit?.primary_lookbook_url || outfit?.hero_lookbook_url || '';
+  return normalizeDropboxImageUrl(first);
+}
+
+function renderLookbookEditorRows(urls = ['']) {
+  const safeUrls = (urls.length ? urls : ['']).map(url => String(url || ''));
+  return safeUrls.map(url => `
+    <div class="lookbook-row">
+      <input class="lookbook-url-input" type="text" value="${url.replace(/"/g,'&quot;')}" placeholder="Paste Dropbox image link" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"/>
+      <button class="btn btn-ghost" type="button" style="width:auto;margin:0;padding:11px 12px" onclick="removeLookbookInputRow(this)">Remove</button>
+    </div>
+  `).join('');
+}
+
+function ensureLookbookRows(container) {
+  if (!container) return;
+  if (!container.querySelector('.lookbook-row')) {
+    container.innerHTML = renderLookbookEditorRows(['']);
+  }
+}
+
+function addLookbookInputRow(containerId, value = '') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.insertAdjacentHTML('beforeend', renderLookbookEditorRows([value]));
+}
+
+function removeLookbookInputRow(btn) {
+  btn?.closest('.lookbook-row')?.remove();
+  ensureLookbookRows(document.getElementById('out-lookbook-rows'));
+}
+
+function collectLookbookInputValues(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  return [...container.querySelectorAll('.lookbook-url-input')]
+    .map(input => String(input.value || '').trim())
+    .filter(Boolean);
+}
+
+function inventoryItemMatchesRef(item, ref) {
+  const value = String(ref || '');
+  if (!value) return false;
+  if (value.startsWith('item:')) return String(item?.item_id || '') === value.slice(5);
+  if (value.startsWith('db:')) return String(item?.id || '') === value.slice(3);
+  return String(item?.item_id || '') === value || String(item?.id || '') === value;
+}
+
+function inventoryFindByRef(inventory, ref) {
+  return (inventory || []).find(item => inventoryItemMatchesRef(item, ref)) || null;
+}
+
+function packOutfitIdsFromPack(pack) {
+  try {
+    const state = pack?.checklist_state
+      ? (typeof pack.checklist_state === 'string' ? JSON.parse(pack.checklist_state) : pack.checklist_state)
+      : null;
+    return Array.isArray(state?.outfit_ids) ? state.outfit_ids.map(String) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function packOutfitThumb(outfit, inventory) {
+  const hero = outfitHeroLookbookUrl(outfit);
+  if (hero) return hero;
+  const ids = parseStoredIdList(outfit?.item_ids);
+  const item = ids.map(id => inventoryFindByRef(inventory, id)).find(Boolean);
+  return item?.image || '';
+}
+
+function packOutfitItems(outfit, inventory) {
+  const ids = parseStoredIdList(outfit?.item_ids);
+  return ids.map(id => inventoryFindByRef(inventory, id)).filter(Boolean);
+}
+
+function packCategoryBucket(item) {
+  const category = normalizeWardCategory(item?.category || '');
+  if (category === 'top') return 'top';
+  if (category === 'bottom' || category === 'skirt' || category === 'shorts') return 'bottom';
+  if (category === 'dress' || category === 'onepiece' || category === 'set') return 'dressset';
+  if (category === 'outer') return 'outer';
+  if (category === 'bag') return 'bag';
+  if (category === 'shoes') return 'shoes';
+  if (category === 'hat' || category === 'sunglasses') return 'hatglasses';
+  if (category === 'hair') return 'hair';
+  if (category === 'accessories') return 'accessories';
+
+  const src = `${item?.category || ''} ${item?.tags || ''} ${item?.item_name || ''}`.toLowerCase();
+  if (/(dress|onepiece|one piece|jumpsuit|playsuit|set|co-ord|coord)/.test(src)) return 'dressset';
+  if (/(outer|outerwear|jacket|coat|blazer|cardigan|hoodie)/.test(src)) return 'outer';
+  if (/(top|shirt|blouse|tee|tank|vest|camisole|bodysuit|\bcrop\b)/.test(src)) return 'top';
+  if (/(bottom|trouser|pant|jean|legging|skirt|short)/.test(src)) return 'bottom';
+  if (/(shoe|boot|trainer|heel|sandal|sneaker|flat|mule)/.test(src)) return 'shoes';
+  if (/\bbag\b|purse|clutch/.test(src)) return 'bag';
+  if (/hair|wig|scrunch|clip/.test(src)) return 'hair';
+  if (/sunglass|hat/.test(src)) return 'hatglasses';
+  if (/earring|necklace|bracelet|ring|belt|scarf|accessor/.test(src)) return 'accessories';
+  return '';
+}
+
+const PACK_OUTFIT_BUCKETS = [
+  { key: 'top', label: 'Top' },
+  { key: 'bottom', label: 'Bottom / Shorts / Skirt' },
+  { key: 'dressset', label: 'Dress / OnePiece / Set' },
+  { key: 'outer', label: 'Outerwear' },
+  { key: 'shoes', label: 'Shoes' },
+  { key: 'bag', label: 'Bag' },
+  { key: 'accessories', label: 'Accessories' },
+  { key: 'hair', label: 'Hair' },
+  { key: 'hatglasses', label: 'Sunglasses / Hat' },
+];
+
+function packOutfitCoverage(outfitItems, packedIds) {
+  return PACK_OUTFIT_BUCKETS.map(bucket => {
+    const matches = outfitItems.filter(item => packCategoryBucket(item) === bucket.key);
+    const included = matches.length > 0;
+    const packed = included && matches.some(item => packedIds.has(inventoryItemRef(item)) || packedIds.has(String(item.item_id || item.id)));
+    return { ...bucket, included, packed };
+  }).filter(row => row.included);
+}
+
 // ── Pack list ──
 async function renderPacking() {
-  const [rawPacks, inventory] = await Promise.all([
+  const [rawPacks, inventory, outfits] = await Promise.all([
     dbFetch(T.PACKS, {order:['created_at',false]}),
     dbFetch(T.INVENTORY, {order:['item_name',true]}),
+    dbFetch(T.OUTFITS, {order:['created_at',false]}),
   ]);
   window._invCache = inventory;
 
@@ -4610,11 +5088,19 @@ async function renderPacking() {
   function packCard(p) {
     let ids = [];
     try { ids = Array.isArray(p.item_ids) ? p.item_ids : JSON.parse(p.item_ids||'[]'); } catch(e){}
-    const items = ids.map(id => inventory.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
+    const items = ids.map(id => inventoryFindByRef(inventory, id)).filter(Boolean);
+    const attachedOutfitIds = packOutfitIdsFromPack(p);
+    const attachedOutfits = attachedOutfitIds.map(id => outfits.find(o => String(o.id) === String(id))).filter(Boolean);
     const thumbs = items.slice(0,4).map(i => i.image
       ? `<img class="thumb" src="${i.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.style.background='var(--bg)'">`
       : `<div class="thumb-placeholder">👗</div>`
     ).join('');
+    const outfitThumbs = attachedOutfits.slice(0,4).map(o => {
+      const thumb = packOutfitThumb(o, inventory);
+      return thumb
+        ? `<img class="pk-outfit-mini" src="${thumb.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.style.display='none'">`
+        : `<div class="pk-outfit-mini-ph">👗</div>`;
+    }).join('');
     const dates = [p.start_date,p.end_date].filter(Boolean).map(d=>fmtDate(d)).join(' → ');
     const bagBadge = p.baggage_limit ? `<span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:99px">${p.baggage_limit}kg</span>` : '';
     const pid = String(p.id).replace(/"/g,'&quot;');
@@ -4627,11 +5113,12 @@ async function renderPacking() {
           </div>
           ${dates ? `<div class="row-sub">${dates}</div>` : ''}
           ${p.project ? `<div class="row-sub" style="color:var(--accent);font-weight:500">📁 ${p.project.replace(/</g,'&lt;')}</div>` : ''}
-          <div class="row-sub">${items.length} clothing item${items.length!==1?'s':''}</div>
+          <div class="row-sub">${items.length} clothing item${items.length!==1?'s':''} · ${attachedOutfits.length} outfit${attachedOutfits.length!==1?'s':''}</div>
         </div>
         <button class="menu-btn" style="pointer-events:all" onclick="event.stopPropagation();ctxPack(event,'${pid}')">···</button>
       </div>
       ${thumbs ? `<div class="thumb-row" style="pointer-events:none">${thumbs}</div>` : ''}
+      ${outfitThumbs ? `<div class="thumb-row" style="pointer-events:none;margin-top:8px">${outfitThumbs}</div>` : ''}
       <div style="margin-top:10px;font-size:12px;color:var(--accent);font-weight:500;pointer-events:none">Click to pack →</div>
     </div>`;
   }
@@ -4652,9 +5139,12 @@ async function renderPackDetail(packId) {
   root().innerHTML = '<div class="spinner"></div>';
   window._pkActiveTab = 'checklist';
   window._pkPackedSearchQuery = '';
-  const [packs, inventory] = await Promise.all([
+  saveViewState({ route: 'wardrobe-pack-detail', params: { packId, tab: window._pkActiveTab || 'checklist' } });
+  setActiveNav('wardrobe-pack-detail');
+  const [packs, inventory, outfits] = await Promise.all([
     dbFetch(T.PACKS, {eq:{id:packId}}),
     dbFetch(T.INVENTORY, {order:['item_name',true]}),
+    dbFetch(T.OUTFITS, {order:['created_at',false]}),
   ]);
   const pack = packs[0];
   if (!pack) { renderPacking(); return; }
@@ -4663,10 +5153,10 @@ async function renderPackDetail(packId) {
   await loadPackChecklistState(pack);
 
   window._currentPackId = packId;
-  _renderPackDetailUI(pack, inventory);
+  _renderPackDetailUI(pack, inventory, outfits);
 }
 
-function _renderPackDetailUI(pack, inventory) {
+function _renderPackDetailUI(pack, inventory, outfits = window._pkCurrentOutfits || []) {
   const packId = pack.id;
   const state  = getPackState(packId);
   const packedQuery = (window._pkPackedSearchQuery || '').trim();
@@ -4677,7 +5167,10 @@ function _renderPackDetailUI(pack, inventory) {
 
   let clothingIds = [];
   try { clothingIds = Array.isArray(pack.item_ids) ? pack.item_ids : JSON.parse(pack.item_ids||'[]'); } catch(e){}
-  const clothingItems = clothingIds.map(id => inventory.find(i=>i.item_id===id||i.id===id)).filter(Boolean);
+  const clothingItems = clothingIds.map(id => inventoryFindByRef(inventory, id)).filter(Boolean);
+  const packedItemIdSet = new Set(clothingItems.flatMap(i => [inventoryItemRef(i), String(i.item_id || i.id)]).filter(Boolean));
+  const attachedOutfitIds = packStateOutfitIds(packId);
+  const attachedOutfits = attachedOutfitIds.map(id => outfits.find(o => String(o.id) === String(id))).filter(Boolean);
   const selectedCategoryLabels = {};
   function selectedCategoryKey(item) {
     const raw = (item?.category || 'Uncategorised').toString().trim() || 'Uncategorised';
@@ -4807,9 +5300,52 @@ function _renderPackDetailUI(pack, inventory) {
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input class="search-input" value="${esc(packedQuery)}" placeholder="Search packed items…" oninput="pkFilterPackedItems(this.value)"/>
           </div>
-        </div>
+      </div>
       </div>
       ${selectedGroupsHtml}`;
+  }
+
+  function buildOutfits() {
+    if (!attachedOutfits.length) {
+      return `<div class="pk-empty-note">No outfits attached yet<br>Attach outfits to plan looks before packing individual items</div>`;
+    }
+    return attachedOutfits.map(outfit => {
+      const outfitItems = packOutfitItems(outfit, inventory);
+      const outfitItemIds = outfitItems.map(i => String(i.item_id || i.id));
+      const packedCount = outfitItemIds.filter(id => packedItemIdSet.has(id)).length;
+      const completion = packedCount === 0 ? 'Missing' : (packedCount === outfitItemIds.length && outfitItemIds.length ? 'Complete' : 'Partial');
+      const completionClass = completion === 'Complete' ? 'status-done' : (completion === 'Partial' ? 'status-waiting' : 'status-overdue');
+      const thumb = packOutfitThumb(outfit, inventory);
+      const coverage = packOutfitCoverage(outfitItems, packedItemIdSet);
+      const itemPills = outfitItems.length
+        ? outfitItems.map(item => `<span class="pk-outfit-item">${(item.item_name || item.item_id || item.category || 'Item').replace(/</g,'&lt;')}</span>`).join('')
+        : '<span class="muted">No linked wardrobe items</span>';
+      const coverageHtml = coverage.length
+        ? `<div class="pk-outfit-checks">
+            ${coverage.map(row => `<div class="pk-outfit-check">• ${row.label}</div>`).join('')}
+          </div>`
+        : `<div class="muted" style="margin-top:10px">No core outfit categories detected from linked items.</div>`;
+      return `<div class="pk-outfit-card">
+        <div class="pk-outfit-head">
+          ${thumb
+            ? `<img class="pk-outfit-thumb" src="${thumb.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.style.display='none'">`
+            : `<div class="pk-outfit-thumb-ph">👗</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <div class="pk-outfit-title">${(outfit.name || 'Untitled outfit').replace(/</g,'&lt;')}</div>
+              <span class="status-badge ${completionClass}" style="font-size:9px;padding:2px 6px">${completion}</span>
+            </div>
+            <div class="pk-outfit-sub">${outfitItems.length} linked item${outfitItems.length!==1?'s':''} · ${packedCount} packed</div>
+          </div>
+        </div>
+        <div class="pk-outfit-items">${itemPills}</div>
+        ${coverageHtml}
+        <div class="pk-outfit-actions">
+          <button class="btn btn-primary" style="width:auto;margin-bottom:0;padding:10px 14px" onclick="pkPackOutfit('${String(outfit.id).replace(/'/g,"\\'")}')">Pack this outfit</button>
+          <button class="btn btn-ghost" style="width:auto;margin-bottom:0;padding:10px 14px" onclick="pkDetachOutfit('${String(outfit.id).replace(/'/g,"\\'")}')">Detach</button>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   root().innerHTML = `
@@ -4844,6 +5380,7 @@ function _renderPackDetailUI(pack, inventory) {
     <button class="tab active" id="pk-tab-check" onclick="pkSwitchTab('checklist')">Checklist</button>
     <button class="tab" id="pk-tab-toget" onclick="pkSwitchTab('toget')">To Get${state.toGet.size ? ` <span class="pk-tab-badge">${state.toGet.size}</span>` : ''}</button>
     <button class="tab" id="pk-tab-clothing" onclick="pkSwitchTab('clothing')">Clothing${clothingItems.length ? ` <span style="font-size:10px;color:var(--text3)">(${clothingItems.length})</span>` : ''}</button>
+    <button class="tab" id="pk-tab-outfits" onclick="pkSwitchTab('outfits')">Outfits${attachedOutfits.length ? ` <span style="font-size:10px;color:var(--text3)">(${attachedOutfits.length})</span>` : ''}</button>
   </div>
 
   <div id="pk-panel-checklist">
@@ -4864,6 +5401,14 @@ function _renderPackDetailUI(pack, inventory) {
       <button onclick="showEditClothingModal('${esc(packId)}')" style="font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-light);border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Add Clothes</button>
     </div>
     <div id="pk-clothing-content">${buildClothing()}</div>
+  </div>
+
+  <div id="pk-panel-outfits" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:13px;color:var(--text2)">${attachedOutfits.length} outfit${attachedOutfits.length!==1?'s':''} attached</span>
+      <button onclick="showAttachOutfitsModal('${esc(packId)}')" style="font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-light);border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Attach Outfits</button>
+    </div>
+    <div id="pk-outfits-content">${buildOutfits()}</div>
   </div>
 </div>`;
 
@@ -4895,16 +5440,20 @@ function _renderPackDetailUI(pack, inventory) {
   window._pkBuildClothing  = buildClothing;
   window._pkCurrentPack    = pack;
   window._pkCurrentInventory = inventory;
+  window._pkCurrentOutfits = outfits;
 }
 
 function pkSwitchTab(tab) {
   window._pkActiveTab = tab;
+  if (window._currentPackId) saveViewState({ route: 'wardrobe-pack-detail', params: { packId: window._currentPackId, tab } });
   document.getElementById('pk-tab-check').classList.toggle('active', tab === 'checklist');
   document.getElementById('pk-tab-toget').classList.toggle('active', tab === 'toget');
   document.getElementById('pk-tab-clothing').classList.toggle('active', tab === 'clothing');
+  document.getElementById('pk-tab-outfits').classList.toggle('active', tab === 'outfits');
   document.getElementById('pk-panel-checklist').classList.toggle('hidden', tab !== 'checklist');
   document.getElementById('pk-panel-toget').classList.toggle('hidden', tab !== 'toget');
   document.getElementById('pk-panel-clothing').classList.toggle('hidden', tab !== 'clothing');
+  document.getElementById('pk-panel-outfits').classList.toggle('hidden', tab !== 'outfits');
 }
 
 function pkFilterPackedItems(query) {
@@ -5003,6 +5552,79 @@ function pkResetChecked(packId) {
   savePackChecklistState(packId).catch(()=>{});
 }
 
+async function pkSaveOutfitLinks(packId, outfitIds) {
+  setPackStateOutfitIds(packId, outfitIds);
+  await savePackChecklistState(packId);
+}
+
+async function pkDetachOutfit(outfitId) {
+  const packId = window._currentPackId;
+  const current = packStateOutfitIds(packId);
+  await pkSaveOutfitLinks(packId, current.filter(id => String(id) !== String(outfitId)));
+  _renderPackDetailUI(window._pkCurrentPack, window._pkCurrentInventory, window._pkCurrentOutfits);
+  pkSwitchTab('outfits');
+}
+
+async function pkPackOutfit(outfitId) {
+  const pack = window._pkCurrentPack;
+  const inventory = window._pkCurrentInventory;
+  const outfits = window._pkCurrentOutfits || [];
+  if (!pack) return;
+  const outfit = outfits.find(o => String(o.id) === String(outfitId));
+  if (!outfit) return;
+  const currentIds = parseStoredIdList(pack.item_ids);
+  const outfitItemIds = packOutfitItems(outfit, inventory).map(i => String(i.item_id || i.id));
+  const merged = [...new Set([...currentIds, ...outfitItemIds])];
+  pack.item_ids = JSON.stringify(merged);
+  await dbUpdate(T.PACKS, pack.id, { item_ids: pack.item_ids });
+  _renderPackDetailUI(pack, inventory, outfits);
+  pkSwitchTab('outfits');
+}
+
+async function showAttachOutfitsModal(packId) {
+  const outfits = window._pkCurrentOutfits || await dbFetch(T.OUTFITS, {order:['created_at',false]});
+  const inventory = window._pkCurrentInventory || await dbFetch(T.INVENTORY, {order:['item_name',true]});
+  const selected = new Set(packStateOutfitIds(packId).map(String));
+  const body = outfits.length
+    ? `<div class="card" style="margin-bottom:0;max-height:52vh;overflow:auto">
+        ${outfits.map(outfit => {
+          const thumb = packOutfitThumb(outfit, inventory);
+          const items = packOutfitItems(outfit, inventory);
+          const oid = String(outfit.id).replace(/"/g,'&quot;');
+          const isSel = selected.has(String(outfit.id));
+          return `<div class="row pk-attach-row${isSel ? ' selected' : ''}" data-outfit-id="${oid}" style="cursor:pointer;${isSel ? 'background:var(--accent-light)' : ''}">
+            ${thumb ? `<img class="pk-outfit-thumb" src="${thumb.replace(/"/g,'&quot;')}" alt="" loading="lazy" style="width:48px;height:62px;border-radius:8px">` : `<div class="pk-outfit-thumb-ph" style="width:48px;height:62px;border-radius:8px">👗</div>`}
+            <div style="flex:1;min-width:0">
+              <div class="row-title">${(outfit.name || 'Untitled outfit').replace(/</g,'&lt;')}</div>
+              <div class="row-sub">${items.length} linked item${items.length!==1?'s':''}</div>
+            </div>
+            <div class="status-badge ${isSel ? 'status-done' : 'status-new'}" style="font-size:9px;padding:2px 6px">${isSel ? 'Attached' : 'Tap to attach'}</div>
+          </div>`;
+        }).join('')}
+      </div>`
+    : `<div class="pk-empty-note">No outfits attached yet<br>Attach outfits to plan looks before packing individual items</div>`;
+  showModal('Attach Outfits', body, outfits.length ? async () => {
+    const picked = [...document.querySelectorAll('.pk-attach-row.selected')].map(el => el.dataset.outfitId);
+    await pkSaveOutfitLinks(packId, picked);
+    _renderPackDetailUI(window._pkCurrentPack, window._pkCurrentInventory, outfits);
+    pkSwitchTab('outfits');
+  } : null);
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.pk-attach-row').forEach(row => {
+      row.addEventListener('click', () => {
+        row.classList.toggle('selected');
+        const active = row.classList.contains('selected');
+        row.style.background = active ? 'var(--accent-light)' : '';
+        const badge = row.querySelector('.status-badge');
+        if (badge) {
+          badge.className = `status-badge ${active ? 'status-done' : 'status-new'}`;
+          badge.textContent = active ? 'Attached' : 'Tap to attach';
+        }
+      });
+    });
+  });
+}
+
 async function pkRemoveClothing(itemId, packId) {
   const pack = window._pkCurrentPack;
   const inv  = window._pkCurrentInventory;
@@ -5011,7 +5633,7 @@ async function pkRemoveClothing(itemId, packId) {
   try { ids = Array.isArray(pack.item_ids) ? pack.item_ids : JSON.parse(pack.item_ids||'[]'); } catch(e){}
   pack.item_ids = JSON.stringify(ids.filter(id => id !== itemId));
   await dbUpdate(T.PACKS, packId, { item_ids: pack.item_ids });
-  _renderPackDetailUI(pack, inv);
+  _renderPackDetailUI(pack, inv, window._pkCurrentOutfits);
   pkSwitchTab('clothing');
 }
 
@@ -5070,7 +5692,7 @@ async function showEditClothingModal(packId) {
     const picked = [...document.querySelectorAll('#pack-picker .picker-item.selected')].map(el => el.dataset.key);
     pack.item_ids = JSON.stringify(picked);
     await dbUpdate(T.PACKS, packId, { item_ids: pack.item_ids });
-    _renderPackDetailUI(pack, inventory);
+    _renderPackDetailUI(pack, inventory, window._pkCurrentOutfits);
     pkSwitchTab('clothing');
   });
 }
@@ -6882,6 +7504,19 @@ function showApp() {
   document.getElementById('app').classList.remove('hidden');
   // Reset bill paid state if it's a new month
   resetBillsPaidIfNewMonth();
+  const savedView = loadViewState();
+  if (savedView?.route === 'wardrobe-pack-detail' && savedView?.params?.packId) {
+    localStorage.setItem('alika-route', 'wardrobe');
+    renderPackDetail(savedView.params.packId).then(() => {
+      if (savedView.params.tab) pkSwitchTab(savedView.params.tab);
+    });
+    return;
+  }
+  if (savedView?.route === 'wardrobe' && savedView?.params) {
+    localStorage.setItem('alika-route', 'wardrobe');
+    renderWardrobe(savedView.params);
+    return;
+  }
   const savedRoute = localStorage.getItem('alika-route');
   const initialRoute = PERSIST_ROUTES.includes(savedRoute) ? savedRoute : 'dashboard';
   navigate(initialRoute);
