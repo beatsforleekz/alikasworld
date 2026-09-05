@@ -13,79 +13,98 @@
 <style>
 /* ── Reset ── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;overflow-x:hidden}
+html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;overflow-x:hidden;font-variant-numeric:tabular-nums}
 
 /* ── Variables ── */
 :root{
-  /* ── Semantic tokens (set by theme) ── */
-  --bg:#F4F1EC;--card:#FFFFFF;
-  --text:#111111;--text2:#6B6B6B;--text3:#9E9E9E;
-  --border:#E5E2DC;--accent:#C8B6A6;--accent-light:#F0EBE4;
+  --font-xs:12px;--font-sm:14px;--font-md:16px;--font-lg:20px;--font-xl:28px;--font-display:40px;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;
+  --radius-control:10px;--radius-surface:16px;--radius-sheet:22px;
+  --canvas:#F5F2EC;--surface:#FCFBF8;--surface-elevated:#FFFFFF;
+  --ink:#171714;--muted:#6F6B63;--muted-soft:#969188;--divider:#DDD8CF;
+  --positive:#356A54;--positive-soft:#E7F0EA;
+  --warning:#9A6A2F;--warning-soft:#F5EBDD;
+  --danger:#B34E3B;--danger-light:#F7E8E4;
+  --accent:#496554;--accent-light:#EAEDE8;
+  --shadow-elevated:0 18px 48px rgba(38,34,27,.14);
+  --transition:160ms cubic-bezier(.2,.8,.2,1);
+  --nav-base-h:64px;--nav-h:calc(var(--nav-base-h) + env(safe-area-inset-bottom,0px));
+  --content-max:1280px;--rail-w:216px;--shell-max:100%;
 
-  /* ── Functional aliases (keep existing var names working) ── */
-  --purple:var(--accent);--purple-light:var(--accent-light);--purple-mid:#B8A494;
-  --teal:#4A7C6F;--teal-light:#E8F0EE;
-  --danger:#C0533A;--danger-light:#F9EDE9;
-  --amber:#A07840;--amber-light:#F5EFE4;
-  --nav-h:64px;--r:14px;--rs:8px;--shell-max:480px;
-
-  /* ── Tab / input backgrounds ── */
-  --tab-bg:#EDE9E3;--input-bg:#EDE9E3;
-  /* ── Interaction ── */
-  --card-hover-border:#C8B6A6;
-  --transition:150ms ease;
+  /* Legacy aliases keep existing screens stable during phased redesign. */
+  --bg:var(--canvas);--card:var(--surface);--text:var(--ink);--text2:var(--muted);--text3:var(--muted-soft);--border:var(--divider);
+  --purple:var(--accent);--purple-light:var(--accent-light);--purple-mid:#718A7B;
+  --teal:var(--positive);--teal-light:var(--positive-soft);--amber:var(--warning);--amber-light:var(--warning-soft);
+  --r:var(--radius-surface);--rs:var(--radius-control);--tab-bg:#E9E5DE;--input-bg:#ECE8E1;--card-hover-border:#BEB7AC;
 }
 /* ── Theme: Minimal Light ── */
 [data-theme="light"]{
-  --bg:#F7F7F5;--card:#FFFFFF;
-  --text:#111111;--text2:#6B6B6B;--text3:#9E9E9E;
-  --border:#E8E5E0;--accent:#D9D4CC;--accent-light:#EFECE8;
-  --tab-bg:#ECEAE5;--input-bg:#ECEAE5;
-  --card-hover-border:#D9D4CC;
+  --canvas:#F5F2EC;--surface:#FCFBF8;--surface-elevated:#FFFFFF;
+  --ink:#171714;--muted:#6F6B63;--muted-soft:#969188;--divider:#DDD8CF;
+  --accent:#496554;--accent-light:#EAEDE8;--card-hover-border:#BEB7AC;
+  --tab-bg:#E9E5DE;--input-bg:#ECE8E1;
 }
 /* ── Theme: Dark ── */
 [data-theme="dark"]{
-  --bg:#111111;--card:#1A1A1A;
-  --text:#F5F5F5;--text2:#B8B8B8;--text3:#888888;
-  --border:#2A2A2A;--accent:#8C7B6B;--accent-light:#2A2520;
-  --tab-bg:#1E1E1E;--input-bg:#1E1E1E;
-  --card-hover-border:#8C7B6B;
-  --teal:#5A9B8E;--teal-light:#1A2E2B;
-  --danger:#D06050;--danger-light:#2D1B18;
-  --amber:#B8904A;--amber-light:#2A2010;
+  --canvas:#121311;--surface:#1A1C18;--surface-elevated:#23251F;
+  --ink:#F1EFE8;--muted:#B5B0A6;--muted-soft:#858177;--divider:#34372F;
+  --accent:#8FAE99;--accent-light:#252D27;--card-hover-border:#59645B;
+  --positive:#78A88D;--positive-soft:#1D2A22;
+  --warning:#D0A05D;--warning-soft:#302719;
+  --danger:#D47765;--danger-light:#321E1A;
+  --tab-bg:#20221E;--input-bg:#20221E;
 }
 /* ── Theme switcher widget ── */
 #theme-switcher{display:none}
 /* theme-switcher moved to settings page */.theme-swatch{width:14px;height:14px;border-radius:50%;border:1px solid var(--border);flex-shrink:0}
 
 /* ── Shell ── */
-#shell{width:100%;max-width:var(--shell-max);margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
-#page-root{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h) + 16px)}
+#shell{width:100%;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+#page-root{width:100%;max-width:var(--content-max);margin:0 auto;flex:1;overflow-x:hidden;padding-bottom:calc(var(--nav-h) + var(--space-4))}
 
 /* ── Bottom Nav ── */
 #bottom-nav{
-  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:var(--shell-max);height:var(--nav-h);
+  position:fixed;bottom:0;left:0;width:100%;height:var(--nav-h);
   background:var(--card);border-top:1px solid var(--border);
-  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(64px,1fr);
-  align-items:center;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;
-  z-index:100;padding:0 8px env(safe-area-inset-bottom,0);
-  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;
+  overflow:hidden;z-index:100;padding:0 var(--space-2) env(safe-area-inset-bottom,0);
+  box-shadow:0 -8px 24px rgba(38,34,27,.04)
 }
-#bottom-nav::-webkit-scrollbar{display:none}
+.nav-brand{display:none}
 .nav-btn{
   display:flex;flex-direction:column;align-items:center;gap:3px;
-  font-size:10px;color:var(--text3);background:none;border:none;
-  min-width:64px;height:100%;padding:6px 6px 8px;cursor:pointer;
-  font-family:'Plus Jakarta Sans',sans-serif;scroll-snap-align:center;white-space:nowrap
+  color:var(--text3);background:none;border:none;min-width:0;height:100%;
+  padding:7px 2px 8px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap
 }
-.nav-btn svg{width:22px;height:22px;stroke:var(--text3);fill:none;stroke-width:1.5}
-.nav-label{display:block;max-width:100%;font-size:9.5px;line-height:1.1;overflow:hidden;text-overflow:ellipsis}
-.nav-btn.active{color:var(--text)}
-.nav-btn.active svg{stroke:var(--text)}
+.nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav-label{display:block;max-width:100%;font-size:10px;font-weight:500;line-height:1.1;overflow:hidden;text-overflow:ellipsis}
+.nav-btn.active{color:var(--accent)}
+.nav-btn.active .nav-label{font-weight:700}
 
 /* ── Page ── */
-.page{padding:0 16px 24px;overflow-x:hidden}
+.page{padding:0 var(--space-4) var(--space-6);overflow-x:hidden}
+
+/* ── Phase 1 design primitives ── */
+.page-header{position:sticky;top:0;z-index:12;display:flex;align-items:center;gap:var(--space-3);min-height:64px;padding:var(--space-3) 0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.page-header-copy{min-width:0;flex:1}
+.page-header-title{font-size:var(--font-xl);font-weight:600;letter-spacing:-.035em;line-height:1.1;color:var(--text)}
+.page-header-subtitle{margin-top:var(--space-1);font-size:var(--font-xs);line-height:1.4;color:var(--text2)}
+.page-header-action{flex-shrink:0;border:0;border-radius:var(--radius-control);background:var(--text);color:var(--bg);padding:10px 14px;font:600 var(--font-sm)/1 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.surface-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-surface);overflow:hidden}
+.app-list-row{width:100%;display:flex;align-items:center;gap:var(--space-3);min-height:64px;padding:var(--space-3) var(--space-4);border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);font-family:inherit;text-align:left;cursor:pointer}
+.app-list-row:last-child{border-bottom:0}
+.app-list-row:hover{background:var(--accent-light)}
+.app-list-copy{min-width:0;flex:1}
+.app-list-title{font-size:var(--font-sm);font-weight:650;line-height:1.3}
+.app-list-subtitle{margin-top:2px;font-size:var(--font-xs);line-height:1.4;color:var(--text2)}
+.app-list-chevron{color:var(--text3);font-size:20px;font-weight:300}
+.segmented-control{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-1);padding:var(--space-1);margin-bottom:var(--space-4);border-radius:14px;background:var(--tab-bg)}
+.segment-btn{min-width:0;border:0;border-radius:var(--radius-control);padding:10px 12px;background:transparent;color:var(--text2);font:600 var(--font-sm)/1.2 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.segment-btn.active{background:var(--surface-elevated);color:var(--text);box-shadow:0 1px 4px rgba(24,22,18,.08)}
+.money-section-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-2);margin:0 0 var(--space-6)}
+.money-section-btn{min-width:0;min-height:44px;padding:9px 6px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--surface);color:var(--text2);font:600 var(--font-xs)/1.2 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.money-section-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--text)}
+.money-section-btn:focus-visible,.segment-btn:focus-visible,.nav-btn:focus-visible,.app-list-row:focus-visible,.page-header-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* ── Topbar ── */
 .topbar{
@@ -334,7 +353,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
   .topbar-centered-title{max-width:calc(100% - 112px)}
   .tabs{margin-bottom:16px}
   .tab{min-width:92px;padding:8px 10px;font-size:13px}
-  .nav-btn{min-width:60px;padding:6px 5px 8px}
+  .nav-btn{min-width:0;padding:6px 2px 8px}
   .nav-label{font-size:9px}
   .snap-grid{gap:8px}
   .risk-grid{grid-template-columns:1fr}
@@ -344,15 +363,26 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
   [style*="display:flex;justify-content:space-between;align-items:center"]{flex-wrap:wrap}
 }
 
-@media (min-width:900px){
-  :root{--shell-max:min(1180px,calc(100vw - 64px))}
-  #shell{
-    border-left:1px solid var(--border);
-    border-right:1px solid var(--border);
-    box-shadow:0 10px 30px rgba(0,0,0,.04);
+@media (min-width:960px){
+  #shell{min-height:100vh;padding-left:var(--rail-w)}
+  #page-root{padding-bottom:var(--space-8)}
+  #bottom-nav{
+    top:0;bottom:auto;width:var(--rail-w);height:100vh;display:flex;flex-direction:column;
+    align-items:stretch;gap:var(--space-1);padding:var(--space-6) var(--space-4);
+    border-top:0;border-right:1px solid var(--border);box-shadow:none
   }
-  .page{padding:0 24px 32px}
-  .topbar,.topbar-centered{padding-left:24px;padding-right:24px}
+  .nav-brand{display:block;padding:0 var(--space-3) var(--space-8)}
+  .nav-brand-name{font-size:var(--font-lg);font-weight:650;letter-spacing:-.035em;color:var(--text)}
+  .nav-brand-sub{margin-top:var(--space-1);font-size:10px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--text3)}
+  .nav-btn{width:100%;height:48px;min-height:48px;flex-direction:row;justify-content:flex-start;gap:var(--space-3);padding:0 var(--space-3);border-radius:var(--radius-control)}
+  .nav-btn:hover{background:var(--accent-light);color:var(--text)}
+  .nav-btn.active{background:var(--accent-light);color:var(--accent)}
+  .nav-btn svg{width:19px;height:19px}
+  .nav-label{font-size:var(--font-sm);font-weight:550;overflow:visible}
+  .page{padding:0 var(--space-8) var(--space-8)}
+  .page-header{min-height:80px}
+  .topbar,.topbar-centered{padding-left:32px;padding-right:32px}
+  .money-section-nav{grid-template-columns:repeat(6,minmax(0,1fr));max-width:760px}
   .snap-grid{gap:10px;background:none;border:none}
   .snap-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .risk-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -398,38 +428,30 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 
   <div id="shell">
     <div id="page-root"></div>
-    <nav id="bottom-nav">
-      <button class="nav-btn" onclick="navigate('dashboard')" id="nav-dashboard">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        <span class="nav-label">Dashboard</span>
+    <nav id="bottom-nav" aria-label="Primary navigation">
+      <div class="nav-brand" aria-hidden="true">
+        <div class="nav-brand-name">AlikasWorld</div>
+        <div class="nav-brand-sub">Control centre</div>
+      </div>
+      <button class="nav-btn" onclick="navigate('home')" id="nav-home">
+        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>
+        <span class="nav-label">Home</span>
       </button>
-      <button class="nav-btn" onclick="navigate('finance')" id="nav-finance">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg>
-        <span class="nav-label">Finance</span>
-      </button>
-      <button class="nav-btn" onclick="navigate('projects')" id="nav-projects">
-        <svg viewBox="0 0 24 24"><path d="M3 3h18v5H3zM3 10h18v5H3zM3 17h18v4H3z"/></svg>
-        <span class="nav-label">Projects</span>
-      </button>
-      <button class="nav-btn" onclick="navigate('inbox')" id="nav-inbox">
-        <svg viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        <span class="nav-label">Inbox</span>
+      <button class="nav-btn" onclick="navigate('money')" id="nav-money">
+        <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M16 15h2"/></svg>
+        <span class="nav-label">Money</span>
       </button>
       <button class="nav-btn" onclick="navigate('actions')" id="nav-actions">
         <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         <span class="nav-label">Actions</span>
       </button>
-      <button class="nav-btn" onclick="navigate('ideas')" id="nav-ideas">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        <span class="nav-label">Ideas</span>
+      <button class="nav-btn" onclick="navigate('progress')" id="nav-progress">
+        <svg viewBox="0 0 24 24"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19V3"/></svg>
+        <span class="nav-label">Progress</span>
       </button>
-      <button class="nav-btn" onclick="navigate('habits')" id="nav-habits">
-        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 6v6l4 2"/></svg>
-        <span class="nav-label">Habits</span>
-      </button>
-      <button class="nav-btn" onclick="navigate('content')" id="nav-content">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        <span class="nav-label">Content</span>
+      <button class="nav-btn" onclick="navigate('more')" id="nav-more">
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+        <span class="nav-label">More</span>
       </button>
     </nav>
   </div>
@@ -622,8 +644,12 @@ document.addEventListener('keydown', e => {
 // ════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════
-// Top-level routes that should be persisted on refresh
-const PERSIST_ROUTES = ['finance','dashboard','inbox','actions','ideas','projects','content','habits'];
+// Every stable screen can be restored after refresh without forcing users home.
+const PERSIST_ROUTES = [
+  'home','money','actions','progress','more',
+  'finance','bills','co-bills','spending','income','debt','debt-history','budgets','co-income',
+  'dashboard','inbox','ideas','projects','content','habits','settings'
+];
 
 function saveViewState(view) {
   try {
@@ -631,19 +657,30 @@ function saveViewState(view) {
   } catch (e) {}
 }
 
-function setActiveNav(route) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const navId = {finance:'nav-finance', dashboard:'nav-dashboard', inbox:'nav-inbox', actions:'nav-actions', ideas:'nav-ideas', projects:'nav-projects', content:'nav-content', habits:'nav-habits', progress:'nav-dashboard'}[route];
-  const topLevel = ['finance','dashboard','inbox','actions','ideas','projects','content','habits','progress','settings'];
-  if (navId) {
-    const activeBtn = document.getElementById(navId);
-    activeBtn?.classList.add('active');
-    scrollIntoViewIfNeeded(activeBtn);
-  } else if (!topLevel.includes(route)) {
-    const activeBtn = document.getElementById('nav-finance');
-    activeBtn?.classList.add('active');
-    scrollIntoViewIfNeeded(activeBtn);
+function loadViewState() {
+  try {
+    return JSON.parse(localStorage.getItem('alika-view') || 'null');
+  } catch (e) {
+    return null;
   }
+}
+
+function setActiveNav(route) {
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.remove('active');
+    b.removeAttribute('aria-current');
+  });
+  const groups = {
+    home: ['home','dashboard'],
+    money: ['money','finance','bills','co-bills','spending','income','debt','debt-history','budgets','co-income'],
+    actions: ['actions','inbox'],
+    progress: ['progress'],
+    more: ['more','ideas','projects','content','habits','settings']
+  };
+  const destination = Object.keys(groups).find(key => groups[key].includes(route)) || 'home';
+  const activeButton = document.getElementById(`nav-${destination}`);
+  activeButton?.classList.add('active');
+  activeButton?.setAttribute('aria-current', 'page');
 }
 
 // Helper: navigate to a project detail page by title
@@ -656,10 +693,9 @@ async function openProjectByTitle(title) {
 }
 
 async function navigate(route, params = {}) {
+  if (!PERSIST_ROUTES.includes(route)) route = 'home';
   // Persist top-level route so refresh restores it
-  if (PERSIST_ROUTES.includes(route)) {
-    localStorage.setItem('alika-route', route);
-  }
+  localStorage.setItem('alika-route', route);
   saveViewState({ route, params });
 
   // Update nav
@@ -671,6 +707,9 @@ async function navigate(route, params = {}) {
   root().innerHTML = '<div class="spinner"></div>';
 
   const routes = {
+    home:          renderDashboard,
+    money:         renderMoneyWorkspace,
+    more:          renderMore,
     finance:       renderFinance,
     bills:         renderBills,
     'co-bills':    renderCoBills,
@@ -691,7 +730,42 @@ async function navigate(route, params = {}) {
     settings:      renderSettings,
   };
   const fn = routes[route];
-  if (fn) await fn(params);
+  await fn(params);
+}
+
+const MONEY_SECTIONS = [
+  ['overview', 'Overview'], ['bills', 'Bills'], ['spending', 'Spending'],
+  ['income', 'Income'], ['debt', 'Debt'], ['company', 'Company']
+];
+
+function moneySectionNav(active) {
+  return `<div class="money-section-nav" aria-label="Money sections">
+    ${MONEY_SECTIONS.map(([key, label]) => `<button type="button" class="money-section-btn ${key === active ? 'active' : ''}" onclick="openMoneySection('${key}')" aria-current="${key === active ? 'page' : 'false'}">${label}</button>`).join('')}
+  </div>`;
+}
+
+async function openMoneySection(section) {
+  await navigate('money', {section});
+}
+
+async function renderMoneyWorkspace(params = {}) {
+  const section = MONEY_SECTIONS.some(([key]) => key === params.section) ? params.section : 'overview';
+  const renderers = {
+    overview: renderFinance,
+    bills: renderBills,
+    spending: renderSpending,
+    income: renderIncome,
+    debt: renderDebt,
+    company: renderCoIncome
+  };
+  await renderers[section]();
+}
+
+function actionsWorkspaceNav(active) {
+  return `<div class="segmented-control" aria-label="Actions workspace">
+    <button type="button" class="segment-btn ${active === 'actions' ? 'active' : ''}" onclick="navigate('actions')" aria-current="${active === 'actions' ? 'page' : 'false'}">Actions</button>
+    <button type="button" class="segment-btn ${active === 'inbox' ? 'active' : ''}" onclick="navigate('inbox')" aria-current="${active === 'inbox' ? 'page' : 'false'}">Inbox</button>
+  </div>`;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -895,7 +969,7 @@ async function renderDashboard() {
   root().innerHTML = `
 <div class="page">
   <div class="topbar-centered">
-    <div class="topbar-centered-title">Dashboard</div>
+    <div class="topbar-centered-title">Home</div>
     <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
       <button onclick="navigate('settings')" style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex;align-items:center;border-radius:6px" title="Settings">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -1119,11 +1193,13 @@ async function renderFinance() {
   root().innerHTML = `
 <div class="page">
   <div class="topbar-centered">
-    <div class="topbar-centered-title">Finance</div>
+    <div class="topbar-centered-title">Money</div>
     <button class="topbar-centered-right" onclick="navigate('settings')" style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex;align-items:center;border-radius:6px">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     </button>
   </div>
+
+  ${moneySectionNav('overview')}
 
   <div class="tabs">
     <button class="tab active" id="t-personal" onclick="switchFinanceTab('personal')">Personal</button>
@@ -1345,6 +1421,8 @@ function _renderBillsUI(title, table, unpaid, paid, isCo) {
     <button class="icon-btn topbar-centered-right" onclick="showBillModal(null,'${table}',${isCo})">+</button>
   </div>
 
+  ${moneySectionNav(isCo ? 'company' : 'bills')}
+
   <!-- Snapshot counters -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
     <div class="card" style="padding:12px 14px">
@@ -1509,6 +1587,7 @@ async function renderSpending() {
     <div class="topbar-centered-title">Spending</div>
     <div class="topbar-centered-right"></div>
   </div>
+  ${moneySectionNav('spending')}
   <button class="btn btn-ghost" onclick="navigate('budgets')" style="margin-bottom:12px">⚡ Spending Suite</button>
   <button class="btn btn-primary" onclick="showSpendModal(null,${JSON.stringify(cats).replace(/"/g,"'")})">Add New Spend</button>
   <div class="ph"><h2 style="text-align:left">Variable Spending</h2></div>
@@ -1600,6 +1679,7 @@ async function renderIncome(params={}) {
     <div class="topbar-centered-title">Income</div>
     <button class="icon-btn topbar-centered-right" id="income-add-btn">+</button>
   </div>
+  ${moneySectionNav('income')}
   <div class="tabs">
     <button class="tab ${tab==='received'?'active':''}" onclick="incomeTab('received')">Received</button>
     <button class="tab ${tab==='expected'?'active':''}" onclick="incomeTab('expected')">Expected</button>
@@ -1823,6 +1903,8 @@ async function renderDebt() {
     <div class="topbar-centered-title">Debt</div>
     <button class="icon-btn topbar-centered-right" onclick="showDebtModal(null,'Active')">+</button>
   </div>
+
+  ${moneySectionNav('debt')}
 
   <!-- Snapshot -->
   <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Snapshot</div>
@@ -2496,6 +2578,7 @@ async function renderCoIncome() {
     <div class="topbar-centered-title">Company Accounts</div>
     <button class="icon-btn topbar-centered-right" onclick="showAccountModal(null)">+</button>
   </div>
+  ${moneySectionNav('company')}
   <div class="tabs">
     <button class="tab active" onclick="coTab('received',this)">Received</button>
     <button class="tab" onclick="coTab('expected',this)">Expected</button>
@@ -2807,6 +2890,7 @@ async function renderInbox() {
     <div class="topbar-centered-title">Inbox</div>
     <button class="icon-btn topbar-centered-right" onclick="showAddInboxModal()">+</button>
   </div>
+  ${actionsWorkspaceNav('inbox')}
   <div class="search-wrap">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
     <input class="search-input" placeholder="Search…" oninput="filterRows(this.value)"/>
@@ -3097,6 +3181,8 @@ async function renderActions(params={}) {
     <div class="topbar-centered-title">Actions</div>
     <button class="icon-btn topbar-centered-right" onclick="showAddActionModal()">+</button>
   </div>
+
+  ${actionsWorkspaceNav('actions')}
 
   <!-- Row 1: choose which field to filter/group by -->
   <div class="filter-bar" style="margin-bottom:6px">
@@ -3410,7 +3496,7 @@ async function renderProgress() {
   root().innerHTML = `
 <div class="page">
   <div class="topbar-centered">
-    <button class="back-btn" onclick="navigate('dashboard')">‹ Back</button>
+    <div></div>
     <div class="topbar-centered-title">Progress</div>
     <div class="topbar-centered-right"></div>
   </div>
@@ -4932,6 +5018,46 @@ async function showHabitModal(editId) {
 }
 
 // ════════════════════════════════════════════════════════════
+// MORE DIRECTORY
+// ════════════════════════════════════════════════════════════
+function renderMore() {
+  const rows = [
+    ['projects', 'Projects', 'Group actions, money and plans around real-life goals'],
+    ['habits', 'Habits', 'Keep lower-frequency routines and personal tracking nearby'],
+    ['content', 'Content', 'Manage saved content and publishing activity'],
+    ['ideas', 'Ideas', 'Review and develop ideas when you need them'],
+    ['settings', 'Settings', 'Appearance and account preferences']
+  ];
+
+  root().innerHTML = `
+<div class="page">
+  <header class="page-header">
+    <div class="page-header-copy">
+      <h1 class="page-header-title">More</h1>
+      <p class="page-header-subtitle">Projects, planning tools and account settings</p>
+    </div>
+  </header>
+
+  <div class="surface-group">
+    ${rows.map(([route, title, description]) => `<button type="button" class="app-list-row" onclick="navigate('${route}')">
+      <span class="app-list-copy">
+        <span class="app-list-title">${title}</span>
+        <span class="app-list-subtitle">${description}</span>
+      </span>
+      <span class="app-list-chevron" aria-hidden="true">›</span>
+    </button>`).join('')}
+    <button type="button" class="app-list-row" onclick="doLogout()">
+      <span class="app-list-copy">
+        <span class="app-list-title" style="color:var(--danger)">Sign Out</span>
+        <span class="app-list-subtitle">Securely end this session</span>
+      </span>
+      <span class="app-list-chevron" aria-hidden="true">›</span>
+    </button>
+  </div>
+</div>`;
+}
+
+// ════════════════════════════════════════════════════════════
 // SETTINGS PAGE
 // ════════════════════════════════════════════════════════════
 function renderSettings() {
@@ -4945,7 +5071,7 @@ function renderSettings() {
   root().innerHTML = `
 <div class="page">
   <div class="topbar-centered">
-    <button class="back-btn" onclick="navigate('dashboard')">‹ Back</button>
+    <button class="back-btn" onclick="navigate('more')">‹ Back</button>
     <div class="topbar-centered-title">Settings</div>
     <div class="topbar-centered-right"></div>
   </div>
@@ -4995,9 +5121,11 @@ function showApp() {
   document.getElementById('app').classList.remove('hidden');
   // Reset bill paid state if it's a new month
   resetBillsPaidIfNewMonth();
-  const savedRoute = localStorage.getItem('alika-route');
-  const initialRoute = PERSIST_ROUTES.includes(savedRoute) ? savedRoute : 'dashboard';
-  navigate(initialRoute);
+  const savedView = loadViewState();
+  const savedRoute = savedView?.route || localStorage.getItem('alika-route');
+  const initialRoute = PERSIST_ROUTES.includes(savedRoute) ? savedRoute : 'home';
+  const initialParams = savedView?.route === initialRoute ? (savedView.params || {}) : {};
+  navigate(initialRoute, initialParams);
 }
 
 // ── Monthly bills reset ──────────────────────────────────────
