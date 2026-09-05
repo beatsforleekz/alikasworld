@@ -106,6 +106,100 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .money-section-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--text)}
 .money-section-btn:focus-visible,.segment-btn:focus-visible,.nav-btn:focus-visible,.app-list-row:focus-visible,.page-header-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
+/* ── Phase 2: Money workspace ── */
+.money-shell{display:flex;flex-direction:column;gap:var(--space-6)}
+.money-shell .money-section-nav{margin-bottom:0}
+.money-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4)}
+.money-page-copy{min-width:0}
+.money-eyebrow{font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text3)}
+.money-page-title{margin-top:var(--space-1);font-size:var(--font-xl);font-weight:600;line-height:1.12;letter-spacing:-.035em;color:var(--text)}
+.money-page-subtitle{max-width:620px;margin-top:var(--space-2);font-size:var(--font-sm);line-height:1.5;color:var(--text2)}
+.money-add{flex:none;min-height:42px;padding:0 15px;border:0;border-radius:var(--radius-control);background:var(--text);color:var(--bg);font:600 var(--font-sm)/1 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.money-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-surface);overflow:hidden}
+.money-summary-cell{min-width:0;padding:var(--space-4);border:0;border-right:1px solid var(--border);background:transparent;color:var(--text);font-family:inherit;text-align:left}
+.money-summary-cell:last-child{border-right:0}
+.money-summary-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.money-summary-value{margin-top:var(--space-2);font-size:clamp(19px,4.6vw,28px);font-weight:600;line-height:1.1;letter-spacing:-.035em;color:var(--text);overflow-wrap:anywhere}
+.money-summary-note{margin-top:var(--space-1);font-size:11px;line-height:1.4;color:var(--text2)}
+.money-summary-value.positive{color:var(--positive)}
+.money-summary-value.warning{color:var(--warning)}
+.money-summary-value.danger{color:var(--danger)}
+.money-layout{display:grid;gap:var(--space-4)}
+.money-panel{min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-surface);overflow:hidden}
+.money-panel-head{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-4);border-bottom:1px solid var(--border)}
+.money-panel-title{font-size:var(--font-sm);font-weight:650;color:var(--text)}
+.money-panel-note{margin-top:2px;font-size:11px;color:var(--text2)}
+.money-panel-link{flex:none;border:0;background:none;color:var(--accent);font:650 var(--font-xs)/1 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.financial-row{width:100%;min-width:0;display:flex;align-items:center;gap:var(--space-3);padding:14px var(--space-4);border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);font-family:inherit;text-align:left}
+.financial-row:last-child{border-bottom:0}
+button.financial-row{cursor:pointer}
+button.financial-row:hover{background:var(--accent-light)}
+.financial-row.is-paid{opacity:.62}
+.financial-row-main{min-width:0;flex:1}
+.financial-row-top{display:flex;align-items:center;gap:var(--space-2);min-width:0}
+.financial-row-title{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:var(--font-sm);font-weight:600;line-height:1.35;white-space:nowrap}
+.financial-row-meta{margin-top:3px;font-size:11px;line-height:1.45;color:var(--text2);white-space:normal}
+.financial-row-value{flex:none;max-width:44%;font-size:var(--font-sm);font-weight:650;line-height:1.25;text-align:right;overflow-wrap:anywhere}
+.financial-row-value small{display:block;margin-top:3px;font-size:10px;font-weight:500;color:var(--text3)}
+.financial-actions{display:flex;align-items:center;gap:var(--space-2);flex:none}
+.finance-action{min-height:36px;padding:0 11px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--surface);color:var(--text);font:650 var(--font-xs)/1 'Plus Jakarta Sans',sans-serif;cursor:pointer;white-space:nowrap}
+.finance-action.primary{border-color:var(--text);background:var(--text);color:var(--bg)}
+.finance-action.subtle{background:var(--accent-light)}
+.money-status{display:inline-flex;align-items:center;max-width:150px;min-height:20px;padding:2px 7px;border-radius:999px;background:var(--input-bg);color:var(--text2);font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.money-status.positive{background:var(--positive-soft);color:var(--positive)}
+.money-status.warning{background:var(--warning-soft);color:var(--warning)}
+.money-status.danger{background:var(--danger-light);color:var(--danger)}
+.money-empty{padding:var(--space-8) var(--space-4);text-align:center}
+.money-empty-title{font-size:var(--font-sm);font-weight:600;color:var(--text)}
+.money-empty-copy{max-width:360px;margin:var(--space-1) auto 0;font-size:var(--font-xs);line-height:1.5;color:var(--text2)}
+.money-attention{display:flex;align-items:flex-start;gap:var(--space-3);padding:14px var(--space-4);border-bottom:1px solid var(--border)}
+.money-attention:last-child{border-bottom:0}
+.money-attention-dot{width:8px;height:8px;margin-top:5px;border-radius:50%;background:var(--warning);flex:none}
+.money-attention.danger .money-attention-dot{background:var(--danger)}
+.money-attention-copy{min-width:0;flex:1}
+.money-attention-title{font-size:var(--font-xs);font-weight:650;color:var(--text)}
+.money-attention-meta{margin-top:2px;font-size:11px;line-height:1.45;color:var(--text2)}
+.money-progress{height:5px;margin-top:var(--space-2);border-radius:99px;background:var(--input-bg);overflow:hidden}
+.money-progress span{display:block;height:100%;border-radius:inherit;background:var(--positive)}
+.money-tools{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.money-search{flex:1;min-width:min(220px,100%);margin:0}
+.money-filter-control{min-height:42px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--surface);color:var(--text);padding:0 12px;font:500 var(--font-xs)/1 'Plus Jakarta Sans',sans-serif}
+.debt-hero{padding:var(--space-6);background:var(--ink);color:var(--canvas);border-radius:var(--radius-surface)}
+[data-theme="dark"] .debt-hero{background:var(--surface-elevated);color:var(--text);border:1px solid var(--border)}
+.debt-hero .money-eyebrow{color:color-mix(in srgb,currentColor 62%,transparent)}
+.debt-total{margin-top:var(--space-2);font-size:clamp(34px,9vw,48px);font-weight:600;line-height:1;letter-spacing:-.05em;overflow-wrap:anywhere}
+.debt-support{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-4);margin-top:var(--space-6);padding-top:var(--space-4);border-top:1px solid color-mix(in srgb,currentColor 20%,transparent)}
+.debt-support-label{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;opacity:.6}
+.debt-support-value{margin-top:4px;font-size:var(--font-sm);font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.company-switch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-1);padding:var(--space-1);border-radius:14px;background:var(--tab-bg)}
+.company-switch .tab{min-width:0;margin:0;border-radius:var(--radius-control);padding:10px 4px;font-size:11px}
+.company-switch .tab.active{background:var(--surface-elevated);box-shadow:0 1px 4px rgba(24,22,18,.08)}
+.money-inline-link{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:var(--accent);font:650 var(--font-xs)/1.3 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+
+@media (max-width:560px){
+  .money-page-head{align-items:flex-start}
+  .money-page-title{font-size:24px}
+  .money-page-subtitle{font-size:12px}
+  .money-summary{grid-template-columns:1fr 1fr}
+  .money-summary-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .money-summary-cell:nth-child(2n){border-right:0}
+  .money-summary-cell:last-child{grid-column:1/-1;border-bottom:0}
+  .financial-row{align-items:flex-start;padding:13px 12px}
+  .financial-row-value{max-width:42%;font-size:13px}
+  .financial-actions{align-items:flex-end;flex-direction:column;gap:6px}
+  .finance-action{min-height:38px}
+  .debt-hero{padding:var(--space-4)}
+  .debt-support{gap:var(--space-2)}
+  .debt-support-value{font-size:11px}
+  .company-switch .tab{font-size:10px}
+}
+
+@media (min-width:960px){
+  .money-layout.two-column{grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);align-items:start}
+  .money-layout.equal{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .money-page-head{padding-top:var(--space-3)}
+}
+
 /* ── Topbar ── */
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
@@ -237,7 +331,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 
 /* ── Modal ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px calc(40px + env(safe-area-inset-bottom,0px));width:100%;max-width:480px;max-height:88vh;overflow-y:auto;overflow-x:hidden}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px calc(40px + env(safe-area-inset-bottom,0px));width:100%;max-width:480px;max-height:88vh;max-height:min(88vh,88dvh);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
 .overlay-elevated{align-items:center;padding:18px 14px}
 .overlay-elevated .modal{
   max-width:min(720px, calc(100vw - 28px));
@@ -358,9 +452,9 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
   .snap-grid{gap:8px}
   .risk-grid{grid-template-columns:1fr}
   .row{padding-left:12px;padding-right:12px}
-  [style*="display:grid"][style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
-  [style*="display:grid"][style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
-  [style*="display:flex;justify-content:space-between;align-items:center"]{flex-wrap:wrap}
+  .money-shell [style*="display:grid"][style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  .money-shell [style*="display:grid"][style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
+  .money-shell [style*="display:flex;justify-content:space-between;align-items:center"]{flex-wrap:wrap}
 }
 
 @media (min-width:960px){
@@ -546,6 +640,55 @@ function fmt(n) {
   const v = parseFloat(n);
   const s = '£' + Math.abs(v).toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2});
   return v < 0 ? '-' + s : s;
+}
+function safeText(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+}
+function isCurrentMonth(dateStr, now = new Date()) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  return !isNaN(d) && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+}
+function billFinancialState(bill, now = new Date()) {
+  const due = parseFloat(bill.monthly_amount) || 0;
+  const paid = parseFloat(bill.paid_amount_this_month) || 0;
+  const remaining = Math.max(0, due - paid);
+  const fullyPaid = due > 0 && paid >= due;
+  const day = parseInt(bill.due_day_number || bill.due_day) || null;
+  const today = new Date(now); today.setHours(0,0,0,0);
+  const dueDate = day ? new Date(today.getFullYear(), today.getMonth(), day) : null;
+  const overdue = !fullyPaid && !!dueDate && dueDate < today;
+  return {due, paid, remaining, fullyPaid, overdue, day, dueDate};
+}
+function billTotals(bills) {
+  return bills.reduce((totals, bill) => {
+    const state = billFinancialState(bill);
+    totals.due += state.due;
+    totals.paid += state.paid;
+    totals.remaining += state.remaining;
+    if (state.fullyPaid) totals.paidCount++;
+    else totals.unpaidCount++;
+    if (state.overdue) totals.overdueCount++;
+    return totals;
+  }, {due:0, paid:0, remaining:0, paidCount:0, unpaidCount:0, overdueCount:0});
+}
+function rememberCurrentViewParams(patch) {
+  const current = loadViewState();
+  if (!current?.route) return;
+  saveViewState({route:current.route, params:{...(current.params || {}), ...patch}});
+}
+function moneyPageHead(title, subtitle, addAction = '', addLabel = 'Add') {
+  return `<div class="money-page-head">
+    <div class="money-page-copy">
+      <div class="money-eyebrow">Money</div>
+      <h1 class="money-page-title">${safeText(title)}</h1>
+      ${subtitle ? `<p class="money-page-subtitle">${safeText(subtitle)}</p>` : ''}
+    </div>
+    ${addAction ? `<button type="button" class="money-add" onclick="${addAction}">${safeText(addLabel)}</button>` : ''}
+  </div>`;
+}
+function moneyEmpty(title, copy = '') {
+  return `<div class="money-empty"><div class="money-empty-title">${safeText(title)}</div>${copy ? `<div class="money-empty-copy">${safeText(copy)}</div>` : ''}</div>`;
 }
 function fmtDate(d) {
   if (!d) return '—';
@@ -758,7 +901,7 @@ async function renderMoneyWorkspace(params = {}) {
     debt: renderDebt,
     company: renderCoIncome
   };
-  await renderers[section]();
+  await renderers[section](params);
 }
 
 function actionsWorkspaceNav(active) {
@@ -1125,7 +1268,7 @@ function renderPlaceholder(title, msg) {
 // ════════════════════════════════════════════════════════════
 // FINANCE DASHBOARD
 // ════════════════════════════════════════════════════════════
-async function renderFinance() {
+async function renderFinanceLegacy() {
   const [
     personalIncome, fixedCosts,
     variableSpending, categoryBudgets, debts,
@@ -1371,6 +1514,120 @@ async function renderFinance() {
 </div>`;
 }
 
+async function renderFinance() {
+  const [personalIncome, fixedCosts, variableSpending, categoryBudgets, debts, companyAccounts, companyFixed] = await Promise.all([
+    dbFetch(T.PERSONAL_INCOME, {order:['date_received',false]}),
+    dbFetch(T.FIXED_COSTS, {order:['due_day',true]}),
+    dbFetch(T.VARIABLE_SPENDING, {order:['date',false]}),
+    dbFetch(T.CATEGORY_BUDGETS, {order:['category',true]}),
+    dbFetch(T.DEBT_MASTER, {order:['attack_order',true]}),
+    dbFetch(T.COMPANY_ACCOUNTS, {order:['date',false]}),
+    dbFetch(T.COMPANY_FIXED, {order:['due_day',true]})
+  ]);
+
+  const now = new Date();
+  const receivedThisMonth = personalIncome.filter(row => (row.status || '').toLowerCase() === 'received' && isCurrentMonth(row.date_received, now));
+  const spendThisMonth = variableSpending.filter(row => isCurrentMonth(row.date, now));
+  const incomeReceived = receivedThisMonth.reduce((sum, row) => sum + (parseFloat(row.gross_amount) || 0), 0);
+  const spendingTotal = spendThisMonth.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const personalBillTotals = billTotals(fixedCosts);
+  const companyBillTotals = billTotals(companyFixed);
+  const budgetTarget = categoryBudgets.reduce((sum, row) => sum + (parseFloat(row.monthly_target) || 0), 0);
+
+  const expectedIncome = personalIncome
+    .filter(row => (row.status || '').toLowerCase() !== 'received')
+    .sort((a,b) => new Date(a.date_received || 8640000000000000) - new Date(b.date_received || 8640000000000000));
+  const overdueIncome = expectedIncome.filter(row => incomeDisplayStatus(row) === 'Overdue');
+  const overdueBills = fixedCosts.filter(row => billFinancialState(row, now).overdue);
+
+  const activeDebts = debts.filter(row => (row.status || '').toLowerCase() !== 'cleared' && debtBal(row) > 0);
+  const totalDebt = activeDebts.reduce((sum, row) => sum + debtBal(row), 0);
+  const {totalEstMin, totalUtil, highRisk} = calcDamageAndRisk(debts);
+  const priorityDebt = [...activeDebts].sort((a,b) => (a.attack_order || 999) - (b.attack_order || 999))[0] || highRisk;
+
+  const companyReceived = companyAccounts.filter(row => coEntryTypeValue(row.entry_type) === 'Income' && coDisplayStatus(row.entry_type, row.status) === 'Received');
+  const companyExpected = companyAccounts.filter(row => coEntryTypeValue(row.entry_type) === 'Income' && coDisplayStatus(row.entry_type, row.status) === 'Expected');
+  const companyOutstandingExpenses = companyAccounts.filter(row => coEntryTypeValue(row.entry_type) === 'Expense' && coDisplayStatus(row.entry_type, row.status) === 'Expected');
+  const companyReceivedTotal = companyReceived.reduce((sum,row) => sum + (parseFloat(row.amount) || 0), 0);
+  const companyExpectedTotal = companyExpected.reduce((sum,row) => sum + (parseFloat(row.amount) || 0), 0);
+  const companyOutstandingTotal = companyOutstandingExpenses.reduce((sum,row) => sum + (parseFloat(row.amount) || 0), 0) + companyBillTotals.remaining;
+
+  const attention = [];
+  if (overdueBills.length) attention.push({route:'bills', tone:'danger', title:`${overdueBills.length} overdue personal bill${overdueBills.length === 1 ? '' : 's'}`, meta:`${fmt(overdueBills.reduce((sum,bill) => sum + billFinancialState(bill).remaining, 0))} still to pay`});
+  if (overdueIncome.length) attention.push({route:'income', params:"{section:'income',tab:'expected'}", tone:'danger', title:`${overdueIncome.length} expected payment${overdueIncome.length === 1 ? '' : 's'} overdue`, meta:`${fmt(overdueIncome.reduce((sum,row) => sum + (parseFloat(row.gross_amount) || 0), 0))} awaiting receipt`});
+  if (budgetTarget > 0 && spendingTotal > budgetTarget) attention.push({route:'spending', tone:'warning', title:'Monthly spending is above target', meta:`${fmt(spendingTotal - budgetTarget)} over the combined category budget`});
+  if (totalUtil > 30) attention.push({route:'debt', tone:totalUtil >= 70 ? 'danger' : 'warning', title:`Debt utilisation is ${totalUtil.toFixed(0)}%`, meta:highRisk ? `${safeText(highRisk.account_name)} currently carries the highest APR risk` : 'Review balances and repayment priorities'});
+  if (companyBillTotals.overdueCount) attention.push({route:'co-bills', tone:'warning', title:`${companyBillTotals.overdueCount} company bill${companyBillTotals.overdueCount === 1 ? '' : 's'} overdue`, meta:`${fmt(companyBillTotals.remaining)} remains across company bills`});
+
+  const upcoming = [];
+  fixedCosts.filter(row => !billFinancialState(row).fullyPaid).forEach(row => {
+    const state = billFinancialState(row);
+    const date = state.dueDate || new Date(8640000000000000);
+    upcoming.push({date, route:'bills', label:row.provider || row.category || 'Bill', meta:`Bill · ${fmt(state.remaining)} remaining`, value:state.dueDate ? fmtDate(state.dueDate) : 'No date'});
+  });
+  expectedIncome.forEach(row => {
+    const date = row.date_received ? new Date(row.date_received) : new Date(8640000000000000);
+    upcoming.push({date, route:'income', label:row.paid_by || row.description || 'Expected income', meta:`Income · ${fmt(row.gross_amount)}`, value:row.date_received ? fmtDate(row.date_received) : 'No date'});
+  });
+  upcoming.sort((a,b) => a.date - b.date);
+
+  const attentionHTML = attention.length ? attention.slice(0,5).map(item => `
+    <button type="button" class="money-attention ${item.tone}" onclick="navigate('${item.route}',${item.params || '{}'} )" style="width:100%;border:0;background:transparent;text-align:left;font-family:inherit;cursor:pointer">
+      <span class="money-attention-dot"></span>
+      <span class="money-attention-copy"><span class="money-attention-title">${item.title}</span><span class="money-attention-meta">${item.meta}</span></span>
+      <span class="app-list-chevron" aria-hidden="true">›</span>
+    </button>`).join('') : moneyEmpty('Nothing needs urgent attention', 'Bills, income, debt and budgets have no current exceptions.');
+
+  root().innerHTML = `
+<div class="page money-shell">
+  ${moneyPageHead('Money', 'Your current position, priorities and upcoming financial activity.')}
+  ${moneySectionNav('overview')}
+
+  <section class="money-summary" aria-label="Financial position this month">
+    <button type="button" class="money-summary-cell" onclick="openMoneySection('income')" style="border-top:0;border-bottom:0;background:transparent;text-align:left;font-family:inherit;cursor:pointer">
+      <div class="money-summary-label">Income received</div><div class="money-summary-value positive">${fmt(incomeReceived)}</div><div class="money-summary-note">This month</div>
+    </button>
+    <button type="button" class="money-summary-cell" onclick="openMoneySection('spending')" style="border-top:0;border-bottom:0;background:transparent;text-align:left;font-family:inherit;cursor:pointer">
+      <div class="money-summary-label">Spending</div><div class="money-summary-value">${fmt(spendingTotal)}</div><div class="money-summary-note">This month</div>
+    </button>
+    <button type="button" class="money-summary-cell" onclick="openMoneySection('bills')" style="border-top:0;border-bottom:0;background:transparent;text-align:left;font-family:inherit;cursor:pointer">
+      <div class="money-summary-label">Bills remaining</div><div class="money-summary-value ${personalBillTotals.overdueCount ? 'danger' : ''}">${fmt(personalBillTotals.remaining)}</div><div class="money-summary-note">${personalBillTotals.unpaidCount} unpaid</div>
+    </button>
+  </section>
+
+  <div class="money-layout two-column">
+    <div class="money-layout">
+      <section class="money-panel">
+        <div class="money-panel-head"><div><div class="money-panel-title">Needs attention</div><div class="money-panel-note">Only current exceptions</div></div></div>
+        ${attentionHTML}
+      </section>
+
+      <section class="money-panel">
+        <div class="money-panel-head"><div><div class="money-panel-title">Upcoming</div><div class="money-panel-note">Bills and expected income in date order</div></div></div>
+        ${upcoming.length ? upcoming.slice(0,6).map(item => `<button type="button" class="financial-row" onclick="navigate('${item.route}',${item.route === 'income' ? "{tab:'expected'}" : '{}'} )"><span class="financial-row-main"><span class="financial-row-title">${safeText(item.label)}</span><span class="financial-row-meta">${item.meta}</span></span><span class="financial-row-value">${item.value}</span></button>`).join('') : moneyEmpty('Nothing upcoming', 'Add bills or expected income to see a chronological preview.')}
+      </section>
+    </div>
+
+    <div class="money-layout">
+      <section class="money-panel">
+        <div class="money-panel-head"><div><div class="money-panel-title">Debt</div><div class="money-panel-note">Repayment position</div></div><button class="money-panel-link" onclick="openMoneySection('debt')">Open Debt</button></div>
+        <button type="button" class="financial-row" onclick="openMoneySection('debt')">
+          <span class="financial-row-main"><span class="money-summary-label">Total remaining</span><span class="money-summary-value danger" style="display:block">${fmt(totalDebt)}</span><span class="financial-row-meta">Estimated minimum exposure ${fmt(totalEstMin)}</span></span>
+        </button>
+        ${priorityDebt ? `<button type="button" class="financial-row" onclick="openMoneySection('debt')"><span class="financial-row-main"><span class="financial-row-top"><span class="money-status warning">Priority</span><span class="financial-row-title">${safeText(priorityDebt.account_name)}</span></span><span class="financial-row-meta">${priorityDebt.apr_percent || 0}% ${safeText(priorityDebt.apr_type || 'APR')} · ${totalUtil.toFixed(0)}% overall utilisation</span></span><span class="financial-row-value">${fmt(debtBal(priorityDebt))}</span></button>` : moneyEmpty('No active debt', 'There are no active balances to prioritise.')}
+      </section>
+
+      <section class="money-panel">
+        <div class="money-panel-head"><div><div class="money-panel-title">Company</div><div class="money-panel-note">Accounts and outstanding costs</div></div><button class="money-panel-link" onclick="openMoneySection('company')">Open Company</button></div>
+        <button type="button" class="financial-row" onclick="openMoneySection('company')"><span class="financial-row-main"><span class="financial-row-title">Received</span><span class="financial-row-meta">${companyReceived.length} transaction${companyReceived.length === 1 ? '' : 's'}</span></span><span class="financial-row-value" style="color:var(--positive)">${fmt(companyReceivedTotal)}</span></button>
+        <button type="button" class="financial-row" onclick="openMoneySection('company')"><span class="financial-row-main"><span class="financial-row-title">Expected</span><span class="financial-row-meta">${companyExpected.length} incoming payment${companyExpected.length === 1 ? '' : 's'}</span></span><span class="financial-row-value">${fmt(companyExpectedTotal)}</span></button>
+        <button type="button" class="financial-row" onclick="navigate('co-bills')"><span class="financial-row-main"><span class="financial-row-title">Outstanding costs</span><span class="financial-row-meta">Expenses and unpaid company bills</span></span><span class="financial-row-value ${companyOutstandingTotal ? 'danger' : ''}">${fmt(companyOutstandingTotal)}</span></button>
+      </section>
+    </div>
+  </div>
+</div>`;
+}
+
 function switchFinanceTab(tab) {
   document.getElementById('fp-personal').classList.toggle('hidden', tab!=='personal');
   document.getElementById('fp-company').classList.toggle('hidden', tab!=='company');
@@ -1407,49 +1664,33 @@ async function renderCoBills() {
 }
 
 function _renderBillsUI(title, table, unpaid, paid, isCo) {
-  const totalDue  = unpaid.reduce((s,b) => s + b._amtDue,  0);
-  const totalPaid = [...unpaid, ...paid].reduce((s,b) => s + b._amtPaid, 0);
   const allBills  = [...unpaid, ...paid];
-  const grandTotal = allBills.reduce((s,b) => s + b._amtDue, 0);
-  const remaining  = Math.max(0, grandTotal - totalPaid);
+  const totals = billTotals(allBills);
+  const overdue = unpaid.filter(b => billFinancialState(b).overdue);
+  const overdueIds = new Set(overdue.map(b => String(b.id)));
+  const upcoming = unpaid.filter(b => !overdueIds.has(String(b.id)));
 
   root().innerHTML = `
-<div class="page">
-  <div class="topbar-centered">
-    <button class="back-btn" onclick="navigate('finance')">‹ Back</button>
-    <div class="topbar-centered-title">${title}</div>
-    <button class="icon-btn topbar-centered-right" onclick="showBillModal(null,'${table}',${isCo})">+</button>
-  </div>
-
+<div class="page money-shell">
+  ${moneyPageHead(title, isCo ? 'Manage recurring company costs and this month’s payments.' : 'Manage recurring costs and this month’s payments.', `showBillModal(null,'${table}',${isCo})`, 'Add bill')}
   ${moneySectionNav(isCo ? 'company' : 'bills')}
 
-  <!-- Snapshot counters -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-    <div class="card" style="padding:12px 14px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Total Due</div>
-      <div style="font-size:18px;font-weight:700;color:var(--text)">${fmt(grandTotal)}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:2px">${allBills.length} bill${allBills.length!==1?'s':''}</div>
-    </div>
-    <div class="card" style="padding:12px 14px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Paid So Far</div>
-      <div style="font-size:18px;font-weight:700;color:var(--teal)">${fmt(totalPaid)}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:2px">${paid.length} fully paid</div>
-    </div>
-    <div class="card" style="padding:12px 14px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Remaining</div>
-      <div style="font-size:18px;font-weight:700;color:${remaining>0?'var(--danger)':'var(--teal)'}">${fmt(remaining)}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:2px">${unpaid.length} unpaid</div>
-    </div>
+  <section class="money-summary" aria-label="Bill payment summary">
+    <div class="money-summary-cell"><div class="money-summary-label">Remaining</div><div class="money-summary-value ${totals.overdueCount ? 'danger' : 'warning'}">${fmt(totals.remaining)}</div><div class="money-summary-note">${totals.unpaidCount} unpaid</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Paid</div><div class="money-summary-value positive">${fmt(totals.paid)}</div><div class="money-summary-note">${totals.paidCount} completed</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Monthly total</div><div class="money-summary-value">${fmt(totals.due)}</div><div class="money-summary-note">${allBills.length} recurring bill${allBills.length === 1 ? '' : 's'}</div></div>
+  </section>
+
+  ${overdue.length ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Overdue</div><div class="money-panel-note">Past this month’s due date</div></div><span class="money-status danger">${overdue.length}</span></div>${billRows(overdue, table, isCo)}</section>` : ''}
+
+  <div class="money-tools">
+    <div class="search-wrap money-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="search-input" id="search" placeholder="Search bills" oninput="filterRows(this.value)"/></div>
   </div>
 
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input class="search-input" id="search" placeholder="Search…" oninput="filterRows(this.value)"/>
+  <div class="money-layout ${paid.length ? 'equal' : ''}">
+    <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Upcoming</div><div class="money-panel-note">Not yet past their due date</div></div><span class="money-status ${upcoming.length ? 'warning' : 'positive'}">${upcoming.length}</span></div>${upcoming.length ? billRows(upcoming, table, isCo) : moneyEmpty(overdue.length ? 'No other bills upcoming' : 'Everything is paid', overdue.length ? 'Overdue bills are separated above.' : 'There are no remaining bills for this month.')}</section>
+    ${paid.length ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Paid</div><div class="money-panel-note">Completed this month</div></div><span class="money-status positive">${paid.length}</span></div>${billRows(paid, table, isCo)}</section>` : ''}
   </div>
-  <div class="ph"><h2 style="text-align:left">Unpaid</h2><span class="muted">${unpaid.length}</span></div>
-  <div class="card">${billRows(unpaid, table, isCo)||'<div class="row"><div class="muted">None</div></div>'}</div>
-  <div class="ph mt16"><h2 style="text-align:left">Paid</h2><span class="muted">${paid.length}</span></div>
-  <div class="card">${billRows(paid, table, isCo)||'<div class="row"><div class="muted">None</div></div>'}</div>
 </div>`;
 }
 
@@ -1460,26 +1701,29 @@ function billRows(rows, table, isCo) {
     const remaining = Math.max(0, amtDue - amtPaid);
     const fullyPaid = b._fullyPaid;
     const hasPart   = amtPaid > 0 && !fullyPaid;
-    const dayLabel  = (b.due_day_number || b.due_day) ? 'DAY ' + (b.due_day_number || b.due_day) : '—';
+    const state = billFinancialState(b);
+    const dueLabel = state.dueDate ? fmtDate(state.dueDate) : 'No due date';
+    const progress = amtDue > 0 ? Math.min((amtPaid / amtDue) * 100, 100) : 0;
     return `
-  <div class="row bill-row" data-s="${(b.provider+' '+(b.category||'')).toLowerCase()}">
-    <div class="row-left" style="flex:1;min-width:0">
-      <div class="row-tag">${dayLabel}</div>
-      <div class="row-title">${b.provider||b.category||'—'}${b.category&&b.provider?' — '+b.category:''}</div>
-      <div style="display:flex;align-items:baseline;gap:8px;margin-top:3px;flex-wrap:wrap">
-        <span style="font-size:13px;color:var(--text2)">Due: ${fmt(amtDue)}</span>
-        ${amtPaid > 0 ? `<span style="font-size:12px;color:var(--teal)">Paid: ${fmt(amtPaid)}</span>` : ''}
-        ${hasPart ? `<span style="font-size:12px;color:var(--amber)">Rem: ${fmt(remaining)}</span>` : ''}
-        ${fullyPaid ? `<span style="font-size:11px;font-weight:700;color:var(--teal)">✓ PAID</span>` : ''}
-      </div>
-      ${hasPart ? `<div style="margin-top:5px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:4px;border-radius:2px;background:var(--teal);width:${Math.min((amtPaid/amtDue)*100,100).toFixed(1)}%"></div></div>` : ''}
+  <div class="financial-row bill-row ${fullyPaid ? 'is-paid' : ''}" data-s="${safeText((b.provider+' '+(b.category||'')).toLowerCase())}">
+    <div class="financial-row-main">
+      <div class="financial-row-top">${state.overdue ? '<span class="money-status danger">Overdue</span>' : fullyPaid ? '<span class="money-status positive">Paid</span>' : hasPart ? '<span class="money-status warning">Part paid</span>' : ''}<span class="financial-row-title">${safeText(b.provider || b.category || 'Untitled bill')}</span></div>
+      <div class="financial-row-meta">${state.overdue ? 'Due' : fullyPaid ? 'Paid · due' : 'Due'} ${dueLabel}${b.category && b.provider ? ` · ${safeText(b.category)}` : ''}${hasPart ? ` · ${fmt(amtPaid)} paid` : ''}</div>
+      ${hasPart ? `<div class="money-progress"><span style="width:${progress.toFixed(1)}%"></span></div>` : ''}
     </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:8px">
-      <button onclick="showAddPaymentModal('${b.id}','${table}',${isCo},${amtDue},${amtPaid})" style="background:var(--accent-light);border:1px solid var(--border);border-radius:var(--rs);padding:6px 10px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap">+ Pay</button>
-      <button class="menu-btn" onclick="ctxBill(event,'${b.id}','${table}',${isCo})">···</button>
+    <div class="financial-row-value">${fmt(fullyPaid ? amtDue : remaining)}<small>${fullyPaid ? 'paid' : hasPart ? 'remaining' : 'due'}</small></div>
+    <div class="financial-actions">
+      ${!fullyPaid ? `<button class="finance-action primary" onclick="payBillInFull('${b.id}','${table}',${isCo},${amtDue})">Pay</button>` : ''}
+      <button class="menu-btn" aria-label="More actions for ${safeText(b.provider || b.category || 'bill')}" onclick="ctxBill(event,'${b.id}','${table}',${isCo})">···</button>
     </div>
   </div>`;
   }).join('');
+}
+
+async function payBillInFull(id, table, isCo, amountDue) {
+  await dbUpdate(table, id, {paid_amount_this_month: amountDue});
+  showToast('Bill marked paid');
+  isCo ? renderCoBills() : renderBills();
 }
 
 async function showAddPaymentModal(billId, table, isCo, amtDue, amtPaid) {
@@ -1507,7 +1751,7 @@ async function showAddPaymentModal(billId, table, isCo, amtDue, amtPaid) {
   `, async () => {
     const payAmt = parseFloat(document.getElementById('f-pay-amt')?.value) || 0;
     if (payAmt <= 0) return alert('Enter a payment amount greater than zero.');
-    const newPaid = parseFloat((amtPaid + payAmt).toFixed(2));
+    const newPaid = parseFloat(Math.min(amtDue, amtPaid + payAmt).toFixed(2));
     await dbUpdate(table, billId, { paid_amount_this_month: newPaid });
     isCo ? renderCoBills() : renderBills();
   });
@@ -1527,6 +1771,11 @@ async function togglePaid(id, table, current, isCo) {
 
 function ctxBill(e, id, table, isCo) {
   showCtx(e, [
+    {label:'Log Partial Payment', fn: async()=>{
+      const bills = await dbFetch(table, {eq:{id}});
+      const b = bills[0];
+      if (b) showAddPaymentModal(id, table, isCo, parseFloat(b.monthly_amount)||0, parseFloat(b.paid_amount_this_month)||0);
+    }},
     {label:'Edit', fn: ()=>showBillModal(id, table, isCo)},
     {label:'Mark Fully Paid', fn: async()=>{
       const bills = await dbFetch(table, {eq:{id}});
@@ -1579,33 +1828,36 @@ async function renderSpending() {
     dbFetch(T.CATEGORY_BUDGETS,  {order:['category',true]}),
   ]);
   const cats = [...new Set(spending.map(r=>r.category).filter(Boolean))].sort();
+  const monthRows = spending.filter(row => isCurrentMonth(row.date));
+  const monthSpent = monthRows.reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
+  const target = budgets.reduce((sum,row) => sum + (parseFloat(row.monthly_target)||0), 0);
+  const remaining = target - monthSpent;
 
   root().innerHTML = `
-<div class="page">
-  <div class="topbar-centered">
-    <button class="back-btn" onclick="navigate('finance')">‹ Back</button>
-    <div class="topbar-centered-title">Spending</div>
-    <div class="topbar-centered-right"></div>
-  </div>
+<div class="page money-shell">
+  ${moneyPageHead('Spending', 'Review everyday spending and its effect on your monthly targets.', `showSpendModal(null,${JSON.stringify(cats).replace(/"/g,"'")})`, 'Add spending')}
   ${moneySectionNav('spending')}
-  <button class="btn btn-ghost" onclick="navigate('budgets')" style="margin-bottom:12px">⚡ Spending Suite</button>
-  <button class="btn btn-primary" onclick="showSpendModal(null,${JSON.stringify(cats).replace(/"/g,"'")})">Add New Spend</button>
-  <div class="ph"><h2 style="text-align:left">Variable Spending</h2></div>
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input class="search-input" placeholder="Search…" oninput="filterRows(this.value)"/>
+
+  <section class="money-summary" aria-label="Spending summary">
+    <div class="money-summary-cell"><div class="money-summary-label">Spent</div><div class="money-summary-value">${fmt(monthSpent)}</div><div class="money-summary-note">This month</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Budget target</div><div class="money-summary-value">${fmt(target)}</div><div class="money-summary-note">Across ${budgets.length} categories</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Remaining</div><div class="money-summary-value ${remaining < 0 ? 'danger' : 'positive'}">${fmt(remaining)}</div><div class="money-summary-note">Against targets</div></div>
+  </section>
+
+  <div class="money-tools">
+    <div class="search-wrap money-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="search-input" placeholder="Search spending" oninput="filterRows(this.value)"/></div>
+    <button class="finance-action subtle" onclick="navigate('budgets')">Budgets &amp; tools</button>
   </div>
-  <div class="card">
-    ${spending.map(r=>`
-    <div class="row bill-row" data-s="${(r.category+' '+(r.description||'')).toLowerCase()}">
-      <div class="row-left">
-        <div class="row-tag">${(r.category||'').toUpperCase()}</div>
-        <div class="row-title">${r.description||'—'}</div>
-        <div class="row-sub">${fmt(r.amount)} | ${fmtDate(r.date)}</div>
-      </div>
-      <button class="menu-btn" onclick="ctxSpend(event,'${r.id}',${JSON.stringify(cats).replace(/"/g,"'")})">···</button>
-    </div>`).join('')||'<div class="row"><div class="muted">No spending recorded</div></div>'}
-  </div>
+
+  <section class="money-panel">
+    <div class="money-panel-head"><div><div class="money-panel-title">Spending records</div><div class="money-panel-note">Most recent first</div></div><span class="money-status">${spending.length}</span></div>
+    ${spending.length ? spending.map(r=>`
+    <div class="financial-row bill-row" data-s="${safeText((r.category+' '+(r.description||'')).toLowerCase())}">
+      <div class="financial-row-main"><div class="financial-row-top"><span class="money-status">${safeText(r.category || 'Uncategorised')}</span><span class="financial-row-title">${safeText(r.description || 'Spending')}</span></div><div class="financial-row-meta">${fmtDate(r.date)}${r.counts_toward_target === false ? ' · Excluded from target' : ''}</div></div>
+      <div class="financial-row-value">${fmt(r.amount)}</div>
+      <button class="menu-btn" aria-label="More spending actions" onclick="ctxSpend(event,'${r.id}',${JSON.stringify(cats).replace(/"/g,"'")})">···</button>
+    </div>`).join('') : moneyEmpty('No spending recorded', 'Add spending to begin tracking your monthly pattern.')}
+  </section>
 </div>`;
 }
 
@@ -1656,105 +1908,95 @@ async function renderIncome(params={}) {
   const expectedRows = allIncome.filter(r => (r.status||'').toLowerCase() !== 'received');
 
   const tab = params.tab==='expected'?'expected':'received';
+  const receivedThisMonth = receivedRows.filter(row => isCurrentMonth(row.date_received));
+  const receivedTotal = receivedThisMonth.reduce((sum,row) => sum + (parseFloat(row.gross_amount)||0), 0);
+  const expectedTotal = expectedRows.reduce((sum,row) => sum + (parseFloat(row.gross_amount)||0), 0);
+  const overdueCount = expectedRows.filter(row => incomeDisplayStatus(row) === 'Overdue').length;
 
   function incomeRow(r, showCtxFn) {
     const ds = incomeDisplayStatus(r);
     const tagClass = ds.toLowerCase();
     const dateDisplay = r.date_received ? fmtDate(r.date_received) : '—';
     const search = [r.paid_by,r.description,r.income_type,r.status].join(' ').toLowerCase();
-    return `<div class="row bill-row" data-s="${search}">
-      <div class="row-left">
-        <div class="row-tag ${tagClass}">${ds.toUpperCase()}</div>
-        <div class="row-title">${fmt(r.gross_amount)} on ${dateDisplay}</div>
-        <div class="row-sub">${[r.paid_by,r.description].filter(Boolean).join(' — ')}</div>
+    return `<div class="financial-row bill-row" data-s="${safeText(search)}">
+      <div class="financial-row-main">
+        <div class="financial-row-top"><span class="money-status ${ds === 'Received' ? 'positive' : ds === 'Overdue' ? 'danger' : 'warning'}">${ds}</span><span class="financial-row-title">${safeText(r.paid_by || r.description || 'Income')}</span></div>
+        <div class="financial-row-meta">${dateDisplay}${r.description && r.paid_by ? ` · ${safeText(r.description)}` : ''}${r.income_type ? ` · ${safeText(r.income_type)}` : ''}</div>
       </div>
-      <button class="menu-btn" onclick="${showCtxFn}(event,'${r.id}')">···</button>
+      <div class="financial-row-value">${fmt(r.gross_amount)}<small>${ds === 'Received' ? 'received' : ds === 'Overdue' ? 'overdue' : 'expected'}</small></div>
+      <button class="menu-btn" aria-label="More income actions" onclick="${showCtxFn}(event,'${r.id}')">···</button>
     </div>`;
   }
 
   root().innerHTML = `
-<div class="page">
-  <div class="topbar-centered">
-    <button class="back-btn" onclick="navigate('finance')">‹ Back</button>
-    <div class="topbar-centered-title">Income</div>
-    <button class="icon-btn topbar-centered-right" id="income-add-btn">+</button>
-  </div>
+<div class="page money-shell">
+  ${moneyPageHead('Income', 'Track money received and payments still expected.', `showReceivedModal(null,'${tab === 'expected' ? 'Expected' : 'Received'}')`, tab === 'expected' ? 'Add expected' : 'Add received')}
   ${moneySectionNav('income')}
-  <div class="tabs">
-    <button class="tab ${tab==='received'?'active':''}" onclick="incomeTab('received')">Received</button>
-    <button class="tab ${tab==='expected'?'active':''}" onclick="incomeTab('expected')">Expected</button>
+
+  <section class="money-summary" aria-label="Income summary">
+    <div class="money-summary-cell"><div class="money-summary-label">Received</div><div class="money-summary-value positive">${fmt(receivedTotal)}</div><div class="money-summary-note">This month</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Expected</div><div class="money-summary-value">${fmt(expectedTotal)}</div><div class="money-summary-note">${expectedRows.length} payment${expectedRows.length === 1 ? '' : 's'}</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Overdue</div><div class="money-summary-value ${overdueCount ? 'danger' : ''}">${overdueCount}</div><div class="money-summary-note">Expected payments</div></div>
+  </section>
+
+  <div class="segmented-control">
+    <button class="segment-btn ${tab==='received'?'active':''}" onclick="incomeTab('received')">Received</button>
+    <button class="segment-btn ${tab==='expected'?'active':''}" onclick="incomeTab('expected')">Expected</button>
   </div>
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input class="search-input" placeholder="Search…" oninput="filterRows(this.value)"/>
-  </div>
+  <div class="search-wrap money-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="search-input" placeholder="Search income" oninput="filterRows(this.value)"/></div>
 
   <div id="income-received" class="${tab!=='received'?'hidden':''}">
-    <div class="card">
-      ${receivedRows.length ? receivedRows.map(r=>incomeRow(r,'ctxIncomeRow')).join('') : '<div class="row"><div class="muted">No received income</div></div>'}
-    </div>
+    <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Received income</div><div class="money-panel-note">Most recent first</div></div><span class="money-status positive">${receivedRows.length}</span></div>${receivedRows.length ? receivedRows.map(r=>incomeRow(r,'ctxIncomeRow')).join('') : moneyEmpty('No received income', 'Add income once it reaches you.')}</section>
   </div>
 
   <div id="income-expected" class="${tab!=='expected'?'hidden':''}">
-    ${expectedRows.length ? `<div class="card">
-      ${expectedRows.map(r=>incomeRow(r,'ctxIncomeRow')).join('')}
-    </div>` : `<div class="card"><div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-msg">No expected income yet</div><div>Tap + to add upcoming payments</div></div></div>`}
+    <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Expected income</div><div class="money-panel-note">Upcoming and overdue payments</div></div><span class="money-status ${overdueCount ? 'danger' : 'warning'}">${expectedRows.length}</span></div>${expectedRows.length ? expectedRows.map(r=>incomeRow(r,'ctxIncomeRow')).join('') : moneyEmpty('No expected income', 'Add an upcoming payment to track when it should arrive.')}</section>
   </div>
 </div>`;
 
-  document.getElementById('income-add-btn').onclick = () => showReceivedModal(null);
   window._incomeActiveTab = tab;
 }
 
 function incomeTab(tab) {
   window._incomeActiveTab = tab;
-  ['received','expected'].forEach(t=>{
-    document.getElementById('income-'+t)?.classList.toggle('hidden', t!==tab);
-    document.querySelector(`.tab[onclick="incomeTab('${t}')"]`)?.classList.toggle('active', t===tab);
-  });
+  rememberCurrentViewParams({section:'income', tab});
+  renderIncome({tab});
 }
 
 function ctxIncomeRow(e, id) {
   showCtx(e,[
     {label:'Edit',   fn:()=>showReceivedModal(id)},
-    {label:'Delete', danger:true, fn:async()=>{ if(confirm('Delete?')){await dbDelete(T.PERSONAL_INCOME,id);renderIncome();}}}
+    {label:'Delete', danger:true, fn:async()=>{ if(confirm('Delete?')){await dbDelete(T.PERSONAL_INCOME,id);renderIncome({tab:window._incomeActiveTab || 'received'});}}}
   ]);
 }
 
-async function showReceivedModal(editId) {
+async function showReceivedModal(editId, requestedStatus) {
   let ex=null;
   if(editId){const r=await dbFetch(T.PERSONAL_INCOME,{eq:{id:editId}});ex=r[0]||null;}
   // Build datalist values from existing income
   const allIncome = await dbFetch(T.PERSONAL_INCOME, {order:['date_received',false]});
   const prevPaidBy = [...new Set(allIncome.map(r=>r.paid_by).filter(Boolean))];
   const prevTypes  = [...new Set(allIncome.map(r=>r.income_type).filter(Boolean))];
-  showModal(`${editId?'Edit':'Add'} Income`,`
+  const createStatus = requestedStatus === 'Expected' ? 'Expected' : 'Received';
+  const effectiveStatus = editId ? (ex?.status || 'Received') : createStatus;
+  showModal(`${editId?'Edit':createStatus === 'Expected' ? 'Add Expected':'Add Received'} Income`,`
     <datalist id="dl-paidby">${prevPaidBy.map(s=>`<option value="${s}">`).join('')}</datalist>
     <datalist id="dl-type">${prevTypes.map(s=>`<option value="${s}">`).join('')}</datalist>
     <div class="fg"><label>Paid By / Source</label><input id="f-by" list="dl-paidby" value="${ex?.paid_by||''}" placeholder="e.g. Universal Credit" autocomplete="off"/></div>
     <div class="fg"><label>Description</label><input id="f-desc" value="${ex?.description||''}"/></div>
     <div class="fg"><label>Amount (£)</label><input id="f-amt" type="number" step="0.01" value="${ex?.gross_amount||''}"/></div>
-    <div class="fg"><label>Date Received</label><input id="f-date" type="date" value="${ex?.date_received?ex.date_received.substring(0,10):today()}"/></div>
+    <div class="fg"><label>${effectiveStatus === 'Expected' ? 'Expected Date' : 'Date Received'}</label><input id="f-date" type="date" value="${ex?.date_received?ex.date_received.substring(0,10):today()}"/></div>
     <div class="fg"><label>Income Type</label><input id="f-type" list="dl-type" value="${ex?.income_type||''}" placeholder="e.g. Freelance, Benefit" autocomplete="off"/></div>
-    ${editId ? `<div class="fg"><label>Status</label><select id="f-status">
-      <option value="Received" ${ex?.status==='Received'?'selected':''}>Received</option>
-      <option value="Expected" ${ex?.status==='Expected'?'selected':''}>Expected</option>
-    </select></div>` : ''}
+    <div class="fg"><label>Status</label><select id="f-status">
+      <option value="Received" ${effectiveStatus==='Received'?'selected':''}>Received</option>
+      <option value="Expected" ${effectiveStatus==='Expected'?'selected':''}>Expected</option>
+    </select></div>
   `, async()=>{
     const dateVal = v('f-date');
-    let statusVal;
-    if (editId) {
-      // Editing: use whatever is in the status selector
-      statusVal = v('f-status') || ex?.status || 'Received';
-    } else {
-      // New entry: derive from date — do not touch stored status of existing rows
-      const d = new Date(dateVal);
-      const tod = new Date(); tod.setHours(0,0,0,0);
-      statusVal = d <= tod ? 'Received' : 'Expected';
-    }
+    const statusVal = v('f-status') || effectiveStatus;
     const row={paid_by:v('f-by'),description:v('f-desc')||null,gross_amount:num('f-amt'),date_received:dateVal,income_type:v('f-type')||null,status:statusVal};
     editId?await dbUpdate(T.PERSONAL_INCOME,editId,row):await dbInsert(T.PERSONAL_INCOME,row);
-    renderIncome();
+    renderIncome({tab:statusVal === 'Expected' ? 'expected' : 'received'});
   });
 }
 
@@ -1781,7 +2023,7 @@ async function showExpectedModal(editId) {
 // ════════════════════════════════════════════════════════════
 // DEBT PAGE
 // ════════════════════════════════════════════════════════════
-async function renderDebt() {
+async function renderDebtLegacy() {
   const debts = await dbFetch(T.DEBT_MASTER, {order:['attack_order',true]});
   const active  = debts.filter(d => d.status?.toLowerCase() !== 'cleared');
   const cleared = debts.filter(d => d.status?.toLowerCase() === 'cleared');
@@ -1993,6 +2235,110 @@ async function renderDebt() {
   };
 }
 
+async function renderDebt() {
+  const [debts, totalHistory] = await Promise.all([
+    dbFetch(T.DEBT_MASTER, {order:['attack_order',true]}),
+    dbFetch(T.DEBT_TOTAL_HISTORY, {order:['statement_date',true]})
+  ]);
+  const active = debts.filter(d => (d.status || '').toLowerCase() !== 'cleared' && debtBal(d) > 0);
+  const cleared = debts.filter(d => (d.status || '').toLowerCase() === 'cleared' || debtBal(d) <= 0);
+  const totalDebt = active.reduce((sum,d) => sum + debtBal(d), 0);
+  const {totalEstMin, totalUtil, highRisk} = calcDamageAndRisk(debts);
+  const priority = [...active].sort((a,b) => (a.attack_order || 999) - (b.attack_order || 999))[0] || highRisk || null;
+  const totalLimit = debts.filter(d => (parseFloat(d.credit_limit)||0) > 0).reduce((sum,d) => sum + (parseFloat(d.credit_limit)||0), 0);
+
+  const historyByMonth = {};
+  totalHistory.forEach(row => {
+    if (!row.statement_date) return;
+    const month = row.statement_date.substring(0,7);
+    if (!historyByMonth[month] || row.statement_date > historyByMonth[month].statement_date) historyByMonth[month] = row;
+  });
+  const recordedTotals = Object.values(historyByMonth).sort((a,b) => a.statement_date.localeCompare(b.statement_date));
+  const previousChange = recordedTotals.length >= 2 ? (parseFloat(recordedTotals.at(-1).total_debt)||0) - (parseFloat(recordedTotals.at(-2).total_debt)||0) : null;
+
+  function debtRow(d, isCleared = false) {
+    const balance = Math.max(0, debtBal(d));
+    const limit = parseFloat(d.credit_limit)||0;
+    const utilisation = limit > 0 ? (balance / limit) * 100 : null;
+    const apr = parseFloat(d.apr_percent)||0;
+    const minimum = estMin(d);
+    const isPriority = priority?.id === d.id;
+    const riskTone = utilisation !== null && utilisation >= 70 ? 'danger' : utilisation !== null && utilisation >= 30 ? 'warning' : '';
+    return `<div class="financial-row ${isCleared ? 'is-paid' : ''}">
+      <button type="button" class="financial-row-main" onclick="showDebtDetail('${d.id}')" style="border:0;background:transparent;color:inherit;text-align:left;font-family:inherit;cursor:pointer">
+        <div class="financial-row-top">${isPriority && !isCleared ? '<span class="money-status warning">Priority</span>' : ''}${isCleared ? '<span class="money-status positive">Cleared</span>' : riskTone ? `<span class="money-status ${riskTone}">${utilisation.toFixed(0)}% used</span>` : d.interest_free ? '<span class="money-status positive">Interest free</span>' : ''}<span class="financial-row-title">${safeText(d.account_name || 'Debt account')}</span></div>
+        <div class="financial-row-meta">${apr ? `${apr}% ${safeText(d.apr_type || 'APR')}` : 'No APR recorded'}${minimum > 0 ? ` · Minimum ${fmt(minimum)}` : ''}${limit > 0 ? ` · Limit ${fmt(limit)}` : ''}</div>
+        ${utilisation !== null && !isCleared ? `<div class="money-progress"><span style="width:${Math.min(utilisation,100).toFixed(1)}%;background:${utilisation >= 70 ? 'var(--danger)' : utilisation >= 30 ? 'var(--warning)' : 'var(--positive)'}"></span></div>` : ''}
+      </button>
+      <div class="financial-row-value">${fmt(balance)}<small>${isCleared ? 'cleared' : 'remaining'}</small></div>
+      <button class="menu-btn" aria-label="More debt actions" onclick="ctxDebt(event,'${d.id}')">···</button>
+    </div>`;
+  }
+
+  const priorityBalance = priority ? debtBal(priority) : 0;
+  const priorityMinimum = priority ? estMin(priority) : 0;
+  const defaultOverpay = priority ? Math.max(0, (parseFloat(priority.payments_made)||0) - priorityMinimum) : 0;
+  window._debtRows = debts;
+  window._debtCtx = {totalDebt, totalLimit, totalUtil, focusBal:priorityBalance, focusMinP:priorityMinimum};
+
+  root().innerHTML = `
+<div class="page money-shell">
+  ${moneyPageHead('Debt', 'See what remains, what needs focus, and where risk is building.', "showDebtModal(null,'Active')", 'Add account')}
+  ${moneySectionNav('debt')}
+
+  <section class="debt-hero">
+    <div class="money-eyebrow">Total debt remaining</div>
+    <div class="debt-total">${fmt(totalDebt)}</div>
+    ${previousChange !== null ? `<div style="margin-top:8px;font-size:12px;opacity:.72">${previousChange <= 0 ? 'Down' : 'Up'} ${fmt(Math.abs(previousChange))} since the previous recorded period</div>` : '<div style="margin-top:8px;font-size:12px;opacity:.62">Add history entries to track period changes</div>'}
+    <div class="debt-support">
+      <div><div class="debt-support-label">Minimum exposure</div><div class="debt-support-value">${fmt(totalEstMin)}</div></div>
+      <div><div class="debt-support-label">Priority</div><div class="debt-support-value">${priority ? safeText(priority.account_name) : 'None'}</div></div>
+      <div><div class="debt-support-label">Utilisation</div><div class="debt-support-value" style="color:${totalUtil >= 70 ? 'var(--danger)' : totalUtil >= 30 ? 'var(--warning)' : 'inherit'}">${totalLimit > 0 ? totalUtil.toFixed(0)+'%' : 'Not available'}</div></div>
+    </div>
+  </section>
+
+  <div class="money-layout two-column">
+    <div class="money-layout">
+      <section class="money-panel">
+        <div class="money-panel-head"><div><div class="money-panel-title">Debt accounts</div><div class="money-panel-note">Ordered by repayment priority</div></div><span class="money-status ${active.length ? 'warning' : 'positive'}">${active.length} active</span></div>
+        ${active.length ? active.map(d => debtRow(d)).join('') : moneyEmpty('No active debt', 'Add an account when you need to track a balance.')}
+      </section>
+      ${cleared.length ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Cleared accounts</div><div class="money-panel-note">Kept for your records</div></div><span class="money-status positive">${cleared.length}</span></div>${cleared.map(d => debtRow(d,true)).join('')}</section>` : ''}
+    </div>
+
+    <div class="money-layout">
+      ${priority ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Repayment focus</div><div class="money-panel-note">Based on your recorded attack order</div></div></div><button type="button" class="financial-row" onclick="showDebtDetail('${priority.id}')"><span class="financial-row-main"><span class="financial-row-top"><span class="money-status warning">Next</span><span class="financial-row-title">${safeText(priority.account_name)}</span></span><span class="financial-row-meta">${priority.apr_percent || 0}% ${safeText(priority.apr_type || 'APR')} · minimum ${fmt(priorityMinimum)}</span></span><span class="financial-row-value">${fmt(priorityBalance)}</span></button>
+        <div style="padding:var(--space-4);border-top:1px solid var(--border)"><label for="debt-overpay-input" style="display:block;font-size:11px;font-weight:650;color:var(--text2);margin-bottom:7px">Monthly overpayment scenario</label><div style="display:flex;align-items:center;gap:8px"><span>£</span><input id="debt-overpay-input" class="money-filter-control" type="number" min="0" step="10" value="${defaultOverpay.toFixed(0)}" style="width:110px" oninput="debtCalcPayoff(this.value)"/><span style="font-size:11px;color:var(--text3)">per month</span></div><div id="debt-payoff-panel" style="margin-top:12px;padding:12px;border-radius:var(--radius-control);background:var(--bg);border:1px solid var(--border)">${defaultOverpay > 0 ? '<div id="debt-payoff-est" style="font-size:12px;color:var(--text2)">Calculating…</div>' : '<div id="debt-payoff-est" style="font-size:12px;color:var(--text3)">Enter an amount to see the estimated impact</div>'}</div></div></section>` : ''}
+      <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">History</div><div class="money-panel-note">Recorded balances over time</div></div><button class="money-panel-link" onclick="navigate('debt-history')">Open History</button></div>${previousChange !== null ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Latest recorded change</div><div class="financial-row-meta">Compared with the previous recorded period</div></div><div class="financial-row-value" style="color:${previousChange <= 0 ? 'var(--positive)' : 'var(--danger)'}">${previousChange > 0 ? '+' : '−'}${fmt(Math.abs(previousChange))}</div></div>` : moneyEmpty('No comparison yet', 'Two recorded periods are needed for a reliable change.')}</section>
+    </div>
+  </div>
+</div>`;
+
+  if (defaultOverpay > 0) setTimeout(() => debtCalcPayoff(defaultOverpay), 0);
+}
+
+function showDebtDetail(id) {
+  const debt = (window._debtRows || []).find(row => String(row.id) === String(id));
+  if (!debt) return;
+  const balance = Math.max(0, debtBal(debt));
+  const limit = parseFloat(debt.credit_limit)||0;
+  const utilisation = limit > 0 ? (balance / limit) * 100 : null;
+  const minimum = estMin(debt);
+  showModal(safeText(debt.account_name || 'Debt account'), `
+    <div class="money-summary" style="margin-bottom:16px"><div class="money-summary-cell"><div class="money-summary-label">Balance</div><div class="money-summary-value danger">${fmt(balance)}</div></div><div class="money-summary-cell"><div class="money-summary-label">Minimum</div><div class="money-summary-value">${fmt(minimum)}</div></div><div class="money-summary-cell"><div class="money-summary-label">Utilisation</div><div class="money-summary-value">${utilisation !== null ? utilisation.toFixed(0)+'%' : '—'}</div></div></div>
+    <div class="surface-group">
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">APR</div></div><div class="financial-row-value">${debt.apr_percent || 0}% ${safeText(debt.apr_type || '')}</div></div>
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Credit limit</div></div><div class="financial-row-value">${limit ? fmt(limit) : '—'}</div></div>
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">New spending</div></div><div class="financial-row-value">${fmt(debt.new_spend)}</div></div>
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Payments made</div></div><div class="financial-row-value">${fmt(debt.payments_made)}</div></div>
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Target payment</div></div><div class="financial-row-value">${fmt(debt.target_payment)}</div></div>
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Repayment order</div></div><div class="financial-row-value">${debt.attack_order || '—'}</div></div>
+    </div>
+    ${debt.notes ? `<div style="margin-top:14px;font-size:12px;line-height:1.55;color:var(--text2)">${safeText(debt.notes)}</div>` : ''}
+    <button type="button" class="btn btn-primary" style="margin-top:16px" onclick="document.querySelector('.overlay')?.remove();showDebtModal('${debt.id}')">Edit account</button>
+  `);
+}
+
 function ctxDebt(e, id) {
   showCtx(e,[
     {label:'Edit',         fn:()=>showDebtModal(id)},
@@ -2161,43 +2507,34 @@ async function renderDebtHistory() {
   }
 
   root().innerHTML = `
-<div class="page">
-  <div class="topbar-centered">
-    <button class="back-btn" onclick="navigate('debt')">‹ Back</button>
-    <div class="topbar-centered-title">Debt History</div>
-    <div class="topbar-centered-right"></div>
-  </div>
-  <div class="chart-card">
-    <div class="chart-title">Debt Progress</div>
+<div class="page money-shell">
+  ${moneyPageHead('Debt history', 'Recorded balances over time. Comparisons are shown only when supported by saved history.', `showHistoryModal(${JSON.stringify(debts.map(d=>d.account_name)).replace(/"/g,"'")})`, 'Add entry')}
+  ${moneySectionNav('debt')}
+  <section class="money-panel" style="padding:16px">
+    <div class="money-panel-title">Total debt by recorded period</div>
+    <div class="money-panel-note" style="margin-bottom:12px">One primary series using saved history</div>
     <div class="chart-wrap"><canvas id="debt-chart"></canvas></div>
     <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--text2)">
-      <div style="width:10px;height:10px;border-radius:50%;background:var(--accent)"></div>Total debt by month
+      <div style="width:10px;height:2px;border-radius:2px;background:var(--accent)"></div>Total debt
     </div>
-  </div>
-  <button class="btn btn-primary mb16" onclick="showHistoryModal(${JSON.stringify(debts.map(d=>d.account_name)).replace(/"/g,"'")})">Add History Entry</button>
-  <div class="ph"><h2 style="text-align:left">Debt History</h2></div>
+  </section>
   <div class="search-wrap">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
     <input class="search-input" placeholder="Search account…" oninput="filterGroups(this.value)"/>
   </div>
   <div id="hist-groups">
     ${Object.entries(byAccount).map(([acc,rows])=>`
-    <div class="acct-group" data-acct="${acc.toLowerCase()}">
-      <div class="ph mt16"><h2 style="text-align:left">${acc}</h2></div>
-      <div class="card">
+    <section class="acct-group money-panel" data-acct="${safeText(acc.toLowerCase())}">
+      <div class="money-panel-head"><div><div class="money-panel-title">${safeText(acc)}</div><div class="money-panel-note">${rows.length} recorded period${rows.length === 1 ? '' : 's'}</div></div></div>
         ${rows.map(r=>{
           const change=(parseFloat(r.closing_balance)||0)-(parseFloat(r.opening_balance)||0);
-          return `<div class="row">
-            <div class="row-left">
-              <div class="row-tag">${fmtDateUp(r.statement_date)}</div>
-              <div class="row-title">Close: ${fmt(r.closing_balance)}</div>
-              <div class="row-sub">Open Bal: ${fmt(r.opening_balance)} | Change: ${fmt(change)}</div>
-            </div>
-            <button class="menu-btn" onclick="delHistEntry('${r.id}')">···</button>
+          return `<div class="financial-row">
+            <div class="financial-row-main"><div class="financial-row-title">${fmtDate(r.statement_date)}</div><div class="financial-row-meta">Opened ${fmt(r.opening_balance)} · ${change <= 0 ? 'Down' : 'Up'} ${fmt(Math.abs(change))}</div></div>
+            <div class="financial-row-value">${fmt(r.closing_balance)}<small>closing balance</small></div>
+            <button class="menu-btn" aria-label="Delete history entry" onclick="delHistEntry('${r.id}')">···</button>
           </div>`;
         }).join('')}
-      </div>
-    </div>`).join('')||'<div class="muted center mt16">No history recorded yet</div>'}
+    </section>`).join('')||moneyEmpty('No history recorded', 'Add a history entry to begin tracking debt over time.')}
   </div>
 </div>`;
 
@@ -2209,6 +2546,9 @@ async function renderDebtHistory() {
     canvas.parentElement.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📈</div><div class="empty-state-msg">No history yet</div><div>Add history entries to see your progress</div></div>';
     return;
   }
+  const chartTheme = getComputedStyle(document.documentElement);
+  const chartAccent = chartTheme.getPropertyValue('--accent').trim() || '#496554';
+  const chartMuted = chartTheme.getPropertyValue('--muted').trim() || '#6F6B63';
   window._debtChart = new Chart(canvas.getContext('2d'), {
     type: 'line',
     data: {
@@ -2216,13 +2556,13 @@ async function renderDebtHistory() {
       datasets: [{
         label: 'Total Debt',
         data: chartData,
-        borderColor: 'var(--accent)',
-        backgroundColor: 'rgba(200,182,166,.12)',
+        borderColor: chartAccent,
+        backgroundColor: 'rgba(73,101,84,.08)',
         borderWidth: 2,
-        pointBackgroundColor: 'var(--accent)',
-        pointRadius: 4,
+        pointBackgroundColor: chartAccent,
+        pointRadius: 3,
         tension: .3,
-        fill: true
+        fill: false
       }]
     },
     options: {
@@ -2230,8 +2570,8 @@ async function renderDebtHistory() {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { ticks: { callback: v => '£' + v.toLocaleString('en-GB') }, grid: { color: 'rgba(0,0,0,.05)' } },
-        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+        y: { ticks: { color:chartMuted, callback: v => '£' + v.toLocaleString('en-GB') }, grid: { color: 'rgba(111,107,99,.12)' } },
+        x: { ticks: { color:chartMuted, font: { size: 11 } }, grid: { display: false } }
       }
     }
   });
@@ -2307,23 +2647,26 @@ async function renderBudgets() {
   const catNames = budgets.map(b => b.category).filter(Boolean);
 
   root().innerHTML = `
-<div class="page">
-  <div class="topbar-centered">
-    <button class="back-btn" onclick="navigate('spending')">‹ Back</button>
-    <div class="topbar-centered-title">Spending Suite</div>
-    <button class="icon-btn topbar-centered-right" onclick="showBudgetModal(null)">+</button>
-  </div>
+<div class="page money-shell">
+  ${moneyPageHead('Budgets & tools', 'Category targets and a decision check for planned spending.', 'showBudgetModal(null)', 'Add target')}
+  ${moneySectionNav('spending')}
 
-  <div class="chart-card mb16">
-    <div class="chart-title">This Month</div>
+  <section class="money-summary" aria-label="Budget summary">
+    <div class="money-summary-cell"><div class="money-summary-label">Spent</div><div class="money-summary-value">${fmt(totalSpentThisMonth)}</div><div class="money-summary-note">This month</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Target</div><div class="money-summary-value">${fmt(totalBudgetTarget)}</div><div class="money-summary-note">${budgets.length} categories</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Remaining</div><div class="money-summary-value ${totalBudgetRem < 0 ? 'danger' : 'positive'}">${fmt(totalBudgetRem)}</div><div class="money-summary-note">Across all targets</div></div>
+  </section>
+
+  <section class="money-panel" style="padding:16px">
+    <div class="money-panel-title" style="margin-bottom:12px">Category position</div>
     <div class="budget-chart-wrap"><canvas id="budget-chart"></canvas></div>
-  </div>
+  </section>
 
   <div class="search-wrap">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
     <input class="search-input" placeholder="Search categories…" oninput="filterRows(this.value)"/>
   </div>
-  <div class="card" style="margin-bottom:20px">
+  <section class="money-panel">
     <div class="table-scroll">
       <table class="btable">
         <thead><tr><th>Category</th><th>Spent</th><th>Target</th><th>Remaining</th><th style="width:32px"></th></tr></thead>
@@ -2342,11 +2685,12 @@ async function renderBudgets() {
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 
   <!-- Decision Checker -->
-  <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Decision Checker</div>
-  <div class="card" style="padding:16px;margin-bottom:12px">
+  <section class="money-panel" style="padding:16px">
+    <div class="money-panel-title">Decision Checker</div>
+    <div class="money-panel-note" style="margin-bottom:16px">Check a potential purchase against targets and unpaid bills.</div>
     ${datalist('dc-cats', catNames)}
     <div style="display:flex;flex-direction:column;gap:10px">
       <div>
@@ -2384,7 +2728,7 @@ async function renderBudgets() {
     <div id="suite-decision-box" style="margin-top:14px;border-radius:var(--rs);padding:12px 14px;background:var(--accent-light);border:1px solid var(--border)">
       <div style="font-size:12px;color:var(--text3);text-align:center">Enter an amount above to check this spend</div>
     </div>
-  </div>
+  </section>
 </div>`;
 
   // Store ctx on window so suiteDecisionCheck can read it without args
@@ -2400,21 +2744,23 @@ async function renderBudgets() {
   // Render budget bar chart
   const chartCanvas = document.getElementById('budget-chart');
   if (chartCanvas && rows.length) {
+    const chartTheme = getComputedStyle(document.documentElement);
+    const chartMuted = chartTheme.getPropertyValue('--muted').trim() || '#6F6B63';
     new Chart(chartCanvas.getContext('2d'), {
       type: 'bar',
       data: {
         labels: rows.map(r=>r.category),
         datasets: [
-          {label:'Spent', data:rows.map(r=>r.spent), backgroundColor: rows.map(r=>r.rem<0?'rgba(216,64,64,0.7)':'rgba(91,63,212,0.65)'), borderRadius:4},
-          {label:'Target', data:rows.map(r=>parseFloat(r.monthly_target)||0), backgroundColor:'rgba(0,0,0,0.08)', borderRadius:4}
+          {label:'Spent', data:rows.map(r=>r.spent), backgroundColor: rows.map(r=>r.rem<0?'rgba(179,78,59,.76)':'rgba(73,101,84,.72)'), borderRadius:5},
+          {label:'Target', data:rows.map(r=>parseFloat(r.monthly_target)||0), backgroundColor:'rgba(111,107,99,.16)', borderRadius:5}
         ]
       },
       options:{
         responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:true, labels:{font:{size:11}, boxWidth:10}}},
+        plugins:{legend:{display:true, labels:{color:chartMuted, font:{size:11}, boxWidth:10}}},
         scales:{
-          x:{ticks:{font:{size:10}}, grid:{display:false}},
-          y:{ticks:{callback:val=>'£'+val, font:{size:11}}, grid:{color:'#EBEBEB'}}
+          x:{ticks:{color:chartMuted, font:{size:10}}, grid:{display:false}},
+          y:{ticks:{color:chartMuted, callback:val=>'£'+val, font:{size:11}}, grid:{color:'rgba(111,107,99,.12)'}}
         }
       }
     });
@@ -2565,64 +2911,65 @@ function coStatusSelectHTML(entryType, currentStatus) {
   </select>`;
 }
 
-async function renderCoIncome() {
-  const accounts = await dbFetch(T.COMPANY_ACCOUNTS, {order:['date',false]});
+async function renderCoIncome(params = {}) {
+  const [accounts, companyBills] = await Promise.all([
+    dbFetch(T.COMPANY_ACCOUNTS, {order:['date',false]}),
+    dbFetch(T.COMPANY_FIXED, {order:['due_day',true]})
+  ]);
   const receivedIncome = accounts.filter(r => coEntryTypeValue(r.entry_type) === 'Income' && coDisplayStatus(r.entry_type, r.status) === 'Received');
   const expectedIncome = accounts.filter(r => coEntryTypeValue(r.entry_type) === 'Income' && coDisplayStatus(r.entry_type, r.status) === 'Expected');
   const expenseRows = accounts.filter(r => coEntryTypeValue(r.entry_type) === 'Expense');
+  const activeTab = ['received','expected','expenses','all'].includes(params.tab) ? params.tab : (window._coActiveTab || 'received');
+  const receivedTotal = receivedIncome.reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
+  const expectedTotal = expectedIncome.reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
+  const outstandingExpenses = expenseRows.filter(row => coDisplayStatus(row.entry_type, row.status) === 'Expected');
+  const expenseTotal = outstandingExpenses.reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
+  const companyBillSummary = billTotals(companyBills);
+  const requestedType = activeTab === 'expenses' ? 'Expense' : 'Income';
+  const requestedStatus = activeTab === 'expected' || activeTab === 'expenses' ? 'Expected' : requestedType === 'Expense' ? 'Paid' : 'Received';
 
   root().innerHTML = `
-<div class="page">
-  <div class="topbar-centered">
-    <button class="back-btn" onclick="navigate('finance')">‹ Back</button>
-    <div class="topbar-centered-title">Company Accounts</div>
-    <button class="icon-btn topbar-centered-right" onclick="showAccountModal(null)">+</button>
-  </div>
+<div class="page money-shell">
+  ${moneyPageHead('Company', 'A focused view of incoming money, costs and company bills.', `showAccountModal(null,'${requestedType}','${requestedStatus}')`, 'Add transaction')}
   ${moneySectionNav('company')}
-  <div class="tabs">
-    <button class="tab active" onclick="coTab('received',this)">Received</button>
-    <button class="tab" onclick="coTab('expected',this)">Expected</button>
-    <button class="tab" onclick="coTab('expenses',this)">Expenses</button>
-    <button class="tab" onclick="coTab('all',this)">All</button>
+
+  <section class="money-summary" aria-label="Company financial summary">
+    <div class="money-summary-cell"><div class="money-summary-label">Received</div><div class="money-summary-value positive">${fmt(receivedTotal)}</div><div class="money-summary-note">${receivedIncome.length} transactions</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Expected</div><div class="money-summary-value">${fmt(expectedTotal)}</div><div class="money-summary-note">${expectedIncome.length} incoming</div></div>
+    <div class="money-summary-cell"><div class="money-summary-label">Outstanding costs</div><div class="money-summary-value ${expenseTotal + companyBillSummary.remaining > 0 ? 'danger' : ''}">${fmt(expenseTotal + companyBillSummary.remaining)}</div><div class="money-summary-note">Expenses and bills</div></div>
+  </section>
+
+  ${(companyBillSummary.overdueCount || outstandingExpenses.length) ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Needs attention</div><div class="money-panel-note">Outstanding company costs</div></div></div>${companyBillSummary.overdueCount ? `<button class="money-attention danger" onclick="navigate('co-bills')" style="width:100%;border:0;background:transparent;text-align:left;font-family:inherit;cursor:pointer"><span class="money-attention-dot"></span><span class="money-attention-copy"><span class="money-attention-title">${companyBillSummary.overdueCount} overdue company bill${companyBillSummary.overdueCount === 1 ? '' : 's'}</span><span class="money-attention-meta">${fmt(companyBillSummary.remaining)} remains across recurring bills</span></span><span class="app-list-chevron">›</span></button>` : ''}${outstandingExpenses.length ? `<button class="money-attention" onclick="coTab('expenses')" style="width:100%;border:0;background:transparent;text-align:left;font-family:inherit;cursor:pointer"><span class="money-attention-dot"></span><span class="money-attention-copy"><span class="money-attention-title">${outstandingExpenses.length} unpaid expense${outstandingExpenses.length === 1 ? '' : 's'}</span><span class="money-attention-meta">${fmt(expenseTotal)} awaiting payment</span></span><span class="app-list-chevron">›</span></button>` : ''}</section>` : ''}
+
+  <div class="money-tools"><div class="search-wrap money-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="search-input" placeholder="Search company accounts" oninput="filterRows(this.value)"/></div><button class="finance-action subtle" onclick="navigate('co-bills')">Company bills · ${companyBillSummary.unpaidCount}</button></div>
+
+  <div class="company-switch">
+    <button class="tab ${activeTab === 'received' ? 'active' : ''}" onclick="coTab('received')">Received</button>
+    <button class="tab ${activeTab === 'expected' ? 'active' : ''}" onclick="coTab('expected')">Expected</button>
+    <button class="tab ${activeTab === 'expenses' ? 'active' : ''}" onclick="coTab('expenses')">Expenses</button>
+    <button class="tab ${activeTab === 'all' ? 'active' : ''}" onclick="coTab('all')">All</button>
   </div>
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input class="search-input" placeholder="Search…" oninput="filterRows(this.value)"/>
-  </div>
-  <div id="co-received">
-    <div class="card">${coAccountRows(receivedIncome, 'No received income yet')}</div>
-  </div>
-  <div id="co-expected" class="hidden">
-    <div class="card">${coAccountRows(expectedIncome, 'No expected income yet')}</div>
-  </div>
-  <div id="co-expenses" class="hidden">
-    <div class="card">${coAccountRows(expenseRows, 'No company expenses yet')}</div>
-  </div>
-  <div id="co-all" class="hidden">
-    <div class="card">${coAccountRows(accounts, 'No transactions')}</div>
-  </div>
+  <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">${activeTab === 'received' ? 'Received income' : activeTab === 'expected' ? 'Expected income' : activeTab === 'expenses' ? 'Company expenses' : 'All transactions'}</div><div class="money-panel-note">Most recent first</div></div></div>${coAccountRows(activeTab === 'received' ? receivedIncome : activeTab === 'expected' ? expectedIncome : activeTab === 'expenses' ? expenseRows : accounts, activeTab === 'received' ? 'No received income yet' : activeTab === 'expected' ? 'No expected income yet' : activeTab === 'expenses' ? 'No company expenses yet' : 'No transactions')}</section>
 </div>`;
+  window._coActiveTab = activeTab;
 }
 
-function coTab(tab, btn) {
-  ['received','expected','expenses','all'].forEach(t=>{
-    document.getElementById('co-'+t)?.classList.toggle('hidden', t!==tab);
-  });
-  document.querySelectorAll('.tabs .tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+function coTab(tab) {
+  window._coActiveTab = tab;
+  rememberCurrentViewParams({section:'company', tab});
+  renderCoIncome({tab});
 }
 
 function coAccountRows(rows, emptyMessage='No transactions') {
-  if(!rows.length) return `<div class="row"><div class="muted">${emptyMessage}</div></div>`;
+  if(!rows.length) return moneyEmpty(emptyMessage, 'Add a company transaction when there is activity to record.');
   return rows.map(r=>`
-  <div class="row bill-row" data-s="${[r.description,r.category,r.status,r.entry_type].join(' ').toLowerCase()}">
-    <div class="row-left">
-      <div class="row-tag ${coDisplayStatus(r.entry_type, r.status).toLowerCase()}">${coDisplayStatus(r.entry_type, r.status).toUpperCase()}</div>
-      <div class="row-title">${fmt(r.amount)} on ${fmtDate(r.date)}</div>
-      <div class="row-sub">${[coEntryTypeValue(r.entry_type), r.description, r.category].filter(Boolean).join(' — ')}</div>
-      ${r.commission_applies&&r.manager_commission?`<div class="row-sub" style="color:var(--accent)">Commission: ${fmt(r.manager_commission)}</div>`:''}
+  <div class="financial-row bill-row" data-s="${safeText([r.description,r.category,r.status,r.entry_type].join(' ').toLowerCase())}">
+    <div class="financial-row-main">
+      <div class="financial-row-top"><span class="money-status ${coDisplayStatus(r.entry_type, r.status) === 'Expected' ? 'warning' : 'positive'}">${coDisplayStatus(r.entry_type, r.status)}</span><span class="financial-row-title">${safeText(r.description || r.category || coEntryTypeValue(r.entry_type))}</span></div>
+      <div class="financial-row-meta">${fmtDate(r.date)} · ${safeText(coEntryTypeValue(r.entry_type))}${r.category ? ` · ${safeText(r.category)}` : ''}${r.commission_applies&&r.manager_commission ? ` · Commission ${fmt(r.manager_commission)}` : ''}</div>
     </div>
-    <button class="menu-btn" onclick="ctxAccount(event,'${r.id}','${coEntryTypeValue(r.entry_type)}','${coDisplayStatus(r.entry_type, r.status)}')">···</button>
+    <div class="financial-row-value">${fmt(r.amount)}</div>
+    <button class="menu-btn" aria-label="More company transaction actions" onclick="ctxAccount(event,'${r.id}','${coEntryTypeValue(r.entry_type)}','${coDisplayStatus(r.entry_type, r.status)}')">···</button>
   </div>`).join('');
 }
 
@@ -2638,14 +2985,14 @@ function ctxAccount(e, id, entryType='Income', status='Expected') {
   ]);
 }
 
-async function showAccountModal(editId) {
+async function showAccountModal(editId, requestedType = 'Income', requestedStatus) {
   let ex=null;
   if(editId){const r=await dbFetch(T.COMPANY_ACCOUNTS,{eq:{id:editId}});ex=r[0]||null;}
   const allAccts = await dbFetch(T.COMPANY_ACCOUNTS, {});
   const aDescs = allAccts.map(r=>r.description).filter(Boolean);
   const aCats  = allAccts.map(r=>r.category).filter(Boolean);
-  const defaultEntryType = ex?.entry_type || 'Income';
-  const defaultStatus = ex?.status || (defaultEntryType === 'Expense' ? 'Paid' : 'Received');
+  const defaultEntryType = ex?.entry_type || coEntryTypeValue(requestedType);
+  const defaultStatus = ex?.status || requestedStatus || (defaultEntryType === 'Expense' ? 'Paid' : 'Received');
   showModal(`${editId?'Edit':'Add'} Transaction`,`
     ${datalist('dl-adesc', aDescs)}
     ${datalist('dl-acat', aCats)}
@@ -2654,8 +3001,8 @@ async function showAccountModal(editId) {
     <div class="fg"><label>Amount (£)</label><input id="f-amt" type="number" step="0.01" value="${ex?.amount||''}"/></div>
     <div class="fg"><label>Date</label><input id="f-date" type="date" value="${ex?.date?ex.date.substring(0,10):today()}"/></div>
     <div class="fg"><label>Entry Type</label><select id="f-entry">
-      <option value="Income"  ${ex?.entry_type==='Income'?'selected':''}>Income</option>
-      <option value="Expense" ${ex?.entry_type==='Expense'?'selected':''}>Expense</option>
+      <option value="Income"  ${defaultEntryType==='Income'?'selected':''}>Income</option>
+      <option value="Expense" ${defaultEntryType==='Expense'?'selected':''}>Expense</option>
     </select></div>
     <div class="fg" id="co-status-wrap">${coStatusSelectHTML(defaultEntryType, defaultStatus)}</div>
     <div class="fg"><label>Commission Applies?</label><select id="f-comm">
@@ -2671,7 +3018,8 @@ async function showAccountModal(editId) {
     const entryType = coEntryTypeValue(v('f-entry'));
     const row={description:v('f-desc'),category:v('f-cat'),amount:amt,date:v('f-date'),entry_type:entryType,status:coStoredStatus(entryType, v('f-status')),commission_applies:commOn,manager_commission:commOn?amt*0.2:0,tax_deductible:v('f-tax')==='true'};
     editId?await dbUpdate(T.COMPANY_ACCOUNTS,editId,row):await dbInsert(T.COMPANY_ACCOUNTS,row);
-    renderCoIncome();
+    const nextTab = entryType === 'Expense' ? 'expenses' : coStoredStatus(entryType, v('f-status')) === 'Expected' ? 'expected' : 'received';
+    renderCoIncome({tab:nextTab});
   });
   document.getElementById('f-entry')?.addEventListener('change', e => {
     const nextType = coEntryTypeValue(e.target.value);
@@ -2706,14 +3054,19 @@ function showModal(title, bodyHTML, onSave) {
   document.getElementById('modal-cancel-btn')?.addEventListener('click', ()=> el.remove());
   if (!hasSave) return;
   document.getElementById('modal-save-btn').addEventListener('click', async()=>{
-    const page = root();
-    const prevScrollTop = page ? page.scrollTop : 0;
+    const prevScrollY = window.scrollY;
+    const previousSearches = [...document.querySelectorAll('.money-shell .search-input')].map(input => ({placeholder:input.placeholder, value:input.value}));
     try{
       await onSave();
       el.remove();
       const restoreScroll = () => {
-        const nextPage = root();
-        if (nextPage) nextPage.scrollTop = prevScrollTop;
+        window.scrollTo({top:prevScrollY, left:0, behavior:'auto'});
+        previousSearches.forEach(saved => {
+          const input = [...document.querySelectorAll('.money-shell .search-input')].find(el => el.placeholder === saved.placeholder);
+          if (!input || !saved.value) return;
+          input.value = saved.value;
+          input.dispatchEvent(new Event('input', {bubbles:true}));
+        });
       };
       requestAnimationFrame(() => {
         restoreScroll();
