@@ -13,7 +13,7 @@
 <style>
 /* ── Reset ── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;overflow-x:hidden;font-variant-numeric:tabular-nums}
+html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;overflow-x:hidden;overscroll-behavior-x:none;font-variant-numeric:tabular-nums}
 
 /* ── Variables ── */
 :root{
@@ -392,8 +392,8 @@ button.financial-row:hover{background:var(--accent-light)}
 .chart-wrap{position:relative;height:200px}
 
 /* ── Modal ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px calc(40px + env(safe-area-inset-bottom,0px));width:100%;max-width:480px;max-height:88vh;max-height:min(88vh,88dvh);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:flex;align-items:flex-end;justify-content:center;overscroll-behavior:none;touch-action:pan-y}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px calc(40px + env(safe-area-inset-bottom,0px));width:100%;max-width:480px;max-height:88vh;max-height:min(88vh,88dvh);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y}
 .overlay-elevated{align-items:center;padding:18px 14px}
 .overlay-elevated .modal{
   max-width:min(720px, calc(100vw - 28px));
@@ -1864,11 +1864,11 @@ async function showBillModal(editId, table, isCo) {
   showModal(`${editId?'Edit':'Add'} Bill`,`
     ${datalist('dl-bprov', provs)}
     ${datalist('dl-bcat', cats)}
-    <div class="fg"><label>Provider</label>${dlInput('f-prov','dl-bprov',ex?.provider,'e.g. Netflix')}</div>
-    <div class="fg"><label>Category</label>${dlInput('f-cat','dl-bcat',ex?.category,'e.g. Subscriptions')}</div>
+    <div class="fg"><label>Provider</label><input id="f-prov" list="dl-bprov" data-suggest-table="${table}" data-suggest-field="provider" value="${(ex?.provider||'').replace(/"/g,'&quot;')}" placeholder="e.g. Netflix" autocomplete="off"/></div>
+    <div class="fg"><label>Category</label><input id="f-cat" list="dl-bcat" data-suggest-table="${table}" data-suggest-field="category" value="${(ex?.category||'').replace(/"/g,'&quot;')}" placeholder="e.g. Subscriptions" autocomplete="off"/></div>
     <div class="fg"><label>Monthly Amount (£)</label><input id="f-amt" type="number" step="0.01" value="${ex?.monthly_amount||''}"/></div>
     <div class="fg"><label>Due Day of Month</label><input id="f-day" type="number" min="1" max="31" value="${ex?.due_day_number||ex?.due_day||''}" placeholder="e.g. 15"/></div>
-    <div class="fg"><label>Notes</label><input id="f-notes" value="${ex?.notes||''}"/></div>
+    <div class="fg"><label>Notes</label><input id="f-notes" data-suggest-table="${table}" data-suggest-field="notes" value="${ex?.notes||''}"/></div>
   `, async()=>{
     const dayNum = parseInt(v('f-day'))||null;
     const row={
@@ -3161,8 +3161,168 @@ async function showAccountModal(editId, requestedType = 'Income', requestedStatu
 // ════════════════════════════════════════════════════════════
 // SHARED UI HELPERS
 // ════════════════════════════════════════════════════════════
+const LOCAL_TEXT_SUGGESTIONS_KEY = 'alika-local-text-suggestions-v1';
+
+function textSuggestionLabel(input) {
+  return input.closest('.fg')?.querySelector('label')?.textContent
+    ?.replace(/\(optional[^)]*\)|optional/gi, '').replace(/\s+/g, ' ').trim().toLowerCase() || '';
+}
+
+function textSuggestionSource(modalTitle, input) {
+  if (input.dataset.suggestTable && input.dataset.suggestField) {
+    return {table:input.dataset.suggestTable, field:input.dataset.suggestField};
+  }
+  const title = String(modalTitle || '').toLowerCase();
+  const label = textSuggestionLabel(input);
+  const source = (table, field) => ({table, field});
+
+  if (label === 'project') return source(T.PROJECTS, 'title');
+  if (title.includes('spend')) {
+    if (label === 'category') return source(T.VARIABLE_SPENDING, 'category');
+    if (label === 'description') return source(T.VARIABLE_SPENDING, 'description');
+  }
+  if (title.includes('income')) {
+    if (input.id === 'f-src') return source(T.EXPECTED_INCOME, 'source');
+    if (label.includes('paid by') || label === 'source') return source(T.PERSONAL_INCOME, 'paid_by');
+    if (label === 'description') return source(T.PERSONAL_INCOME, 'description');
+    if (label === 'income type') return source(T.PERSONAL_INCOME, 'income_type');
+    if (label === 'notes') return source(title.includes('expected income') ? T.EXPECTED_INCOME : T.PERSONAL_INCOME, 'notes');
+  }
+  if (title.includes('debt history')) {
+    if (label === 'notes') return source(T.DEBT_HISTORY, 'notes');
+  } else if (title.includes('debt')) {
+    if (label === 'account name') return source(T.DEBT_MASTER, 'account_name');
+    if (label === 'notes') return source(T.DEBT_MASTER, 'notes');
+  }
+  if (title.includes('budget') && label === 'category') return source(T.CATEGORY_BUDGETS, 'category');
+  if (title.includes('transaction')) {
+    if (label === 'description') return source(T.COMPANY_ACCOUNTS, 'description');
+    if (label === 'category') return source(T.COMPANY_ACCOUNTS, 'category');
+  }
+  if (title.includes('capture')) {
+    if (label === 'capture') return source(T.INBOX, 'content');
+    if (label === 'area') return source(T.INBOX, 'area');
+  }
+  if (title.includes('action')) {
+    const fields = {title:'title', domain:'domain', area:'area', notes:'notes'};
+    if (fields[label]) return source(T.ACTIONS, fields[label]);
+  }
+  if (title.includes('idea')) {
+    const fields = {title:'title', type:'type', notes:'notes'};
+    if (fields[label]) return source(T.IDEAS, fields[label]);
+  }
+  if (title.includes('project')) {
+    const fields = {title:'title', type:'type', notes:'notes'};
+    if (fields[label]) return source(T.PROJECTS, fields[label]);
+  }
+  if (title.includes('moodboard')) {
+    const fields = {title:'title', 'asset reference':'asset_reference', 'asset link':'asset_link', notes:'notes'};
+    if (fields[label]) return source(T.MOODBOARD, fields[label]);
+  }
+  if (title.includes('content')) {
+    const fields = {title:'title', platform:'platform', 'content type':'content_type', 'asset reference':'asset_reference', 'asset link':'asset_link', hashtags:'hashtags', notes:'notes'};
+    if (fields[label]) return source(T.CONTENT_ITEMS, fields[label]);
+  }
+  if (title.includes('habit')) {
+    const fields = {title:'title', type:'type', notes:'notes'};
+    if (fields[label]) return source(T.HABITS, fields[label]);
+  }
+  if ((title.includes('pantry') || title.includes('grocery items')) && (label === 'item name' || label === 'name')) return source(T.PANTRY_ITEMS, 'name');
+  if ((title.includes('pantry') || title.includes('grocery items')) && (label === 'quantity' || label === 'quantity description')) return source(T.PANTRY_ITEMS, 'quantity_description');
+  if (title.includes('pantry') && label === 'category') return source(T.PANTRY_ITEMS, 'category');
+  if ((title.includes('pantry item') || title.includes('pantry purchase') || title.includes('grocery items')) && label === 'notes') return source(T.PANTRY_ITEMS, 'notes');
+  if ((title.includes('pantry purchase') || title.includes('grocery items')) && label === 'merchant') return source(T.PANTRY_PURCHASES, 'merchant');
+  if (title.includes('meal')) {
+    if (label === 'meal name') return source(T.PANTRY_MEALS, 'name');
+  }
+  return null;
+}
+
+function readLocalTextSuggestions() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_TEXT_SUGGESTIONS_KEY) || '{}'); }
+  catch (_) { return {}; }
+}
+
+function localTextSuggestionKey(modalTitle, input) {
+  const area = String(modalTitle || 'form').replace(/^(add|edit|new|create)\s+/i, '').trim().toLowerCase();
+  return `${area}|${textSuggestionLabel(input) || input.id || input.dataset.field || 'text'}`;
+}
+
+function ensureTextSuggestionList(modal, input, index) {
+  if (input.list) return input.list;
+  const list = document.createElement('datalist');
+  list.id = `field-suggestions-${Date.now()}-${index}`;
+  modal.appendChild(list);
+  input.setAttribute('list', list.id);
+  return list;
+}
+
+function appendTextSuggestions(list, values) {
+  const existing = new Set([...list.options].map(option => option.value.trim().toLowerCase()).filter(Boolean));
+  values.filter(Boolean).map(value => String(value).trim()).filter(Boolean).forEach(value => {
+    if (existing.has(value.toLowerCase())) return;
+    const option = document.createElement('option');
+    option.value = value;
+    list.appendChild(option);
+    existing.add(value.toLowerCase());
+  });
+}
+
+function enableTextFieldSuggestions(modal, modalTitle) {
+  const tableCache = new Map();
+  const localMemory = readLocalTextSuggestions();
+  let listIndex = 0;
+  const enhance = async input => {
+    if (!(input instanceof HTMLInputElement) || input.dataset.suggestionsReady === 'true') return;
+    const type = (input.getAttribute('type') || 'text').toLowerCase();
+    if (!['text','url','tel'].includes(type) || input.classList.contains('search-input') || input.disabled || input.readOnly) return;
+    input.dataset.suggestionsReady = 'true';
+    input.setAttribute('autocomplete', 'off');
+    const source = textSuggestionSource(modalTitle, input);
+    const hasPersistedList = input.list && input.list.options.length > 0;
+    if (source) {
+      input.dataset.suggestionSource = 'supabase';
+      const list = ensureTextSuggestionList(modal, input, listIndex++);
+      const cacheKey = `${source.table}|${source.field}`;
+      if (!tableCache.has(cacheKey)) tableCache.set(cacheKey, dbFetch(source.table, {select:source.field}));
+      const rows = await tableCache.get(cacheKey);
+      appendTextSuggestions(list, [...new Set(rows.map(row => row[source.field]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b))).slice(0, 100));
+      return;
+    }
+    if (hasPersistedList) {
+      input.dataset.suggestionSource = 'supabase';
+      return;
+    }
+    const key = localTextSuggestionKey(modalTitle, input);
+    input.dataset.suggestionSource = 'local';
+    input.dataset.suggestionKey = key;
+    appendTextSuggestions(ensureTextSuggestionList(modal, input, listIndex++), localMemory[key] || []);
+  };
+  modal.querySelectorAll('input').forEach(enhance);
+  const observer = new MutationObserver(mutations => mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+    if (!(node instanceof Element)) return;
+    if (node.matches('input')) enhance(node);
+    node.querySelectorAll?.('input').forEach(enhance);
+  })));
+  observer.observe(modal, {childList:true, subtree:true});
+  return observer;
+}
+
+function rememberLocalTextSuggestions(modal) {
+  const entries = [...modal.querySelectorAll('input[data-suggestion-source="local"]')]
+    .map(input => ({key:input.dataset.suggestionKey, value:input.value.trim()})).filter(entry => entry.key && entry.value);
+  if (!entries.length) return;
+  const memory = readLocalTextSuggestions();
+  entries.forEach(({key,value}) => {
+    memory[key] = [value, ...(memory[key] || []).filter(item => item.toLowerCase() !== value.toLowerCase())].slice(0, 12);
+  });
+  localStorage.setItem(LOCAL_TEXT_SUGGESTIONS_KEY, JSON.stringify(memory));
+}
+
 function showModal(title, bodyHTML, onSave) {
-  document.querySelector('.overlay')?.remove();
+  const existingOverlay = document.querySelector('.overlay');
+  if (existingOverlay?._closeModal) existingOverlay._closeModal();
+  else existingOverlay?.remove();
   const el = document.createElement('div');
   el.className = 'overlay';
   const hasSave = typeof onSave === 'function';
@@ -3179,16 +3339,39 @@ function showModal(title, bodyHTML, onSave) {
     </div>
   </div>`;
   document.body.appendChild(el);
-  el.addEventListener('click', e=>{ if(e.target===el) el.remove(); });
-  document.getElementById('modal-close-btn')?.addEventListener('click', ()=> el.remove());
-  document.getElementById('modal-cancel-btn')?.addEventListener('click', ()=> el.remove());
+  const suggestionObserver = hasSave ? enableTextFieldSuggestions(el, title) : null;
+  const closeModal = () => { suggestionObserver?.disconnect(); el.remove(); };
+  el._closeModal = closeModal;
+  // Forms require an explicit Save, Cancel or close action. This also prevents
+  // a sideways touch gesture from becoming a backdrop click and losing work.
+  el.addEventListener('click', e=>{ if(e.target===el && !hasSave) closeModal(); });
+  if (hasSave) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    el.addEventListener('touchstart', e => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }, {passive:true});
+    el.addEventListener('touchmove', e => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const deltaX = Math.abs(touch.clientX - touchStartX);
+      const deltaY = Math.abs(touch.clientY - touchStartY);
+      if (deltaX > 8 && deltaX > deltaY) e.preventDefault();
+    }, {passive:false});
+  }
+  document.getElementById('modal-close-btn')?.addEventListener('click', closeModal);
+  document.getElementById('modal-cancel-btn')?.addEventListener('click', closeModal);
   if (!hasSave) return;
   document.getElementById('modal-save-btn').addEventListener('click', async()=>{
     const prevScrollY = window.scrollY;
     const previousSearches = [...document.querySelectorAll('.money-shell .search-input')].map(input => ({placeholder:input.placeholder, value:input.value}));
     try{
       await onSave();
-      el.remove();
+      rememberLocalTextSuggestions(el);
+      closeModal();
       const restoreScroll = () => {
         window.scrollTo({top:prevScrollY, left:0, behavior:'auto'});
         previousSearches.forEach(saved => {
