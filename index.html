@@ -175,6 +175,68 @@ button.financial-row:hover{background:var(--accent-light)}
 .company-switch .tab{min-width:0;margin:0;border-radius:var(--radius-control);padding:10px 4px;font-size:11px}
 .company-switch .tab.active{background:var(--surface-elevated);box-shadow:0 1px 4px rgba(24,22,18,.08)}
 .money-inline-link{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:var(--accent);font:650 var(--font-xs)/1.3 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.debt-history-groups{display:grid;gap:var(--space-4)}
+.reconciliation-box{padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--bg)}
+.reconciliation-box.is-balanced{border-color:var(--positive);background:var(--positive-soft)}
+.reconciliation-box.is-unbalanced{border-color:var(--danger);background:var(--danger-light)}
+
+/* ── Pantry / Food Value ── */
+.pantry-shell{display:flex;flex-direction:column;gap:var(--space-6)}
+.pantry-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+.pantry-tab{min-width:0;min-height:44px;padding:9px 8px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--surface);color:var(--text2);font:600 var(--font-xs)/1.25 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.pantry-tab.active{border-color:var(--accent);background:var(--accent-light);color:var(--text)}
+.pantry-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+.pantry-item{min-width:0;padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
+.pantry-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2)}
+.pantry-item h3{margin:6px 0 0;font-size:var(--font-sm);line-height:1.35;overflow-wrap:anywhere}
+.pantry-item p{margin:5px 0 0;font-size:11px;line-height:1.5;color:var(--text2);overflow-wrap:anywhere}
+.pantry-notes{padding-top:8px;border-top:1px solid var(--border)}
+.pantry-item-name{min-width:0;font-size:var(--font-sm);font-weight:650;line-height:1.35;overflow-wrap:anywhere}
+.pantry-item-meta{margin-top:4px;font-size:11px;line-height:1.5;color:var(--text2)}
+.pantry-item-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:var(--space-3)}
+.pantry-status-btn{min-height:34px;padding:0 9px;border:1px solid var(--border);border-radius:9px;background:transparent;color:var(--text2);font:600 10px/1 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.pantry-status-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--text)}
+.pantry-status-btn.waste,.pantry-status-btn.danger{color:var(--danger)}
+.ingredient-chips{display:flex;flex-wrap:wrap;gap:var(--space-2);max-height:240px;overflow-y:auto;padding:2px}
+.ingredient-chip{position:relative}
+.ingredient-chip input{position:absolute;opacity:0;pointer-events:none}
+.ingredient-chip span{display:inline-flex;align-items:center;min-height:38px;padding:7px 11px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer}
+.ingredient-chip input:checked + span{border-color:var(--positive);background:var(--positive-soft);color:var(--positive)}
+.pantry-form-row{position:relative;padding:var(--space-3);border:1px solid var(--border);border-radius:var(--radius-control);background:var(--bg);margin-bottom:var(--space-2)}
+.pantry-row-remove{position:absolute;top:8px;right:8px;width:30px;height:30px;border:0;border-radius:99px;background:var(--input-bg);color:var(--text2);font-size:18px;cursor:pointer}
+.pantry-form-row>.fg:first-of-type{padding-right:36px}
+.pantry-form-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(90px,.6fr);gap:var(--space-2)}
+.pantry-insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+.pantry-insights>div{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
+.pantry-insights strong{display:block;font-size:clamp(20px,6vw,30px);font-weight:650;letter-spacing:-.04em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.pantry-insights span{display:block;margin-top:5px;font-size:10px;color:var(--text2);line-height:1.4}
+.pantry-insight{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
+.pantry-insight-value{margin-top:var(--space-2);font-size:clamp(22px,7vw,34px);font-weight:600;line-height:1.05;letter-spacing:-.04em;overflow-wrap:anywhere}
+.pantry-purchase-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--space-3)}
+.pantry-purchase-items>span{display:inline-flex;max-width:100%;padding:5px 8px;border-radius:999px;background:var(--input-bg);font-size:10px;color:var(--text2);overflow-wrap:anywhere}
+.pantry-purchase-chip{display:inline-flex;gap:5px;align-items:center;max-width:100%;padding:5px 8px;border-radius:999px;background:var(--input-bg);font-size:10px;color:var(--text2)}
+.pantry-purchase-chip strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.pantry-form-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 10px}
+.pantry-form-section-head strong,.pantry-form-section-head span,.pantry-linked-spend strong,.pantry-linked-spend span,.pantry-linked-spend small{display:block}
+.pantry-form-section-head span,.pantry-linked-spend span,.pantry-linked-spend small{margin-top:3px;font-size:11px;color:var(--text2)}
+.pantry-linked-spend,.pantry-waste-estimate{padding:12px 14px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--bg)}
+.pantry-waste-estimate{font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums}
+.pantry-spend-offer{padding:12px 14px;border:1px solid var(--positive);border-radius:var(--radius-control);background:var(--positive-soft)}
+.pantry-spend-offer label{display:flex;align-items:flex-start;gap:10px;margin:0;color:var(--text);font-size:12px;letter-spacing:0;text-transform:none;cursor:pointer}
+.pantry-spend-offer input{width:auto;margin-top:2px}
+.fg textarea{width:100%;min-height:88px;padding:11px 13px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;resize:vertical;outline:none}
+.fg textarea:focus{border-color:var(--accent)}
+
+@media (max-width:560px){
+  .pantry-card-grid{grid-template-columns:1fr}
+  .pantry-form-grid{grid-template-columns:1fr}
+}
+
+@media (min-width:960px){
+  .pantry-tabs{grid-template-columns:repeat(4,minmax(0,1fr));max-width:760px}
+  .pantry-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pantry-insights{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 
 @media (max-width:560px){
   .money-page-head{align-items:flex-start}
@@ -580,6 +642,10 @@ const T = {
   HABITS:             'habits',
   HABIT_LOGS:         'habit_logs',
   MOODBOARD:          'moodboard_items',
+  PANTRY_PURCHASES:    'pantry_purchases',
+  PANTRY_ITEMS:        'pantry_items',
+  PANTRY_MEALS:        'pantry_meals',
+  PANTRY_MEAL_ITEMS:   'pantry_meal_items',
 };
 
 // ════════════════════════════════════════════════════════════
@@ -791,7 +857,7 @@ document.addEventListener('keydown', e => {
 const PERSIST_ROUTES = [
   'home','money','actions','progress','more',
   'finance','bills','co-bills','spending','income','debt','debt-history','budgets','co-income',
-  'dashboard','inbox','ideas','projects','content','habits','settings'
+  'dashboard','inbox','ideas','projects','content','habits','pantry','settings'
 ];
 
 function saveViewState(view) {
@@ -818,7 +884,7 @@ function setActiveNav(route) {
     money: ['money','finance','bills','co-bills','spending','income','debt','debt-history','budgets','co-income'],
     actions: ['actions','inbox'],
     progress: ['progress'],
-    more: ['more','ideas','projects','content','habits','settings']
+    more: ['more','ideas','projects','content','habits','pantry','settings']
   };
   const destination = Object.keys(groups).find(key => groups[key].includes(route)) || 'home';
   const activeButton = document.getElementById(`nav-${destination}`);
@@ -869,6 +935,7 @@ async function navigate(route, params = {}) {
     projects:      renderProjects,
     content:       renderContent,
     habits:        renderHabits,
+    pantry:        renderPantry,
     progress:      renderProgress,
     settings:      renderSettings,
   };
@@ -1886,14 +1953,26 @@ async function showSpendModal(editId, cats) {
       <label style="text-transform:uppercase;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text2)">Counts Toward Target</label>
       <label class="tog"><input type="checkbox" id="f-ctt" ${cttChecked?'checked':''}/><span class="tog-slider"></span></label>
     </div>
+    ${!editId ? `<div id="pantry-spend-offer" class="pantry-spend-offer hidden"><label><input type="checkbox" id="f-add-pantry"/><span><strong>Add items to Pantry?</strong><br/>Optionally itemise only the food you want to track after saving.</span></label></div>` : ''}
   `, async()=>{
     const cat=v('f-cat');
     if(!cat)return alert('Enter a category.');
     const ctt = document.getElementById('f-ctt')?.checked ?? true;
+    const addToPantry = !editId && isGroceryCategory(cat) && document.getElementById('f-add-pantry')?.checked;
     const row={category:cat,description:v('f-desc'),amount:num('f-amt'),date:v('f-date'),counts_toward_target:ctt};
-    editId?await dbUpdate(T.VARIABLE_SPENDING,editId,row):await dbInsert(T.VARIABLE_SPENDING,row);
+    let savedSpend = ex;
+    if(editId) await dbUpdate(T.VARIABLE_SPENDING,editId,row);
+    else savedSpend = await dbInsert(T.VARIABLE_SPENDING,row);
     renderSpending();
+    if(addToPantry && savedSpend) setTimeout(()=>showPantryPurchaseModal(savedSpend),0);
   });
+  if(!editId) setTimeout(()=>{
+    const category=document.getElementById('f-cat');
+    const update=()=>document.getElementById('pantry-spend-offer')?.classList.toggle('hidden',!isGroceryCategory(category?.value));
+    category?.addEventListener('input',update);
+    category?.addEventListener('change',update);
+    update();
+  },0);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2451,16 +2530,50 @@ async function showDebtModal(editId, defaultStatus='Active') {
 // ════════════════════════════════════════════════════════════
 // DEBT HISTORY PAGE
 // ════════════════════════════════════════════════════════════
-async function renderDebtHistory() {
+async function renderDebtHistory(params = {}) {
   const [history, totalHist, debts] = await Promise.all([
     dbFetch(T.DEBT_HISTORY,       {order:['statement_date',true]}),
     dbFetch(T.DEBT_TOTAL_HISTORY, {order:['statement_date',true]}),
     dbFetch(T.DEBT_MASTER,        {order:['account_name',true]}),
   ]);
 
+  const groupMode = params.group === 'account' ? 'account' : (window._debtHistoryGroup === 'account' ? 'account' : 'month');
+  window._debtHistoryGroup = groupMode;
+
   const byAccount = {};
-  // Use descending order for display list
-  [...history].reverse().forEach(h=>{ if(!byAccount[h.account])byAccount[h.account]=[]; byAccount[h.account].push(h); });
+  [...history].reverse().forEach(h=>{ const key=h.account || 'No account'; if(!byAccount[key])byAccount[key]=[]; byAccount[key].push(h); });
+  const byMonth = {};
+  [...history].sort((a,b)=>(b.statement_date||'').localeCompare(a.statement_date||'')).forEach(h=>{
+    const key = h.statement_date ? h.statement_date.substring(0,7) : 'undated';
+    if(!byMonth[key]) byMonth[key]=[];
+    byMonth[key].push(h);
+  });
+
+  function historyExpectedClose(row) {
+    return (parseFloat(row.opening_balance)||0) + (parseFloat(row.new_spend)||0) + (parseFloat(row.interest_and_fees)||0) - (parseFloat(row.payments_made)||0);
+  }
+  function historyRow(row, showAccount) {
+    const expected = historyExpectedClose(row);
+    const closing = parseFloat(row.closing_balance)||0;
+    const difference = closing - expected;
+    const balanced = Math.abs(difference) < 0.01;
+    return `<div class="financial-row">
+      <div class="financial-row-main">
+        <div class="financial-row-top">${balanced ? '<span class="money-status positive">Balanced</span>' : '<span class="money-status danger">Check balance</span>'}<span class="financial-row-title">${safeText(showAccount ? (row.account || 'No account') : fmtDate(row.statement_date))}</span></div>
+        <div class="financial-row-meta">${showAccount ? fmtDate(row.statement_date) : safeText(row.account || 'No account')} · Opened ${fmt(row.opening_balance)} · Spend ${fmt(row.new_spend)} · Interest ${fmt(row.interest_and_fees)} · Payments ${fmt(row.payments_made)}</div>
+        ${!balanced ? `<div class="financial-row-meta" style="color:var(--danger)">Expected close ${fmt(expected)} · Difference ${fmt(Math.abs(difference))}</div>` : ''}
+      </div>
+      <div class="financial-row-value">${fmt(closing)}<small>closing balance</small></div>
+      <button class="menu-btn" aria-label="Delete history entry" onclick="delHistEntry('${row.id}')">···</button>
+    </div>`;
+  }
+  function monthLabel(key) {
+    if (key === 'undated') return 'No date';
+    return new Date(key + '-01T00:00:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  }
+  const groupedHistoryHTML = groupMode === 'account'
+    ? Object.entries(byAccount).sort(([a],[b])=>a.localeCompare(b)).map(([account,rows])=>`<section class="acct-group money-panel" data-acct="${safeText((account+' '+rows.map(r=>r.statement_date||'').join(' ')).toLowerCase())}"><div class="money-panel-head"><div><div class="money-panel-title">${safeText(account)}</div><div class="money-panel-note">${rows.length} recorded period${rows.length===1?'':'s'}</div></div></div>${rows.map(row=>historyRow(row,false)).join('')}</section>`).join('')
+    : Object.entries(byMonth).sort(([a],[b])=>b.localeCompare(a)).map(([month,rows])=>`<section class="acct-group money-panel" data-acct="${safeText((month+' '+monthLabel(month)+' '+rows.map(r=>r.account||'').join(' ')).toLowerCase())}"><div class="money-panel-head"><div><div class="money-panel-title">${monthLabel(month)}</div><div class="money-panel-note">${rows.length} transaction${rows.length===1?'':'s'} recorded</div></div></div>${rows.map(row=>historyRow(row,true)).join('')}</section>`).join('');
 
   // ── Build month-aggregated chart data ──
   // Priority: use debt_total_history if available (already one-row-per-month totals).
@@ -2518,23 +2631,15 @@ async function renderDebtHistory() {
       <div style="width:10px;height:2px;border-radius:2px;background:var(--accent)"></div>Total debt
     </div>
   </section>
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input class="search-input" placeholder="Search account…" oninput="filterGroups(this.value)"/>
+  <div class="money-tools">
+    <div class="search-wrap money-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="search-input" placeholder="Search history" oninput="filterGroups(this.value)"/></div>
+    <select class="money-filter-control" aria-label="Group debt history" onchange="setDebtHistoryGroup(this.value)">
+      <option value="month" ${groupMode==='month'?'selected':''}>Group by month</option>
+      <option value="account" ${groupMode==='account'?'selected':''}>Group by account</option>
+    </select>
   </div>
-  <div id="hist-groups">
-    ${Object.entries(byAccount).map(([acc,rows])=>`
-    <section class="acct-group money-panel" data-acct="${safeText(acc.toLowerCase())}">
-      <div class="money-panel-head"><div><div class="money-panel-title">${safeText(acc)}</div><div class="money-panel-note">${rows.length} recorded period${rows.length === 1 ? '' : 's'}</div></div></div>
-        ${rows.map(r=>{
-          const change=(parseFloat(r.closing_balance)||0)-(parseFloat(r.opening_balance)||0);
-          return `<div class="financial-row">
-            <div class="financial-row-main"><div class="financial-row-title">${fmtDate(r.statement_date)}</div><div class="financial-row-meta">Opened ${fmt(r.opening_balance)} · ${change <= 0 ? 'Down' : 'Up'} ${fmt(Math.abs(change))}</div></div>
-            <div class="financial-row-value">${fmt(r.closing_balance)}<small>closing balance</small></div>
-            <button class="menu-btn" aria-label="Delete history entry" onclick="delHistEntry('${r.id}')">···</button>
-          </div>`;
-        }).join('')}
-    </section>`).join('')||moneyEmpty('No history recorded', 'Add a history entry to begin tracking debt over time.')}
+  <div id="hist-groups" class="debt-history-groups">
+    ${groupedHistoryHTML || moneyEmpty('No history recorded', 'Add a history entry to begin tracking debt over time.')}
   </div>
 </div>`;
 
@@ -2577,6 +2682,13 @@ async function renderDebtHistory() {
   });
 }
 
+function setDebtHistoryGroup(group) {
+  const nextGroup = group === 'account' ? 'account' : 'month';
+  window._debtHistoryGroup = nextGroup;
+  rememberCurrentViewParams({group:nextGroup});
+  renderDebtHistory({group:nextGroup});
+}
+
 async function delHistEntry(id) {
   if(!confirm('Delete this entry?')) return;
   await dbDelete(T.DEBT_HISTORY, id);
@@ -2588,19 +2700,37 @@ function showHistoryModal(accounts) {
   showModal('Add Debt History',`
     <div class="fg"><label>Account</label><select id="f-acc"><option value="">Select…</option>${opts}</select></div>
     <div class="fg"><label>Statement Date</label><input id="f-date" type="date" value="${today()}"/></div>
-    <div class="fg"><label>Opening Balance (£)</label><input id="f-open" type="number" step="0.01" value="0"/></div>
-    <div class="fg"><label>New Spend (£)</label><input id="f-spend" type="number" step="0.01" value="0"/></div>
-    <div class="fg"><label>Payments Made (£)</label><input id="f-paid" type="number" step="0.01" value="0"/></div>
-    <div class="fg"><label>Interest &amp; Fees (£)</label><input id="f-int" type="number" step="0.01" value="0"/></div>
-    <div class="fg"><label>Closing Balance (£)</label><input id="f-close" type="number" step="0.01" value="0"/></div>
+    <div class="fg"><label>Opening Balance (£)</label><input id="f-open" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>New Spend (£)</label><input id="f-spend" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>Payments Made (£)</label><input id="f-paid" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>Interest &amp; Fees (£)</label><input id="f-int" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>Closing Balance (£)</label><input id="f-close" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div id="debt-history-reconciliation" class="reconciliation-box" style="margin-bottom:14px"></div>
     <div class="fg"><label>Notes</label><input id="f-notes" value=""/></div>
   `, async()=>{
     const acc=v('f-acc');
-    if(!acc)return alert('Select an account.');
+    if(!acc) throw new Error('Select an account before saving.');
     const row={account:acc,statement_date:v('f-date'),opening_balance:num('f-open'),new_spend:num('f-spend'),payments_made:num('f-paid'),interest_and_fees:num('f-int'),closing_balance:num('f-close'),notes:v('f-notes')||null};
+    const expectedClose = row.opening_balance + row.new_spend + row.interest_and_fees - row.payments_made;
+    if (Math.abs(row.closing_balance - expectedClose) >= 0.01) {
+      throw new Error(`Closing balance must be ${fmt(expectedClose)}. Review the recorded spend, interest and payments before saving.`);
+    }
     await dbInsert(T.DEBT_HISTORY,row);
-    renderDebtHistory();
+    renderDebtHistory({group:window._debtHistoryGroup || 'month'});
   });
+  updateDebtHistoryReconciliation();
+}
+
+function updateDebtHistoryReconciliation() {
+  const box = document.getElementById('debt-history-reconciliation');
+  if (!box) return;
+  const expectedClose = num('f-open') + num('f-spend') + num('f-int') - num('f-paid');
+  const closing = num('f-close');
+  const difference = closing - expectedClose;
+  const balanced = Math.abs(difference) < 0.01;
+  box.classList.toggle('is-balanced', balanced);
+  box.classList.toggle('is-unbalanced', !balanced);
+  box.innerHTML = `<div style="font-size:12px;font-weight:650;color:${balanced?'var(--positive)':'var(--danger)'}">${balanced?'Balances correctly':'Closing balance does not reconcile'}</div><div style="margin-top:3px;font-size:11px;color:var(--text2)">Calculated closing balance: <strong>${fmt(expectedClose)}</strong>${balanced?'':` · Difference ${fmt(Math.abs(difference))}`}</div>`;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -5371,11 +5501,252 @@ async function showHabitModal(editId) {
 }
 
 // ════════════════════════════════════════════════════════════
+// PANTRY / FOOD VALUE
+// ════════════════════════════════════════════════════════════
+const PANTRY_STATUSES = ['Unused', 'Open', 'Finished', 'Wasted'];
+
+function isGroceryCategory(value) {
+  const category = String(value || '').trim().toLowerCase();
+  return category === 'grocery' || category === 'groceries' || category.includes('grocery');
+}
+
+function isEatingOutCategory(value) {
+  const category = String(value || '').trim().toLowerCase();
+  return ['eating out', 'takeaway', 'takeaways', 'restaurant', 'restaurants'].some(term => category.includes(term));
+}
+
+function pantryTabs(active) {
+  const tabs = [['pantry','Current Pantry'], ['meals','Meal Log'], ['insights','Food Insights'], ['history','Purchase History']];
+  return `<div class="pantry-tabs" aria-label="Pantry sections">${tabs.map(([key,label]) => `<button type="button" class="pantry-tab ${active === key ? 'active' : ''}" onclick="openPantryTab('${key}')">${label}</button>`).join('')}</div>`;
+}
+
+function openPantryTab(tab) {
+  navigate('pantry', {tab});
+}
+
+async function loadPantryData() {
+  const [purchases, items, meals, mealItems, spending] = await Promise.all([
+    dbFetch(T.PANTRY_PURCHASES, {order:['purchase_date',false]}),
+    dbFetch(T.PANTRY_ITEMS, {order:['created_at',false]}),
+    dbFetch(T.PANTRY_MEALS, {order:['meal_date',false]}),
+    dbFetch(T.PANTRY_MEAL_ITEMS, {}),
+    dbFetch(T.VARIABLE_SPENDING, {order:['date',false]})
+  ]);
+  return {purchases, items, meals, mealItems, spending};
+}
+
+async function renderPantry(params = {}) {
+  const validTabs = ['pantry','meals','insights','history'];
+  const active = validTabs.includes(params.tab) ? params.tab : 'pantry';
+  const data = await loadPantryData();
+  window._pantryData = data;
+  const action = active === 'pantry'
+    ? `<button class="page-header-action" onclick="showPantryPurchaseModal()">Add purchase</button>`
+    : active === 'meals' ? `<button class="page-header-action" onclick="showPantryMealModal()">Log meal</button>` : '';
+  const views = {
+    pantry: renderCurrentPantry,
+    meals: renderPantryMeals,
+    insights: renderFoodInsights,
+    history: renderPantryHistory
+  };
+  root().innerHTML = `<div class="page pantry-shell">
+    <header class="page-header"><div class="page-header-copy"><h1 class="page-header-title">Pantry</h1><p class="page-header-subtitle">See how grocery spending turns into meals and useful portions.</p></div>${action}</header>
+    ${pantryTabs(active)}
+    <div class="pantry-view">${views[active](data)}</div>
+  </div>`;
+}
+
+function pantryItemCard(item, purchase) {
+  const status = PANTRY_STATUSES.includes(item.status) ? item.status : 'Unused';
+  const merchant = purchase?.merchant || 'Unlinked purchase';
+  const meta = [item.quantity_description, item.category].filter(Boolean).map(safeText).join(' · ');
+  return `<article class="pantry-item">
+    <div class="pantry-item-head"><div><span class="money-status ${status === 'Finished' ? 'positive' : status === 'Wasted' ? 'danger' : status === 'Open' ? 'warning' : ''}">${status}</span><h3>${safeText(item.name)}</h3></div><button class="menu-btn" aria-label="Pantry item actions" onclick="ctxPantryItem(event,'${item.id}')">···</button></div>
+    ${meta ? `<p>${meta}</p>` : ''}<p>${safeText(merchant)}${purchase?.purchase_date ? ` · ${fmtDate(purchase.purchase_date)}` : ''}${item.price !== null && item.price !== undefined ? ` · ${fmt(item.price)}` : ''}</p>
+    ${item.notes ? `<p class="pantry-notes">${safeText(item.notes)}</p>` : ''}
+    <div class="pantry-item-actions">
+      ${status === 'Unused' ? `<button class="pantry-status-btn" onclick="setPantryStatus('${item.id}','Open')">Open</button>` : ''}
+      ${!['Finished','Wasted'].includes(status) ? `<button class="pantry-status-btn" onclick="setPantryStatus('${item.id}','Finished')">Finished</button><button class="pantry-status-btn danger" onclick="showPantryWasteModal('${item.id}')">Wasted</button>` : ''}
+    </div>
+  </article>`;
+}
+
+function renderCurrentPantry(data) {
+  const purchaseMap = new Map(data.purchases.map(row => [String(row.id), row]));
+  const active = data.items.filter(item => !['Finished','Wasted'].includes(item.status));
+  const finished = data.items.filter(item => item.status === 'Finished').length;
+  const wasted = data.items.filter(item => item.status === 'Wasted').length;
+  return `<section class="pantry-insights" aria-label="Pantry summary"><div><strong>${active.length}</strong><span>Current items</span></div><div><strong>${finished}</strong><span>Finished</span></div><div><strong>${wasted}</strong><span>Wasted</span></div></section>
+    ${active.length ? `<div class="pantry-card-grid">${active.map(item => pantryItemCard(item, purchaseMap.get(String(item.purchase_id)))).join('')}</div>` : moneyEmpty('Your current pantry is clear', 'Add a grocery purchase and track only the food that matters to you.')}`;
+}
+
+function renderPantryMeals(data) {
+  const itemMap = new Map(data.items.map(item => [String(item.id), item]));
+  const linksByMeal = new Map();
+  data.mealItems.forEach(link => {
+    const key = String(link.meal_id);
+    if (!linksByMeal.has(key)) linksByMeal.set(key, []);
+    const item = itemMap.get(String(link.pantry_item_id));
+    if (item) linksByMeal.get(key).push(item);
+  });
+  return data.meals.length ? `<div class="pantry-card-grid">${data.meals.map(meal => {
+    const used = linksByMeal.get(String(meal.id)) || [];
+    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(meal.meal_date)}</span><h3>${safeText(meal.name)}</h3></div><button class="menu-btn" aria-label="Meal actions" onclick="ctxPantryMeal(event,'${meal.id}')">···</button></div><p><strong>${Number(meal.portions) || 0} portion${Number(meal.portions) === 1 ? '' : 's'}</strong></p>${used.length ? `<div class="pantry-purchase-items">${used.map(item => `<span>${safeText(item.name)}</span>`).join('')}</div>` : '<p>No tracked pantry items selected.</p>'}${meal.notes ? `<p class="pantry-notes">${safeText(meal.notes)}</p>` : ''}</article>`;
+  }).join('')}</div>` : moneyEmpty('No meals logged yet', 'Log a meal to connect pantry items with the portions you cooked.');
+}
+
+function renderFoodInsights(data) {
+  const now = new Date();
+  const grocerySpend = data.spending.filter(row => isCurrentMonth(row.date, now) && isGroceryCategory(row.category)).reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
+  const eatingOutSpend = data.spending.filter(row => isCurrentMonth(row.date, now) && isEatingOutCategory(row.category)).reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
+  const monthMeals = data.meals.filter(row => isCurrentMonth(row.meal_date, now));
+  const portions = monthMeals.reduce((sum,row) => sum + (parseInt(row.portions)||0), 0);
+  const purchaseMap = new Map(data.purchases.map(row => [String(row.id), row]));
+  const monthItems = data.items.filter(item => isCurrentMonth(purchaseMap.get(String(item.purchase_id))?.purchase_date, now));
+  const wasteValue = monthItems.reduce((sum,item) => sum + (parseFloat(item.waste_value)||0), 0);
+  const wastePercent = grocerySpend > 0 ? wasteValue / grocerySpend * 100 : 0;
+  const usedCounts = new Map();
+  data.mealItems.forEach(link => usedCounts.set(String(link.pantry_item_id), (usedCounts.get(String(link.pantry_item_id)) || 0) + 1));
+  const repeated = data.items.filter(item => (usedCounts.get(String(item.id)) || 0) > 1).sort((a,b) => (usedCounts.get(String(b.id))||0) - (usedCounts.get(String(a.id))||0))[0];
+  const wastedNames = data.items.filter(item => item.status === 'Wasted').reduce((map,item) => { const key=item.name.trim().toLowerCase(); map.set(key,(map.get(key)||0)+1); return map; }, new Map());
+  const frequentWaste = [...wastedNames.entries()].sort((a,b)=>b[1]-a[1])[0];
+  return `<section class="pantry-insights">
+    <div><strong>${fmt(grocerySpend)}</strong><span>Groceries this month</span></div>
+    <div><strong>${portions}</strong><span>Home-cooked portions</span></div>
+    <div><strong>${portions ? fmt(grocerySpend / portions) : '—'}</strong><span>Approx. grocery spend / portion</span></div>
+    <div><strong>${fmt(wasteValue)}</strong><span>Tracked waste · ${wastePercent.toFixed(1)}%</span></div>
+  </section>
+  <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Food value</div><div class="money-panel-note">Directional insight, not exact recipe costing</div></div></div>
+    <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Eating out &amp; takeaway</div><div class="financial-row-meta">Compared with ${fmt(grocerySpend)} grocery spend</div></div><div class="financial-row-value">${fmt(eatingOutSpend)}</div></div>
+    <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Items finished</div><div class="financial-row-meta">Tracked purchases this month</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Finished').length}</div></div>
+    <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Items wasted</div><div class="financial-row-meta">Tracked purchases this month</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Wasted').length}</div></div>
+  </section>
+  ${(repeated || frequentWaste) ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Patterns</div><div class="money-panel-note">Based on your tracked Pantry activity</div></div></div>${repeated ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">${safeText(repeated.name)} stretches across meals</div><div class="financial-row-meta">Used in ${usedCounts.get(String(repeated.id))} logged meals</div></div></div>` : ''}${frequentWaste ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Watch ${safeText(frequentWaste[0])}</div><div class="financial-row-meta">Marked wasted ${frequentWaste[1]} time${frequentWaste[1] === 1 ? '' : 's'}</div></div></div>` : ''}</section>` : ''}`;
+}
+
+function renderPantryHistory(data) {
+  const spendMap = new Map(data.spending.map(row => [String(row.id), row]));
+  const mealMap = new Map(data.meals.map(row => [String(row.id), row]));
+  const mealsByItem = new Map();
+  data.mealItems.forEach(link => { const key=String(link.pantry_item_id); if(!mealsByItem.has(key)) mealsByItem.set(key,[]); const meal=mealMap.get(String(link.meal_id)); if(meal) mealsByItem.get(key).push(meal); });
+  return data.purchases.length ? `<div class="pantry-card-grid">${data.purchases.map(purchase => {
+    const items = data.items.filter(item => String(item.purchase_id) === String(purchase.id));
+    const meals = [...new Map(items.flatMap(item => mealsByItem.get(String(item.id)) || []).map(meal => [String(meal.id), meal])).values()];
+    const spend = spendMap.get(String(purchase.spending_transaction_id));
+    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<div class="pantry-purchase-items">${items.map(item => `<span>${safeText(item.name)} · ${safeText(item.status || 'Unused')}</span>`).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
+  }).join('')}</div>` : moneyEmpty('No purchase history yet', 'Pantry purchases linked from Spending or added here will appear in this timeline.');
+}
+
+async function setPantryStatus(id, status) {
+  const updates = {status, updated_at:new Date().toISOString()};
+  if (status !== 'Wasted') Object.assign(updates, {waste_fraction:null, waste_value:null});
+  await dbUpdate(T.PANTRY_ITEMS, id, updates);
+  renderPantry({tab:'pantry'});
+}
+
+function ctxPantryItem(event, id) {
+  showCtx(event, [
+    {label:'Edit', fn:()=>showPantryItemModal(id)},
+    {label:'Delete', danger:true, fn:async()=>{ if(confirm('Delete this tracked pantry item? This will not alter its spending transaction.')) { await dbDelete(T.PANTRY_ITEMS,id); renderPantry({tab:'pantry'}); } }}
+  ]);
+}
+
+async function showPantryItemModal(id) {
+  const item = (await dbFetch(T.PANTRY_ITEMS,{eq:{id}}))[0];
+  if (!item) return;
+  showModal('Edit pantry item', `
+    <div class="fg"><label>Name</label><input id="f-pan-name" value="${safeText(item.name)}"/></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Price (£) <span>optional</span></label><input id="f-pan-price" type="number" min="0" step="0.01" value="${item.price ?? ''}"/></div><div class="fg"><label>Quantity description <span>optional</span></label><input id="f-pan-qty" value="${safeText(item.quantity_description || '')}" placeholder="e.g. 225g"/></div></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Category <span>optional</span></label><input id="f-pan-cat" value="${safeText(item.category || '')}"/></div><div class="fg"><label>Status</label><select id="f-pan-status">${PANTRY_STATUSES.map(status=>`<option ${item.status===status?'selected':''}>${status}</option>`).join('')}</select></div></div>
+    <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-pan-notes">${safeText(item.notes || '')}</textarea></div>`, async()=>{
+      const name=v('f-pan-name'); if(!name) throw new Error('Enter an item name.');
+      await dbUpdate(T.PANTRY_ITEMS,id,{name,price:v('f-pan-price')===''?null:num('f-pan-price'),quantity_description:v('f-pan-qty')||null,category:v('f-pan-cat')||null,status:v('f-pan-status'),notes:v('f-pan-notes')||null,updated_at:new Date().toISOString()});
+      renderPantry({tab:'pantry'});
+    });
+}
+
+async function showPantryWasteModal(id) {
+  const item = window._pantryData?.items?.find(row=>String(row.id)===String(id)) || (await dbFetch(T.PANTRY_ITEMS,{eq:{id}}))[0];
+  if (!item) return;
+  showModal(`Record waste · ${safeText(item.name)}`, `
+    <p class="muted mb16">Choose an approximate share. This estimates value only and does not track remaining grams.</p>
+    <div class="fg"><label>Amount wasted</label><select id="f-waste-share" onchange="updatePantryWasteEstimate(${Number(item.price)||0})"><option value="1">All</option><option value="0.75">3/4</option><option value="0.5">1/2</option><option value="0.25">1/4</option><option value="0.1">Small amount</option><option value="custom">Custom £</option></select></div>
+    <div class="fg hidden" id="f-waste-custom-wrap"><label>Custom waste value (£)</label><input id="f-waste-custom" type="number" min="0" step="0.01" oninput="updatePantryWasteEstimate(${Number(item.price)||0})"/></div>
+    <div class="pantry-waste-estimate" id="f-waste-estimate">Estimated waste value: ${item.price != null ? fmt(item.price) : 'price unavailable'}</div>`, async()=>{
+      const choice=v('f-waste-share');
+      const fraction=choice==='custom'?null:parseFloat(choice);
+      const custom=choice==='custom'&&v('f-waste-custom')!==''?num('f-waste-custom'):null;
+      const wasteValue=custom ?? (item.price == null ? null : (parseFloat(item.price)||0)*fraction);
+      await dbUpdate(T.PANTRY_ITEMS,id,{status:'Wasted',waste_fraction:fraction,waste_value:wasteValue,updated_at:new Date().toISOString()});
+      renderPantry({tab:'pantry'});
+    });
+}
+
+function updatePantryWasteEstimate(price) {
+  const choice=v('f-waste-share');
+  document.getElementById('f-waste-custom-wrap')?.classList.toggle('hidden',choice!=='custom');
+  const value=choice==='custom' ? (v('f-waste-custom')===''?null:num('f-waste-custom')) : (price?price*parseFloat(choice):null);
+  const label=document.getElementById('f-waste-estimate');
+  if(label) label.textContent='Estimated waste value: '+(value===null?'price unavailable':fmt(value));
+}
+
+function addPantryItemRow(values = {}) {
+  const container=document.getElementById('pantry-item-rows');
+  if(!container) return;
+  const row=document.createElement('div');
+  row.className='pantry-form-row';
+  row.innerHTML=`<button type="button" class="pantry-row-remove" aria-label="Remove item" onclick="this.parentElement.remove()">×</button>
+    <div class="fg"><label>Item name</label><input data-field="name" value="${safeText(values.name||'')}" placeholder="e.g. Prawns"/></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Price (£) <span>optional</span></label><input data-field="price" type="number" min="0" step="0.01" value="${values.price??''}"/></div><div class="fg"><label>Quantity <span>optional</span></label><input data-field="quantity" value="${safeText(values.quantity_description||'')}" placeholder="e.g. 225g"/></div></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Category <span>optional</span></label><input data-field="category" value="${safeText(values.category||'')}" placeholder="e.g. Protein"/></div><div class="fg"><label>Notes <span>optional</span></label><input data-field="notes" value="${safeText(values.notes||'')}"/></div></div>`;
+  container.appendChild(row);
+  row.querySelector('[data-field="name"]')?.focus();
+}
+
+async function showPantryPurchaseModal(linkedSpend = null) {
+  showModal(linkedSpend ? 'Add grocery items to Pantry' : 'Add pantry purchase', `
+    ${linkedSpend ? `<div class="pantry-linked-spend"><strong>${safeText(linkedSpend.description||'Grocery spend')}</strong><span>${fmt(linkedSpend.amount)} · ${fmtDate(linkedSpend.date)}</span><small>The Spending record remains unchanged.</small></div>` : ''}
+    <div class="pantry-form-grid"><div class="fg"><label>Merchant</label><input id="f-purchase-merchant" value="${safeText(linkedSpend?.description||'')}" placeholder="e.g. Morrisons"/></div><div class="fg"><label>Date</label><input id="f-purchase-date" type="date" value="${linkedSpend?.date?.substring(0,10)||today()}"/></div></div>
+    <div class="pantry-form-section-head"><div><strong>Tracked food</strong><span>Add only the items useful to you.</span></div><button type="button" class="btn btn-secondary" onclick="addPantryItemRow()">Add item</button></div>
+    <div id="pantry-item-rows"></div>`, async()=>{
+      const rows=[...document.querySelectorAll('#pantry-item-rows .pantry-form-row')].map(el=>({name:el.querySelector('[data-field="name"]')?.value.trim(),price:el.querySelector('[data-field="price"]')?.value,quantity_description:el.querySelector('[data-field="quantity"]')?.value.trim()||null,category:el.querySelector('[data-field="category"]')?.value.trim()||null,notes:el.querySelector('[data-field="notes"]')?.value.trim()||null})).filter(row=>row.name);
+      if(!rows.length) throw new Error('Add at least one pantry item.');
+      const purchase=await dbInsert(T.PANTRY_PURCHASES,{spending_transaction_id:linkedSpend?.id!=null?String(linkedSpend.id):null,merchant:v('f-purchase-merchant')||null,purchase_date:v('f-purchase-date')||today()});
+      for(const row of rows) await dbInsert(T.PANTRY_ITEMS,{purchase_id:purchase.id,name:row.name,price:row.price===''?null:parseFloat(row.price),quantity_description:row.quantity_description,category:row.category,status:'Unused',notes:row.notes});
+      renderPantry({tab:'pantry'});
+    });
+  setTimeout(()=>addPantryItemRow(),0);
+}
+
+async function showPantryMealModal() {
+  const data=window._pantryData || await loadPantryData();
+  const active=data.items.filter(item=>!['Finished','Wasted'].includes(item.status));
+  showModal('Log meal', `
+    <div class="fg"><label>Meal name</label><input id="f-meal-name" placeholder="e.g. Cajun Prawn Mac"/></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Date</label><input id="f-meal-date" type="date" value="${today()}"/></div><div class="fg"><label>Portions produced</label><input id="f-meal-portions" type="number" min="1" step="1" value="1"/></div></div>
+    <div class="fg"><label>Pantry items used</label>${active.length ? `<div class="ingredient-chips">${active.map(item=>`<label class="ingredient-chip"><input type="checkbox" value="${item.id}"/><span>${safeText(item.name)}</span></label>`).join('')}</div>` : '<p class="muted">No active pantry items. You can still log the meal.</p>'}</div>
+    <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-meal-notes"></textarea></div>`, async()=>{
+      const name=v('f-meal-name'); const portions=parseInt(v('f-meal-portions'));
+      if(!name) throw new Error('Enter a meal name.');
+      if(!portions||portions<1) throw new Error('Enter at least one portion.');
+      const selected=[...document.querySelectorAll('.ingredient-chip input:checked')].map(input=>input.value);
+      const meal=await dbInsert(T.PANTRY_MEALS,{name,meal_date:v('f-meal-date')||today(),portions,notes:v('f-meal-notes')||null});
+      for(const pantryItemId of selected) { await dbInsert(T.PANTRY_MEAL_ITEMS,{meal_id:meal.id,pantry_item_id:pantryItemId}); const item=active.find(row=>String(row.id)===String(pantryItemId)); if(item?.status==='Unused') await dbUpdate(T.PANTRY_ITEMS,pantryItemId,{status:'Open',updated_at:new Date().toISOString()}); }
+      renderPantry({tab:'meals'});
+    });
+}
+
+function ctxPantryMeal(event,id) {
+  showCtx(event,[{label:'Delete',danger:true,fn:async()=>{ if(!confirm('Delete this meal log? Pantry items will be kept.')) return; const {error}=await getDB().from(T.PANTRY_MEAL_ITEMS).delete().eq('meal_id',id); if(error) throw error; await dbDelete(T.PANTRY_MEALS,id); renderPantry({tab:'meals'}); }}]);
+}
+
+// ════════════════════════════════════════════════════════════
 // MORE DIRECTORY
 // ════════════════════════════════════════════════════════════
 function renderMore() {
   const rows = [
     ['projects', 'Projects', 'Group actions, money and plans around real-life goals'],
+    ['pantry', 'Pantry', 'Connect grocery spending with meals, portions and food value'],
     ['habits', 'Habits', 'Keep lower-frequency routines and personal tracking nearby'],
     ['content', 'Content', 'Manage saved content and publishing activity'],
     ['ideas', 'Ideas', 'Review and develop ideas when you need them'],
