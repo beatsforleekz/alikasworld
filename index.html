@@ -80,6 +80,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:
 .nav-label{display:block;max-width:100%;font-size:10px;font-weight:500;line-height:1.1;overflow:hidden;text-overflow:ellipsis}
 .nav-btn.active{color:var(--accent)}
 .nav-btn.active .nav-label{font-weight:700}
+.nav-desktop-only{display:none}
 
 /* ── Page ── */
 .page{padding:0 var(--space-4) var(--space-6);overflow-x:hidden}
@@ -550,6 +551,7 @@ button.financial-row:hover{background:var(--accent-light)}
   .nav-brand-name{font-size:var(--font-lg);font-weight:650;letter-spacing:-.035em;color:var(--text)}
   .nav-brand-sub{margin-top:var(--space-1);font-size:10px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--text3)}
   .nav-btn{width:100%;height:48px;min-height:48px;flex-direction:row;justify-content:flex-start;gap:var(--space-3);padding:0 var(--space-3);border-radius:var(--radius-control)}
+  .nav-desktop-only{display:flex}
   .nav-btn:hover{background:var(--accent-light);color:var(--text)}
   .nav-btn.active{background:var(--accent-light);color:var(--accent)}
   .nav-btn svg{width:19px;height:19px}
@@ -623,6 +625,10 @@ button.financial-row:hover{background:var(--accent-light)}
       <button class="nav-btn" onclick="navigate('progress')" id="nav-progress">
         <svg viewBox="0 0 24 24"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19V3"/></svg>
         <span class="nav-label">Progress</span>
+      </button>
+      <button class="nav-btn nav-desktop-only" onclick="navigate('pantry')" id="nav-pantry">
+        <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M8 8V5h8v3"/><path d="M9 13h6"/></svg>
+        <span class="nav-label">Pantry</span>
       </button>
       <button class="nav-btn" onclick="navigate('more')" id="nav-more">
         <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
@@ -903,7 +909,8 @@ function setActiveNav(route) {
     money: ['money','finance','bills','co-bills','spending','income','debt','debt-history','budgets','co-income'],
     actions: ['actions','inbox'],
     progress: ['progress'],
-    more: ['more','ideas','projects','content','habits','pantry','settings']
+    pantry: ['pantry'],
+    more: ['more','ideas','projects','content','habits','settings']
   };
   const destination = Object.keys(groups).find(key => groups[key].includes(route)) || 'home';
   const activeButton = document.getElementById(`nav-${destination}`);
