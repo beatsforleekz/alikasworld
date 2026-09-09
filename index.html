@@ -209,7 +209,9 @@ button.financial-row:hover{background:var(--accent-light)}
 .pantry-form-row>.fg:first-of-type{padding-right:36px}
 .pantry-form-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(90px,.6fr);gap:var(--space-2)}
 .pantry-insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
-.pantry-insights>div{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
+.pantry-insights>div,.pantry-insights>button{min-width:0;padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface);color:var(--text);font-family:inherit;text-align:left}
+.pantry-insights>button{cursor:pointer;transition:border-color var(--transition),background var(--transition)}
+.pantry-insights>button:hover,.pantry-insights>button:focus-visible{border-color:var(--accent);background:var(--accent-light);outline:none}
 .pantry-insights strong{display:block;font-size:clamp(20px,6vw,30px);font-weight:650;letter-spacing:-.04em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .pantry-insights span{display:block;margin-top:5px;font-size:10px;color:var(--text2);line-height:1.4}
 .pantry-insight{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
@@ -5775,10 +5777,10 @@ function pantryItemCard(item, purchase) {
 
 function renderCurrentPantry(data) {
   const purchaseMap = new Map(data.purchases.map(row => [String(row.id), row]));
-  const active = data.items.filter(item => !['Finished','Wasted'].includes(item.status));
+  const active = data.items.filter(item => !['Finished','Wasted'].includes(item.status)).sort((a,b)=>(a.status==='Open'?0:1)-(b.status==='Open'?0:1)||String(b.created_at||'').localeCompare(String(a.created_at||'')));
   const finished = data.items.filter(item => item.status === 'Finished').length;
   const wasted = data.items.filter(item => item.status === 'Wasted').length;
-  return `<section class="pantry-insights" aria-label="Pantry summary"><div><strong>${active.length}</strong><span>Current items</span></div><div><strong>${finished}</strong><span>Finished</span></div><div><strong>${wasted}</strong><span>Wasted</span></div></section>
+  return `<section class="pantry-insights" aria-label="Pantry summary"><button type="button" onclick="showPantryInsight('active')"><strong>${active.length}</strong><span>Current items · View list</span></button><button type="button" onclick="showPantryInsight('finished')"><strong>${finished}</strong><span>Finished · View list</span></button><button type="button" onclick="showPantryInsight('wasted')"><strong>${wasted}</strong><span>Wasted · View list</span></button></section>
     ${active.length ? `<div class="pantry-card-grid">${active.map(item => pantryItemCard(item, purchaseMap.get(String(item.purchase_id)))).join('')}</div>` : moneyEmpty('Your current pantry is clear', 'Add a grocery purchase and track only the food that matters to you.')}`;
 }
 
@@ -5813,17 +5815,17 @@ function renderFoodInsights(data) {
   const wastedNames = data.items.filter(item => item.status === 'Wasted').reduce((map,item) => { const key=item.name.trim().toLowerCase(); map.set(key,(map.get(key)||0)+1); return map; }, new Map());
   const frequentWaste = [...wastedNames.entries()].sort((a,b)=>b[1]-a[1])[0];
   return `<section class="pantry-insights">
-    <div><strong>${fmt(grocerySpend)}</strong><span>Groceries this month</span></div>
-    <div><strong>${portions}</strong><span>Home-cooked portions</span></div>
-    <div><strong>${portions ? fmt(grocerySpend / portions) : '—'}</strong><span>Approx. grocery spend / portion</span></div>
-    <div><strong>${fmt(wasteValue)}</strong><span>Tracked waste · ${wastePercent.toFixed(1)}%</span></div>
+    <button type="button" onclick="showPantryInsight('groceries')"><strong>${fmt(grocerySpend)}</strong><span>Groceries this month · View spending</span></button>
+    <button type="button" onclick="showPantryInsight('portions')"><strong>${portions}</strong><span>Home-cooked portions · View meals</span></button>
+    <button type="button" onclick="showPantryInsight('efficiency')"><strong>${portions ? fmt(grocerySpend / portions) : '—'}</strong><span>Approx. grocery spend / portion · See calculation</span></button>
+    <button type="button" onclick="showPantryInsight('waste-month')"><strong>${fmt(wasteValue)}</strong><span>Tracked waste · ${wastePercent.toFixed(1)}% · View items</span></button>
   </section>
   <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Food value</div><div class="money-panel-note">Directional insight, not exact recipe costing</div></div></div>
-    <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Eating out &amp; takeaway</div><div class="financial-row-meta">Compared with ${fmt(grocerySpend)} grocery spend</div></div><div class="financial-row-value">${fmt(eatingOutSpend)}</div></div>
-    <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Items finished</div><div class="financial-row-meta">Tracked purchases this month</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Finished').length}</div></div>
-    <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Items wasted</div><div class="financial-row-meta">Tracked purchases this month</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Wasted').length}</div></div>
+    <button type="button" class="financial-row" onclick="showPantryInsight('eating-out')"><div class="financial-row-main"><div class="financial-row-title">Eating out &amp; takeaway</div><div class="financial-row-meta">Compared with ${fmt(grocerySpend)} grocery spend</div></div><div class="financial-row-value">${fmt(eatingOutSpend)}</div></button>
+    <button type="button" class="financial-row" onclick="showPantryInsight('finished-month')"><div class="financial-row-main"><div class="financial-row-title">Items finished</div><div class="financial-row-meta">Tracked purchases this month</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Finished').length}</div></button>
+    <button type="button" class="financial-row" onclick="showPantryInsight('waste-month')"><div class="financial-row-main"><div class="financial-row-title">Items wasted</div><div class="financial-row-meta">Tracked purchases this month</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Wasted').length}</div></button>
   </section>
-  ${(repeated || frequentWaste) ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Patterns</div><div class="money-panel-note">Based on your tracked Pantry activity</div></div></div>${repeated ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">${safeText(repeated.name)} stretches across meals</div><div class="financial-row-meta">Used in ${usedCounts.get(String(repeated.id))} logged meals</div></div></div>` : ''}${frequentWaste ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Watch ${safeText(frequentWaste[0])}</div><div class="financial-row-meta">Marked wasted ${frequentWaste[1]} time${frequentWaste[1] === 1 ? '' : 's'}</div></div></div>` : ''}</section>` : ''}`;
+  ${(repeated || frequentWaste) ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Patterns</div><div class="money-panel-note">Based on your tracked Pantry activity</div></div></div>${repeated ? `<button type="button" class="financial-row" onclick="showPantryItemDetail('${repeated.id}')"><div class="financial-row-main"><div class="financial-row-title">${safeText(repeated.name)} stretches across meals</div><div class="financial-row-meta">Used in ${usedCounts.get(String(repeated.id))} logged meals · View item</div></div></button>` : ''}${frequentWaste ? `<button type="button" class="financial-row" onclick="showPantryInsight('wasted')"><div class="financial-row-main"><div class="financial-row-title">Watch ${safeText(frequentWaste[0])}</div><div class="financial-row-meta">Marked wasted ${frequentWaste[1]} time${frequentWaste[1] === 1 ? '' : 's'} · View wasted items</div></div></button>` : ''}</section>` : ''}`;
 }
 
 function renderPantryHistory(data) {
@@ -5834,9 +5836,65 @@ function renderPantryHistory(data) {
   return data.purchases.length ? `<div class="pantry-card-grid">${data.purchases.map(purchase => {
     const items = data.items.filter(item => String(item.purchase_id) === String(purchase.id));
     const meals = [...new Map(items.flatMap(item => mealsByItem.get(String(item.id)) || []).map(meal => [String(meal.id), meal])).values()];
+    const itemsUsed = items.filter(item => (mealsByItem.get(String(item.id)) || []).length).length;
+    const finishedCount = items.filter(item => item.status === 'Finished').length;
+    const wastedCount = items.filter(item => item.status === 'Wasted').length;
     const spend = spendMap.get(String(purchase.spending_transaction_id));
-    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<div class="pantry-purchase-items">${items.map(item => `<button type="button" onclick="showPantryItemDetail('${item.id}')">${safeText(item.name)} · ${safeText(item.status || 'Unused')}</button>`).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
+    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<p><strong>${itemsUsed}/${items.length} used in meals</strong> · ${finishedCount} finished · ${wastedCount} wasted</p><div class="pantry-purchase-items">${items.map(item => `<button type="button" onclick="showPantryItemDetail('${item.id}')">${safeText(item.name)} · ${safeText(item.status || 'Unused')}</button>`).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
   }).join('')}</div>` : moneyEmpty('No purchase history yet', 'Pantry purchases linked from Spending or added here will appear in this timeline.');
+}
+
+function pantryInsightItemRows(items, data) {
+  const purchaseMap = new Map(data.purchases.map(row => [String(row.id), row]));
+  const mealCounts = new Map();
+  data.mealItems.forEach(link => mealCounts.set(String(link.pantry_item_id), (mealCounts.get(String(link.pantry_item_id)) || 0) + 1));
+  return items.length ? items.map(item => {
+    const purchase = purchaseMap.get(String(item.purchase_id));
+    const mealCount = mealCounts.get(String(item.id)) || 0;
+    return `<button type="button" class="financial-row" onclick="showPantryItemDetail('${item.id}')"><div class="financial-row-main"><div class="financial-row-top"><span class="money-status ${item.status === 'Finished' ? 'positive' : item.status === 'Wasted' ? 'danger' : item.status === 'Open' ? 'warning' : ''}">${safeText(item.status || 'Unused')}</span><span class="financial-row-title">${safeText(item.name)}</span></div><div class="financial-row-meta">${safeText(purchase?.merchant || 'Unlinked purchase')}${purchase?.purchase_date ? ` · ${fmtDate(purchase.purchase_date)}` : ''} · ${mealCount} meal${mealCount === 1 ? '' : 's'}</div></div><div class="financial-row-value">${item.status === 'Wasted' && item.waste_value != null ? fmt(item.waste_value) : item.price != null ? fmt(item.price) : '—'}<small>${item.status === 'Wasted' ? 'waste value' : 'purchase price'}</small></div></button>`;
+  }).join('') : moneyEmpty('Nothing to show', 'No records currently match this insight.');
+}
+
+function pantryInsightMealRows(meals, data) {
+  const itemMap = new Map(data.items.map(item => [String(item.id), item]));
+  return meals.length ? meals.map(meal => {
+    const ingredients = data.mealItems.filter(link => String(link.meal_id) === String(meal.id)).map(link => itemMap.get(String(link.pantry_item_id))?.name).filter(Boolean);
+    return `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">${safeText(meal.name)}</div><div class="financial-row-meta">${fmtDate(meal.meal_date)}${ingredients.length ? ` · ${ingredients.map(safeText).join(', ')}` : ' · No tracked items'}</div></div><div class="financial-row-value">${Number(meal.portions)||0}<small>portions</small></div></div>`;
+  }).join('') : moneyEmpty('No meals this month', 'Log meals and portions to build this insight.');
+}
+
+function showPantryInsight(type) {
+  const data = window._pantryData;
+  if (!data) return;
+  const now = new Date();
+  const purchaseMap = new Map(data.purchases.map(row => [String(row.id), row]));
+  const monthItems = data.items.filter(item => isCurrentMonth(purchaseMap.get(String(item.purchase_id))?.purchase_date, now));
+  const groceryRows = data.spending.filter(row => isCurrentMonth(row.date, now) && isGroceryCategory(row.category));
+  const eatingOutRows = data.spending.filter(row => isCurrentMonth(row.date, now) && isEatingOutCategory(row.category));
+  const monthMeals = data.meals.filter(row => isCurrentMonth(row.meal_date, now));
+  const portions = monthMeals.reduce((sum,row) => sum + (parseInt(row.portions)||0), 0);
+  const grocerySpend = groceryRows.reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
+  const spendingRows = rows => rows.length ? rows.map(row => `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">${safeText(row.description || row.category || 'Spending')}</div><div class="financial-row-meta">${fmtDate(row.date)} · ${safeText(row.category || 'Uncategorised')}</div></div><div class="financial-row-value">${fmt(row.amount)}</div></div>`).join('') : moneyEmpty('No spending found', 'No matching Spending records exist this month.');
+  const definitions = {
+    active: ['Current pantry', pantryInsightItemRows(data.items.filter(item => !['Finished','Wasted'].includes(item.status)), data)],
+    finished: ['Finished items', pantryInsightItemRows(data.items.filter(item => item.status === 'Finished'), data)],
+    wasted: ['Wasted items', pantryInsightItemRows(data.items.filter(item => item.status === 'Wasted'), data)],
+    'finished-month': ['Finished this month', pantryInsightItemRows(monthItems.filter(item => item.status === 'Finished'), data)],
+    'waste-month': ['Waste this month', pantryInsightItemRows(monthItems.filter(item => item.status === 'Wasted'), data)],
+    groceries: ['Grocery spending this month', `${spendingRows(groceryRows)}<button type="button" class="btn btn-secondary mt16" onclick="openPantrySpending()">Open Spending</button>`],
+    'eating-out': ['Eating out this month', `${spendingRows(eatingOutRows)}<button type="button" class="btn btn-secondary mt16" onclick="openPantrySpending()">Open Spending</button>`],
+    portions: ['Home-cooked portions', pantryInsightMealRows(monthMeals, data)],
+    efficiency: ['Approximate food efficiency', `<div class="pantry-linked-spend"><strong>${portions ? fmt(grocerySpend / portions) : 'Not available yet'}</strong><span>${fmt(grocerySpend)} grocery spending ÷ ${portions} logged portion${portions === 1 ? '' : 's'}</span><small>This is a directional efficiency measure, not exact recipe costing. Shops may include untracked food, fees, discounts or non-food items.</small></div>${pantryInsightMealRows(monthMeals, data)}`]
+  };
+  const insight = definitions[type];
+  if (insight) showModal(insight[0], `<section class="money-panel">${insight[1]}</section>`);
+}
+
+function openPantrySpending() {
+  const overlay = document.querySelector('.overlay');
+  if (overlay?._closeModal) overlay._closeModal();
+  else overlay?.remove();
+  navigate('money', {section:'spending'});
 }
 
 async function setPantryStatus(id, status) {
