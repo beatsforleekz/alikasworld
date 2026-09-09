@@ -199,11 +199,10 @@ button.financial-row:hover{background:var(--accent-light)}
 .pantry-status-btn{min-height:34px;padding:0 9px;border:1px solid var(--border);border-radius:9px;background:transparent;color:var(--text2);font:600 10px/1 'Plus Jakarta Sans',sans-serif;cursor:pointer}
 .pantry-status-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--text)}
 .pantry-status-btn.waste,.pantry-status-btn.danger{color:var(--danger)}
-.ingredient-chips{display:flex;flex-wrap:wrap;gap:var(--space-2);max-height:240px;overflow-y:auto;padding:2px}
-.ingredient-chip{position:relative}
-.ingredient-chip input{position:absolute;opacity:0;pointer-events:none}
-.ingredient-chip span{display:inline-flex;align-items:center;min-height:38px;padding:7px 11px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer}
-.ingredient-chip input:checked + span{border-color:var(--positive);background:var(--positive-soft);color:var(--positive)}
+.pantry-picker-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.pantry-picker-row input{min-width:0}
+.pantry-selected-items{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.pantry-selected-items button{min-height:34px;padding:6px 10px;border:1px solid var(--positive);border-radius:999px;background:var(--positive-soft);color:var(--positive);font:600 10px/1.3 'Plus Jakarta Sans',sans-serif;cursor:pointer}
 .pantry-form-row{position:relative;padding:var(--space-3);border:1px solid var(--border);border-radius:var(--radius-control);background:var(--bg);margin-bottom:var(--space-2)}
 .pantry-row-remove{position:absolute;top:8px;right:8px;width:30px;height:30px;border:0;border-radius:99px;background:var(--input-bg);color:var(--text2);font-size:18px;cursor:pointer}
 .pantry-form-row>.fg:first-of-type{padding-right:36px}
@@ -5760,17 +5759,49 @@ async function renderPantry(params = {}) {
   </div>`;
 }
 
+function pantryHasWaste(item) {
+  return (parseFloat(item.waste_value) || 0) > 0 || (parseFloat(item.waste_fraction) || 0) > 0;
+}
+
+function pantryIsPartialWaste(item) {
+  const fraction = parseFloat(item.waste_fraction);
+  return item.status === 'Finished' && pantryHasWaste(item) || item.status === 'Wasted' && !isNaN(fraction) && fraction > 0 && fraction < 1;
+}
+
+function pantryOutcomeLabel(item) {
+  if (pantryIsPartialWaste(item)) return 'Finished with waste';
+  return PANTRY_STATUSES.includes(item.status) ? item.status : 'Unused';
+}
+
+function pantryOutcomeClass(item) {
+  if (pantryIsPartialWaste(item)) return 'warning';
+  if (item.status === 'Finished') return 'positive';
+  if (item.status === 'Wasted') return 'danger';
+  if (item.status === 'Open') return 'warning';
+  return '';
+}
+
+function pantryWasteAmountLabel(item) {
+  const fraction = parseFloat(item.waste_fraction);
+  if (fraction === 1) return 'all wasted';
+  if (fraction === .75) return 'about 3/4 wasted';
+  if (fraction === .5) return 'about 1/2 wasted';
+  if (fraction === .25) return 'about 1/4 wasted';
+  if (fraction === .1) return 'a small amount wasted';
+  return item.waste_value != null ? `${fmt(item.waste_value)} waste recorded` : 'waste recorded';
+}
+
 function pantryItemCard(item, purchase) {
-  const status = PANTRY_STATUSES.includes(item.status) ? item.status : 'Unused';
+  const outcome = pantryOutcomeLabel(item);
   const merchant = purchase?.merchant || 'Unlinked purchase';
   const meta = [item.quantity_description, item.category].filter(Boolean).map(safeText).join(' · ');
   return `<article class="pantry-item clickable" role="button" tabindex="0" onclick="showPantryItemDetail('${item.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();showPantryItemDetail('${item.id}')}" aria-label="View ${safeText(item.name)} details">
-    <div class="pantry-item-head"><div><span class="money-status ${status === 'Finished' ? 'positive' : status === 'Wasted' ? 'danger' : status === 'Open' ? 'warning' : ''}">${status}</span><h3>${safeText(item.name)}</h3></div><button class="menu-btn" aria-label="Pantry item actions" onclick="event.stopPropagation();ctxPantryItem(event,'${item.id}')">···</button></div>
+    <div class="pantry-item-head"><div><span class="money-status ${pantryOutcomeClass(item)}">${outcome}</span><h3>${safeText(item.name)}</h3></div><button class="menu-btn" aria-label="Pantry item actions" onclick="event.stopPropagation();ctxPantryItem(event,'${item.id}')">···</button></div>
     ${meta ? `<p>${meta}</p>` : ''}<p>${safeText(merchant)}${purchase?.purchase_date ? ` · ${fmtDate(purchase.purchase_date)}` : ''}${item.price !== null && item.price !== undefined ? ` · ${fmt(item.price)}` : ''}</p>
     ${item.notes ? `<p class="pantry-notes">${safeText(item.notes)}</p>` : ''}
     <div class="pantry-item-actions">
       ${status === 'Unused' ? `<button class="pantry-status-btn" onclick="event.stopPropagation();setPantryStatus('${item.id}','Open')">Open</button>` : ''}
-      ${!['Finished','Wasted'].includes(status) ? `<button class="pantry-status-btn" onclick="event.stopPropagation();setPantryStatus('${item.id}','Finished')">Finished</button><button class="pantry-status-btn danger" onclick="event.stopPropagation();showPantryWasteModal('${item.id}')">Wasted</button>` : ''}
+      ${!['Finished','Wasted'].includes(status) ? `<button class="pantry-status-btn" onclick="event.stopPropagation();showPantryCloseModal('${item.id}')">Close item</button>` : ''}
     </div>
   </article>`;
 }
@@ -5778,9 +5809,10 @@ function pantryItemCard(item, purchase) {
 function renderCurrentPantry(data) {
   const purchaseMap = new Map(data.purchases.map(row => [String(row.id), row]));
   const active = data.items.filter(item => !['Finished','Wasted'].includes(item.status)).sort((a,b)=>(a.status==='Open'?0:1)-(b.status==='Open'?0:1)||String(b.created_at||'').localeCompare(String(a.created_at||'')));
-  const finished = data.items.filter(item => item.status === 'Finished').length;
-  const wasted = data.items.filter(item => item.status === 'Wasted').length;
-  return `<section class="pantry-insights" aria-label="Pantry summary"><button type="button" onclick="showPantryInsight('active')"><strong>${active.length}</strong><span>Current items · View list</span></button><button type="button" onclick="showPantryInsight('finished')"><strong>${finished}</strong><span>Finished · View list</span></button><button type="button" onclick="showPantryInsight('wasted')"><strong>${wasted}</strong><span>Wasted · View list</span></button></section>
+  const finished = data.items.filter(item => item.status === 'Finished' && !pantryIsPartialWaste(item)).length;
+  const partial = data.items.filter(pantryIsPartialWaste).length;
+  const wasted = data.items.filter(item => item.status === 'Wasted' && !pantryIsPartialWaste(item)).length;
+  return `<section class="pantry-insights" aria-label="Pantry summary"><button type="button" onclick="showPantryInsight('active')"><strong>${active.length}</strong><span>Current items · View list</span></button><button type="button" onclick="showPantryInsight('finished')"><strong>${finished}</strong><span>Finished · View list</span></button><button type="button" onclick="showPantryInsight('partial-waste')"><strong>${partial}</strong><span>Finished with waste · View list</span></button><button type="button" onclick="showPantryInsight('wasted')"><strong>${wasted}</strong><span>Fully wasted · View list</span></button></section>
     ${active.length ? `<div class="pantry-card-grid">${active.map(item => pantryItemCard(item, purchaseMap.get(String(item.purchase_id)))).join('')}</div>` : moneyEmpty('Your current pantry is clear', 'Add a grocery purchase and track only the food that matters to you.')}`;
 }
 
@@ -5807,23 +5839,26 @@ function renderFoodInsights(data) {
   const portions = monthMeals.reduce((sum,row) => sum + (parseInt(row.portions)||0), 0);
   const purchaseMap = new Map(data.purchases.map(row => [String(row.id), row]));
   const monthItems = data.items.filter(item => isCurrentMonth(purchaseMap.get(String(item.purchase_id))?.purchase_date, now));
+  const pricedMonthItems = monthItems.filter(item => item.price !== null && item.price !== undefined && !isNaN(parseFloat(item.price)));
+  const trackedItemSpend = pricedMonthItems.reduce((sum,item) => sum + (parseFloat(item.price)||0), 0);
+  const trackedSpendPerPortion = portions && pricedMonthItems.length ? trackedItemSpend / portions : null;
   const wasteValue = monthItems.reduce((sum,item) => sum + (parseFloat(item.waste_value)||0), 0);
-  const wastePercent = grocerySpend > 0 ? wasteValue / grocerySpend * 100 : 0;
+  const wastePercent = trackedItemSpend > 0 ? wasteValue / trackedItemSpend * 100 : 0;
   const usedCounts = new Map();
   data.mealItems.forEach(link => usedCounts.set(String(link.pantry_item_id), (usedCounts.get(String(link.pantry_item_id)) || 0) + 1));
   const repeated = data.items.filter(item => (usedCounts.get(String(item.id)) || 0) > 1).sort((a,b) => (usedCounts.get(String(b.id))||0) - (usedCounts.get(String(a.id))||0))[0];
-  const wastedNames = data.items.filter(item => item.status === 'Wasted').reduce((map,item) => { const key=item.name.trim().toLowerCase(); map.set(key,(map.get(key)||0)+1); return map; }, new Map());
+  const wastedNames = data.items.filter(pantryHasWaste).reduce((map,item) => { const key=item.name.trim().toLowerCase(); map.set(key,(map.get(key)||0)+1); return map; }, new Map());
   const frequentWaste = [...wastedNames.entries()].sort((a,b)=>b[1]-a[1])[0];
   return `<section class="pantry-insights">
     <button type="button" onclick="showPantryInsight('groceries')"><strong>${fmt(grocerySpend)}</strong><span>Groceries this month · View spending</span></button>
     <button type="button" onclick="showPantryInsight('portions')"><strong>${portions}</strong><span>Home-cooked portions · View meals</span></button>
-    <button type="button" onclick="showPantryInsight('efficiency')"><strong>${portions ? fmt(grocerySpend / portions) : '—'}</strong><span>Approx. grocery spend / portion · See calculation</span></button>
+    <button type="button" onclick="showPantryInsight('efficiency')"><strong>${trackedSpendPerPortion === null ? '—' : fmt(trackedSpendPerPortion)}</strong><span>Tracked Pantry spend / portion · See calculation</span></button>
     <button type="button" onclick="showPantryInsight('waste-month')"><strong>${fmt(wasteValue)}</strong><span>Tracked waste · ${wastePercent.toFixed(1)}% · View items</span></button>
   </section>
   <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Food value</div><div class="money-panel-note">Directional insight, not exact recipe costing</div></div></div>
     <button type="button" class="financial-row" onclick="showPantryInsight('eating-out')"><div class="financial-row-main"><div class="financial-row-title">Eating out &amp; takeaway</div><div class="financial-row-meta">Compared with ${fmt(grocerySpend)} grocery spend</div></div><div class="financial-row-value">${fmt(eatingOutSpend)}</div></button>
-    <button type="button" class="financial-row" onclick="showPantryInsight('finished-month')"><div class="financial-row-main"><div class="financial-row-title">Items finished</div><div class="financial-row-meta">Tracked purchases this month</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Finished').length}</div></button>
-    <button type="button" class="financial-row" onclick="showPantryInsight('waste-month')"><div class="financial-row-main"><div class="financial-row-title">Items wasted</div><div class="financial-row-meta">Tracked purchases this month</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Wasted').length}</div></button>
+    <button type="button" class="financial-row" onclick="showPantryInsight('finished-month')"><div class="financial-row-main"><div class="financial-row-title">Items finished</div><div class="financial-row-meta">Includes items finished with partial waste</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Finished'||pantryIsPartialWaste(item)).length}</div></button>
+    <button type="button" class="financial-row" onclick="showPantryInsight('waste-month')"><div class="financial-row-main"><div class="financial-row-title">Items with tracked waste</div><div class="financial-row-meta">Partial and fully wasted items this month</div></div><div class="financial-row-value">${monthItems.filter(pantryHasWaste).length}</div></button>
   </section>
   ${(repeated || frequentWaste) ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Patterns</div><div class="money-panel-note">Based on your tracked Pantry activity</div></div></div>${repeated ? `<button type="button" class="financial-row" onclick="showPantryItemDetail('${repeated.id}')"><div class="financial-row-main"><div class="financial-row-title">${safeText(repeated.name)} stretches across meals</div><div class="financial-row-meta">Used in ${usedCounts.get(String(repeated.id))} logged meals · View item</div></div></button>` : ''}${frequentWaste ? `<button type="button" class="financial-row" onclick="showPantryInsight('wasted')"><div class="financial-row-main"><div class="financial-row-title">Watch ${safeText(frequentWaste[0])}</div><div class="financial-row-meta">Marked wasted ${frequentWaste[1]} time${frequentWaste[1] === 1 ? '' : 's'} · View wasted items</div></div></button>` : ''}</section>` : ''}`;
 }
@@ -5837,10 +5872,11 @@ function renderPantryHistory(data) {
     const items = data.items.filter(item => String(item.purchase_id) === String(purchase.id));
     const meals = [...new Map(items.flatMap(item => mealsByItem.get(String(item.id)) || []).map(meal => [String(meal.id), meal])).values()];
     const itemsUsed = items.filter(item => (mealsByItem.get(String(item.id)) || []).length).length;
-    const finishedCount = items.filter(item => item.status === 'Finished').length;
-    const wastedCount = items.filter(item => item.status === 'Wasted').length;
+    const finishedCount = items.filter(item => item.status === 'Finished' && !pantryIsPartialWaste(item)).length;
+    const partialWasteCount = items.filter(pantryIsPartialWaste).length;
+    const wastedCount = items.filter(item => item.status === 'Wasted' && !pantryIsPartialWaste(item)).length;
     const spend = spendMap.get(String(purchase.spending_transaction_id));
-    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<p><strong>${itemsUsed}/${items.length} used in meals</strong> · ${finishedCount} finished · ${wastedCount} wasted</p><div class="pantry-purchase-items">${items.map(item => `<button type="button" onclick="showPantryItemDetail('${item.id}')">${safeText(item.name)} · ${safeText(item.status || 'Unused')}</button>`).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
+    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<p><strong>${itemsUsed}/${items.length} used in meals</strong> · ${finishedCount} finished · ${partialWasteCount} finished with waste · ${wastedCount} fully wasted</p><div class="pantry-purchase-items">${items.map(item => `<button type="button" onclick="showPantryItemDetail('${item.id}')">${safeText(item.name)} · ${safeText(pantryOutcomeLabel(item))}</button>`).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
   }).join('')}</div>` : moneyEmpty('No purchase history yet', 'Pantry purchases linked from Spending or added here will appear in this timeline.');
 }
 
@@ -5851,7 +5887,8 @@ function pantryInsightItemRows(items, data) {
   return items.length ? items.map(item => {
     const purchase = purchaseMap.get(String(item.purchase_id));
     const mealCount = mealCounts.get(String(item.id)) || 0;
-    return `<button type="button" class="financial-row" onclick="showPantryItemDetail('${item.id}')"><div class="financial-row-main"><div class="financial-row-top"><span class="money-status ${item.status === 'Finished' ? 'positive' : item.status === 'Wasted' ? 'danger' : item.status === 'Open' ? 'warning' : ''}">${safeText(item.status || 'Unused')}</span><span class="financial-row-title">${safeText(item.name)}</span></div><div class="financial-row-meta">${safeText(purchase?.merchant || 'Unlinked purchase')}${purchase?.purchase_date ? ` · ${fmtDate(purchase.purchase_date)}` : ''} · ${mealCount} meal${mealCount === 1 ? '' : 's'}</div></div><div class="financial-row-value">${item.status === 'Wasted' && item.waste_value != null ? fmt(item.waste_value) : item.price != null ? fmt(item.price) : '—'}<small>${item.status === 'Wasted' ? 'waste value' : 'purchase price'}</small></div></button>`;
+    const hasWaste = pantryHasWaste(item);
+    return `<button type="button" class="financial-row" onclick="showPantryItemDetail('${item.id}')"><div class="financial-row-main"><div class="financial-row-top"><span class="money-status ${pantryOutcomeClass(item)}">${safeText(pantryOutcomeLabel(item))}</span><span class="financial-row-title">${safeText(item.name)}</span></div><div class="financial-row-meta">${safeText(purchase?.merchant || 'Unlinked purchase')}${purchase?.purchase_date ? ` · ${fmtDate(purchase.purchase_date)}` : ''} · ${mealCount} meal${mealCount === 1 ? '' : 's'}${hasWaste ? ` · ${pantryWasteAmountLabel(item)}` : ''}</div></div><div class="financial-row-value">${hasWaste && item.waste_value != null ? fmt(item.waste_value) : item.price != null ? fmt(item.price) : '—'}<small>${hasWaste ? 'waste value' : 'purchase price'}</small></div></button>`;
   }).join('') : moneyEmpty('Nothing to show', 'No records currently match this insight.');
 }
 
@@ -5873,18 +5910,24 @@ function showPantryInsight(type) {
   const eatingOutRows = data.spending.filter(row => isCurrentMonth(row.date, now) && isEatingOutCategory(row.category));
   const monthMeals = data.meals.filter(row => isCurrentMonth(row.meal_date, now));
   const portions = monthMeals.reduce((sum,row) => sum + (parseInt(row.portions)||0), 0);
-  const grocerySpend = groceryRows.reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
+  const pricedMonthItems = monthItems.filter(item => item.price !== null && item.price !== undefined && !isNaN(parseFloat(item.price)));
+  const trackedItemSpend = pricedMonthItems.reduce((sum,item) => sum + (parseFloat(item.price)||0), 0);
+  const unpricedItemCount = monthItems.length - pricedMonthItems.length;
+  const efficiencyValue = portions && pricedMonthItems.length ? fmt(trackedItemSpend / portions) : 'Not available yet';
+  const efficiencyFormula = `${fmt(trackedItemSpend)} from ${pricedMonthItems.length} tracked, priced Pantry item${pricedMonthItems.length === 1 ? '' : 's'} ÷ ${portions} logged portion${portions === 1 ? '' : 's'}`;
+  const unpricedCopy = unpricedItemCount ? ` ${unpricedItemCount} unpriced Pantry item${unpricedItemCount === 1 ? ' is' : 's are'} excluded.` : '';
   const spendingRows = rows => rows.length ? rows.map(row => `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">${safeText(row.description || row.category || 'Spending')}</div><div class="financial-row-meta">${fmtDate(row.date)} · ${safeText(row.category || 'Uncategorised')}</div></div><div class="financial-row-value">${fmt(row.amount)}</div></div>`).join('') : moneyEmpty('No spending found', 'No matching Spending records exist this month.');
   const definitions = {
     active: ['Current pantry', pantryInsightItemRows(data.items.filter(item => !['Finished','Wasted'].includes(item.status)), data)],
-    finished: ['Finished items', pantryInsightItemRows(data.items.filter(item => item.status === 'Finished'), data)],
-    wasted: ['Wasted items', pantryInsightItemRows(data.items.filter(item => item.status === 'Wasted'), data)],
-    'finished-month': ['Finished this month', pantryInsightItemRows(monthItems.filter(item => item.status === 'Finished'), data)],
-    'waste-month': ['Waste this month', pantryInsightItemRows(monthItems.filter(item => item.status === 'Wasted'), data)],
+    finished: ['Finished items', pantryInsightItemRows(data.items.filter(item => item.status === 'Finished' && !pantryIsPartialWaste(item)), data)],
+    'partial-waste': ['Finished with waste', pantryInsightItemRows(data.items.filter(pantryIsPartialWaste), data)],
+    wasted: ['Fully wasted items', pantryInsightItemRows(data.items.filter(item => item.status === 'Wasted' && !pantryIsPartialWaste(item)), data)],
+    'finished-month': ['Finished this month', pantryInsightItemRows(monthItems.filter(item => item.status === 'Finished' || pantryIsPartialWaste(item)), data)],
+    'waste-month': ['Tracked waste this month', pantryInsightItemRows(monthItems.filter(pantryHasWaste), data)],
     groceries: ['Grocery spending this month', `${spendingRows(groceryRows)}<button type="button" class="btn btn-secondary mt16" onclick="openPantrySpending()">Open Spending</button>`],
     'eating-out': ['Eating out this month', `${spendingRows(eatingOutRows)}<button type="button" class="btn btn-secondary mt16" onclick="openPantrySpending()">Open Spending</button>`],
     portions: ['Home-cooked portions', pantryInsightMealRows(monthMeals, data)],
-    efficiency: ['Approximate food efficiency', `<div class="pantry-linked-spend"><strong>${portions ? fmt(grocerySpend / portions) : 'Not available yet'}</strong><span>${fmt(grocerySpend)} grocery spending ÷ ${portions} logged portion${portions === 1 ? '' : 's'}</span><small>This is a directional efficiency measure, not exact recipe costing. Shops may include untracked food, fees, discounts or non-food items.</small></div>${pantryInsightMealRows(monthMeals, data)}`]
+    efficiency: ['Tracked Pantry spend per portion', `<div class="pantry-linked-spend"><strong>${efficiencyValue}</strong><span>${efficiencyFormula}</span><small>Only Pantry item prices are used. Grocery Spending transaction totals are excluded.${unpricedCopy}</small></div><div class="sec-label" style="margin-top:16px">Priced items included</div>${pantryInsightItemRows(pricedMonthItems, data)}<div class="sec-label" style="margin-top:16px">Meals and portions</div>${pantryInsightMealRows(monthMeals, data)}`]
   };
   const insight = definitions[type];
   if (insight) showModal(insight[0], `<section class="money-panel">${insight[1]}</section>`);
@@ -5923,10 +5966,11 @@ async function showPantryItemDetail(id) {
     .map(link => mealMap.get(String(link.meal_id))).filter(Boolean)
     .sort((a,b) => String(b.meal_date || '').localeCompare(String(a.meal_date || '')));
   const status = PANTRY_STATUSES.includes(item.status) ? item.status : 'Unused';
-  const wasteDetail = status === 'Wasted' && item.waste_value != null
-    ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Estimated waste value</div><div class="financial-row-meta">Approximate value recorded when marked wasted</div></div><div class="financial-row-value">${fmt(item.waste_value)}</div></div>` : '';
+  const outcome = pantryOutcomeLabel(item);
+  const wasteDetail = pantryHasWaste(item)
+    ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Waste recorded</div><div class="financial-row-meta">${safeText(pantryWasteAmountLabel(item))}</div></div><div class="financial-row-value">${item.waste_value == null ? '—' : fmt(item.waste_value)}<small>estimated waste</small></div></div>` : '';
   showModal(safeText(item.name), `
-    <div class="pantry-linked-spend"><span class="money-status ${status === 'Finished' ? 'positive' : status === 'Wasted' ? 'danger' : status === 'Open' ? 'warning' : ''}">${status}</span><strong style="margin-top:8px">${safeText(purchase?.merchant || spending?.description || 'Unlinked purchase')}</strong><span>${purchase?.purchase_date ? fmtDate(purchase.purchase_date) : 'No purchase date'}${spending ? ` · Linked spend ${fmt(spending.amount)}` : ''}</span></div>
+    <div class="pantry-linked-spend"><span class="money-status ${pantryOutcomeClass(item)}">${outcome}</span><strong style="margin-top:8px">${safeText(purchase?.merchant || spending?.description || 'Unlinked purchase')}</strong><span>${purchase?.purchase_date ? fmtDate(purchase.purchase_date) : 'No purchase date'}${spending ? ` · Linked spend ${fmt(spending.amount)}` : ''}</span></div>
     <section class="money-panel">
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Purchase price</div><div class="financial-row-meta">Tracked item value</div></div><div class="financial-row-value">${item.price == null ? '—' : fmt(item.price)}</div></div>
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Quantity</div><div class="financial-row-meta">${safeText(item.quantity_description || 'Not recorded')}</div></div></div>
@@ -5949,40 +5993,61 @@ function openPantryItemEdit(id) {
 async function showPantryItemModal(id) {
   const item = (await dbFetch(T.PANTRY_ITEMS,{eq:{id}}))[0];
   if (!item) return;
+  const editStatus = pantryIsPartialWaste(item) ? 'Finished' : item.status;
   showModal('Edit pantry item', `
     <div class="fg"><label>Name</label><input id="f-pan-name" value="${safeText(item.name)}"/></div>
     <div class="pantry-form-grid"><div class="fg"><label>Price (£) <span>optional</span></label><input id="f-pan-price" type="number" min="0" step="0.01" value="${item.price ?? ''}"/></div><div class="fg"><label>Quantity description <span>optional</span></label><input id="f-pan-qty" value="${safeText(item.quantity_description || '')}" placeholder="e.g. 225g"/></div></div>
-    <div class="pantry-form-grid"><div class="fg"><label>Category <span>optional</span></label><input id="f-pan-cat" value="${safeText(item.category || '')}"/></div><div class="fg"><label>Status</label><select id="f-pan-status">${PANTRY_STATUSES.map(status=>`<option ${item.status===status?'selected':''}>${status}</option>`).join('')}</select></div></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Category <span>optional</span></label><input id="f-pan-cat" value="${safeText(item.category || '')}"/></div><div class="fg"><label>Status</label><select id="f-pan-status">${PANTRY_STATUSES.map(status=>`<option ${editStatus===status?'selected':''}>${status}</option>`).join('')}</select></div></div>
     <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-pan-notes">${safeText(item.notes || '')}</textarea></div>`, async()=>{
       const name=v('f-pan-name'); if(!name) throw new Error('Enter an item name.');
-      await dbUpdate(T.PANTRY_ITEMS,id,{name,price:v('f-pan-price')===''?null:num('f-pan-price'),quantity_description:v('f-pan-qty')||null,category:v('f-pan-cat')||null,status:v('f-pan-status'),notes:v('f-pan-notes')||null,updated_at:new Date().toISOString()});
+      const nextStatus=v('f-pan-status');
+      const updates={name,price:v('f-pan-price')===''?null:num('f-pan-price'),quantity_description:v('f-pan-qty')||null,category:v('f-pan-cat')||null,status:nextStatus,notes:v('f-pan-notes')||null,updated_at:new Date().toISOString()};
+      if(['Unused','Open'].includes(nextStatus)) Object.assign(updates,{waste_fraction:null,waste_value:null});
+      await dbUpdate(T.PANTRY_ITEMS,id,updates);
       renderPantry({tab:'pantry'});
     });
 }
 
-async function showPantryWasteModal(id) {
+async function showPantryCloseModal(id) {
   const item = window._pantryData?.items?.find(row=>String(row.id)===String(id)) || (await dbFetch(T.PANTRY_ITEMS,{eq:{id}}))[0];
   if (!item) return;
-  showModal(`Record waste · ${safeText(item.name)}`, `
-    <p class="muted mb16">Choose an approximate share. This estimates value only and does not track remaining grams.</p>
-    <div class="fg"><label>Amount wasted</label><select id="f-waste-share" onchange="updatePantryWasteEstimate(${Number(item.price)||0})"><option value="1">All</option><option value="0.75">3/4</option><option value="0.5">1/2</option><option value="0.25">1/4</option><option value="0.1">Small amount</option><option value="custom">Custom £</option></select></div>
-    <div class="fg hidden" id="f-waste-custom-wrap"><label>Custom waste value (£)</label><input id="f-waste-custom" type="number" min="0" step="0.01" oninput="updatePantryWasteEstimate(${Number(item.price)||0})"/></div>
-    <div class="pantry-waste-estimate" id="f-waste-estimate">Estimated waste value: ${item.price != null ? fmt(item.price) : 'price unavailable'}</div>`, async()=>{
-      const choice=v('f-waste-share');
-      const fraction=choice==='custom'?null:parseFloat(choice);
-      const custom=choice==='custom'&&v('f-waste-custom')!==''?num('f-waste-custom'):null;
-      const wasteValue=custom ?? (item.price == null ? null : (parseFloat(item.price)||0)*fraction);
-      await dbUpdate(T.PANTRY_ITEMS,id,{status:'Wasted',waste_fraction:fraction,waste_value:wasteValue,updated_at:new Date().toISOString()});
+  showModal(`Close item · ${safeText(item.name)}`, `
+    <p class="muted mb16">Choose how this item left your current Pantry. Meal usage already logged will be preserved.</p>
+    <div class="fg"><label>Outcome</label><select id="f-close-outcome" onchange="updatePantryCloseEstimate(${Number(item.price)||0})"><option value="finished">Finished — fully used</option><option value="partial">Finished with waste</option><option value="wasted">Wasted — essentially all discarded</option></select></div>
+    <div id="f-close-share-wrap" class="hidden"><div class="fg"><label>Approximate amount wasted</label><select id="f-close-share" onchange="updatePantryCloseEstimate(${Number(item.price)||0})"><option value="0.1">Small amount</option><option value="0.25" selected>1/4</option><option value="0.5">1/2</option><option value="0.75">3/4</option><option value="custom">Custom £</option></select></div></div>
+    <div class="fg hidden" id="f-close-custom-wrap"><label>Custom waste value (£)</label><input id="f-close-custom" type="number" min="0.01" step="0.01" oninput="updatePantryCloseEstimate(${Number(item.price)||0})"/></div>
+    <div class="pantry-waste-estimate" id="f-close-estimate">No waste recorded. Item fully used.</div>`, async()=>{
+      const outcome=v('f-close-outcome');
+      let status='Finished', fraction=null, wasteValue=null;
+      if(outcome==='partial') {
+        const choice=v('f-close-share');
+        fraction=choice==='custom'?null:parseFloat(choice);
+        if(choice==='custom') {
+          if(v('f-close-custom')===''||num('f-close-custom')<=0) throw new Error('Enter the approximate waste value.');
+          wasteValue=num('f-close-custom');
+        } else wasteValue=item.price == null ? null : (parseFloat(item.price)||0)*fraction;
+      } else if(outcome==='wasted') {
+        status='Wasted'; fraction=1; wasteValue=item.price == null ? null : parseFloat(item.price)||0;
+      }
+      await dbUpdate(T.PANTRY_ITEMS,id,{status,waste_fraction:fraction,waste_value:wasteValue,updated_at:new Date().toISOString()});
       renderPantry({tab:'pantry'});
     });
 }
 
-function updatePantryWasteEstimate(price) {
-  const choice=v('f-waste-share');
-  document.getElementById('f-waste-custom-wrap')?.classList.toggle('hidden',choice!=='custom');
-  const value=choice==='custom' ? (v('f-waste-custom')===''?null:num('f-waste-custom')) : (price?price*parseFloat(choice):null);
-  const label=document.getElementById('f-waste-estimate');
-  if(label) label.textContent='Estimated waste value: '+(value===null?'price unavailable':fmt(value));
+function updatePantryCloseEstimate(price) {
+  const outcome=v('f-close-outcome');
+  const partial=outcome==='partial';
+  const choice=v('f-close-share');
+  document.getElementById('f-close-share-wrap')?.classList.toggle('hidden',!partial);
+  document.getElementById('f-close-custom-wrap')?.classList.toggle('hidden',!partial||choice!=='custom');
+  const label=document.getElementById('f-close-estimate');
+  if(!label) return;
+  if(outcome==='finished') label.textContent='No waste recorded. Item fully used.';
+  else if(outcome==='wasted') label.textContent='Estimated waste value: '+(price?fmt(price):'price unavailable');
+  else {
+    const value=choice==='custom' ? (v('f-close-custom')===''?null:num('f-close-custom')) : (price?price*parseFloat(choice):null);
+    label.textContent='Estimated partial waste: '+(value===null?'price unavailable':fmt(value));
+  }
 }
 
 function addPantryItemRow(values = {}) {
@@ -6013,27 +6078,84 @@ async function showPantryPurchaseModal(linkedSpend = null) {
   setTimeout(()=>addPantryItemRow(),0);
 }
 
-async function showPantryMealModal() {
+async function showPantryMealModal(editId = null) {
   const data=window._pantryData || await loadPantryData();
+  const existingMeal=editId ? data.meals.find(row=>String(row.id)===String(editId)) : null;
+  if(editId&&!existingMeal) return showToast('Meal could not be found.', 'error');
   const statusOrder={Unused:0,Open:1,Finished:2,Wasted:3};
   const selectable=[...data.items].sort((a,b)=>(statusOrder[a.status]??4)-(statusOrder[b.status]??4)||String(a.name||'').localeCompare(String(b.name||'')));
-  showModal('Log meal', `
-    <div class="fg"><label>Meal name</label><input id="f-meal-name" placeholder="e.g. Cajun Prawn Mac"/></div>
-    <div class="pantry-form-grid"><div class="fg"><label>Date</label><input id="f-meal-date" type="date" value="${today()}"/></div><div class="fg"><label>Portions produced</label><input id="f-meal-portions" type="number" min="1" step="1" value="1"/></div></div>
-    <div class="fg"><label>Pantry items used</label>${selectable.length ? `<div class="ingredient-chips">${selectable.map(item=>`<label class="ingredient-chip"><input type="checkbox" value="${item.id}"/><span>${safeText(item.name)}${['Finished','Wasted'].includes(item.status) ? ` · ${safeText(item.status)}` : ''}</span></label>`).join('')}</div>` : '<p class="muted">No pantry items recorded. You can still log the meal.</p>'}</div>
-    <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-meal-notes"></textarea></div>`, async()=>{
+  const nameCounts=selectable.reduce((map,item)=>{const key=String(item.name||'').trim().toLowerCase();map.set(key,(map.get(key)||0)+1);return map;},new Map());
+  window._pantryMealChoices=selectable.map(item=>{
+    const duplicate=nameCounts.get(String(item.name||'').trim().toLowerCase())>1;
+    const purchase=data.purchases.find(row=>String(row.id)===String(item.purchase_id));
+    const display=`${item.name} — ${pantryOutcomeLabel(item)}${duplicate&&purchase?.merchant?` · ${purchase.merchant}`:''}`;
+    return {id:String(item.id),display,item};
+  });
+  const existingItemIds=editId ? data.mealItems.filter(link=>String(link.meal_id)===String(editId)).map(link=>String(link.pantry_item_id)) : [];
+  window._pantryMealSelected=new Set(existingItemIds);
+  showModal(editId ? 'Edit meal' : 'Log meal', `
+    <div class="fg"><label>Meal name</label><input id="f-meal-name" value="${safeText(existingMeal?.name||'')}" placeholder="e.g. Cajun Prawn Mac"/></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Date</label><input id="f-meal-date" type="date" value="${existingMeal?.meal_date?.substring(0,10)||today()}"/></div><div class="fg"><label>Portions produced</label><input id="f-meal-portions" type="number" min="1" step="1" value="${Number(existingMeal?.portions)||1}"/></div></div>
+    <div class="fg"><label>Pantry items used</label>${selectable.length ? `<datalist id="dl-meal-pantry-items">${window._pantryMealChoices.map(choice=>`<option value="${safeText(choice.display)}">`).join('')}</datalist><div class="pantry-picker-row"><input id="f-meal-item-picker" list="dl-meal-pantry-items" placeholder="Type an item name…" autocomplete="off" onchange="addPantryMealIngredient()" onkeydown="if(event.key==='Enter'){event.preventDefault();addPantryMealIngredient() }"/><button type="button" class="btn btn-secondary" onclick="addPantryMealIngredient()">Add</button></div><div id="f-meal-selected" class="pantry-selected-items"><span class="muted">No pantry items selected yet.</span></div>` : '<p class="muted">No pantry items recorded. You can still log the meal.</p>'}</div>
+    <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-meal-notes">${safeText(existingMeal?.notes||'')}</textarea></div>`, async()=>{
       const name=v('f-meal-name'); const portions=parseInt(v('f-meal-portions'));
       if(!name) throw new Error('Enter a meal name.');
       if(!portions||portions<1) throw new Error('Enter at least one portion.');
-      const selected=[...document.querySelectorAll('.ingredient-chip input:checked')].map(input=>input.value);
-      const meal=await dbInsert(T.PANTRY_MEALS,{name,meal_date:v('f-meal-date')||today(),portions,notes:v('f-meal-notes')||null});
-      for(const pantryItemId of selected) { await dbInsert(T.PANTRY_MEAL_ITEMS,{meal_id:meal.id,pantry_item_id:pantryItemId}); const item=selectable.find(row=>String(row.id)===String(pantryItemId)); if(item?.status==='Unused') await dbUpdate(T.PANTRY_ITEMS,pantryItemId,{status:'Open',updated_at:new Date().toISOString()}); }
+      const selected=[...(window._pantryMealSelected||new Set())];
+      const mealRow={name,meal_date:v('f-meal-date')||today(),portions,notes:v('f-meal-notes')||null};
+      let meal=existingMeal;
+      if(editId) await dbUpdate(T.PANTRY_MEALS,editId,mealRow);
+      else meal=await dbInsert(T.PANTRY_MEALS,mealRow);
+      const mealId=editId||meal.id;
+      const previous=new Set(existingItemIds);
+      const current=new Set(selected.map(String));
+      for(const pantryItemId of previous) {
+        if(current.has(pantryItemId)) continue;
+        const {error}=await getDB().from(T.PANTRY_MEAL_ITEMS).delete().eq('meal_id',mealId).eq('pantry_item_id',pantryItemId);
+        if(error) throw error;
+      }
+      for(const pantryItemId of current) {
+        if(!previous.has(pantryItemId)) await dbInsert(T.PANTRY_MEAL_ITEMS,{meal_id:mealId,pantry_item_id:pantryItemId});
+        const item=selectable.find(row=>String(row.id)===String(pantryItemId));
+        if(item?.status==='Unused') await dbUpdate(T.PANTRY_ITEMS,pantryItemId,{status:'Open',updated_at:new Date().toISOString()});
+      }
       renderPantry({tab:'meals'});
     });
+  setTimeout(renderPantryMealSelection,0);
+}
+
+function addPantryMealIngredient() {
+  const input=document.getElementById('f-meal-item-picker');
+  const value=input?.value.trim();
+  if(!value) return;
+  const choices=window._pantryMealChoices||[];
+  const choice=choices.find(row=>row.display.toLowerCase()===value.toLowerCase())||choices.find(row=>String(row.item.name||'').toLowerCase()===value.toLowerCase());
+  if(!choice) return showToast('Choose an item from the Pantry dropdown.', 'error');
+  window._pantryMealSelected=window._pantryMealSelected||new Set();
+  window._pantryMealSelected.add(choice.id);
+  input.value='';
+  renderPantryMealSelection();
+  input.focus();
+}
+
+function removePantryMealIngredient(id) {
+  window._pantryMealSelected?.delete(String(id));
+  renderPantryMealSelection();
+}
+
+function renderPantryMealSelection() {
+  const target=document.getElementById('f-meal-selected');
+  if(!target) return;
+  const selected=window._pantryMealSelected||new Set();
+  const choices=window._pantryMealChoices||[];
+  target.innerHTML=selected.size ? [...selected].map(id=>{const choice=choices.find(row=>row.id===String(id));return choice?`<button type="button" onclick="removePantryMealIngredient('${choice.id}')">${safeText(choice.item.name)} ×</button>`:'';}).join('') : '<span class="muted">No pantry items selected yet.</span>';
 }
 
 function ctxPantryMeal(event,id) {
-  showCtx(event,[{label:'Delete',danger:true,fn:async()=>{ if(!confirm('Delete this meal log? Pantry items will be kept.')) return; const {error}=await getDB().from(T.PANTRY_MEAL_ITEMS).delete().eq('meal_id',id); if(error) throw error; await dbDelete(T.PANTRY_MEALS,id); renderPantry({tab:'meals'}); }}]);
+  showCtx(event,[
+    {label:'Edit',fn:()=>showPantryMealModal(id)},
+    {label:'Delete',danger:true,fn:async()=>{ if(!confirm('Delete this meal log? Pantry items will be kept.')) return; const {error}=await getDB().from(T.PANTRY_MEAL_ITEMS).delete().eq('meal_id',id); if(error) throw error; await dbDelete(T.PANTRY_MEALS,id); renderPantry({tab:'meals'}); }}
+  ]);
 }
 
 // ════════════════════════════════════════════════════════════
