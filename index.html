@@ -3188,6 +3188,27 @@ async function showAccountModal(editId, requestedType = 'Income', requestedStatu
 // SHARED UI HELPERS
 // ════════════════════════════════════════════════════════════
 const LOCAL_TEXT_SUGGESTIONS_KEY = 'alika-local-text-suggestions-v1';
+let neutralFieldSequence = 0;
+
+function suppressExternalAutofill(scope = document) {
+  const fields = scope.matches?.('input') ? [scope] : [...scope.querySelectorAll?.('input') || []];
+  fields.forEach(input => {
+    if (input.id === 'l-email' || input.id === 'l-pass' || input.dataset.allowExternalAutofill === 'true') return;
+    const type = (input.getAttribute('type') || 'text').toLowerCase();
+    if (!['text','url','tel','search'].includes(type)) return;
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('data-form-type', 'other');
+    input.setAttribute('data-lpignore', 'true');
+    input.setAttribute('data-1p-ignore', 'true');
+    if (!input.name) input.name = `aw-field-${++neutralFieldSequence}`;
+  });
+}
+
+const externalAutofillObserver = new MutationObserver(mutations => mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+  if (node instanceof Element) suppressExternalAutofill(node);
+})));
+externalAutofillObserver.observe(document.body, {childList:true, subtree:true});
+suppressExternalAutofill(document);
 
 function textSuggestionLabel(input) {
   return input.closest('.fg')?.querySelector('label')?.textContent
@@ -3354,7 +3375,7 @@ function showModal(title, bodyHTML, onSave) {
   const el = document.createElement('div');
   el.className = 'overlay';
   const hasSave = typeof onSave === 'function';
-  el.innerHTML = `<div class="modal">
+  el.innerHTML = `<form class="modal" autocomplete="off" data-form-type="other" onsubmit="return false">
     <div class="modal-handle"></div>
     <div class="modal-head">
       <div class="modal-title">${title}</div>
@@ -3365,8 +3386,9 @@ function showModal(title, bodyHTML, onSave) {
       <button class="btn btn-ghost" type="button" id="modal-cancel-btn">${hasSave ? 'Cancel' : 'Close'}</button>
       ${hasSave ? '<button class="btn btn-primary" type="button" id="modal-save-btn">Save</button>' : ''}
     </div>
-  </div>`;
+  </form>`;
   document.body.appendChild(el);
+  suppressExternalAutofill(el);
   const suggestionObserver = hasSave ? enableTextFieldSuggestions(el, title) : null;
   const closeModal = () => { suggestionObserver?.disconnect(); el.remove(); };
   el._closeModal = closeModal;
@@ -5954,7 +5976,7 @@ function renderPantryHistory(data) {
     const partialWasteCount = items.filter(pantryIsPartialWaste).length;
     const wastedCount = items.filter(item => item.status === 'Wasted' && !pantryIsPartialWaste(item)).length;
     const spend = spendMap.get(String(purchase.spending_transaction_id));
-    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<p><strong>${itemsUsed}/${items.length} used in meals</strong> · ${finishedCount} finished · ${partialWasteCount} finished with waste · ${wastedCount} fully wasted</p><div class="pantry-purchase-items">${items.map(item => { const usage=pantryUsageText(item,data); return `<button type="button" onclick="showPantryItemDetail('${item.id}')">${safeText(item.name)} · ${safeText(pantryOutcomeLabel(item))}${usage ? ` · ${safeText(usage)}` : ''}</button>`; }).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
+    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div><button class="menu-btn" aria-label="Purchase actions" onclick="ctxPantryPurchase(event,'${purchase.id}')">···</button></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<p><strong>${itemsUsed}/${items.length} used in meals</strong> · ${finishedCount} finished · ${partialWasteCount} finished with waste · ${wastedCount} fully wasted</p><div class="pantry-purchase-items">${items.map(item => { const usage=pantryUsageText(item,data); return `<button type="button" onclick="showPantryItemDetail('${item.id}')">${safeText(item.name)} · ${safeText(pantryOutcomeLabel(item))}${usage ? ` · ${safeText(usage)}` : ''}</button>`; }).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
   }).join('')}</div>` : moneyEmpty('No purchase history yet', 'Pantry purchases linked from Spending or added here will appear in this timeline.');
 }
 
@@ -6030,7 +6052,28 @@ async function setPantryStatus(id, status) {
 function ctxPantryItem(event, id) {
   showCtx(event, [
     {label:'Edit', fn:()=>showPantryItemModal(id)},
-    {label:'Delete', danger:true, fn:async()=>{ if(confirm('Delete this tracked pantry item? This will not alter its spending transaction.')) { await dbDelete(T.PANTRY_ITEMS,id); renderPantry({tab:'pantry'}); } }}
+    {label:'Delete', danger:true, fn:()=>deletePantryItem(id)}
+  ]);
+}
+
+async function deletePantryItem(id) {
+  if(!confirm('Delete this tracked pantry item? This will not alter its spending transaction.')) return;
+  const item=window._pantryData?.items?.find(row=>String(row.id)===String(id)) || (await dbFetch(T.PANTRY_ITEMS,{eq:{id}}))[0];
+  await dbDelete(T.PANTRY_ITEMS,id);
+  if(item?.purchase_id) {
+    const remaining=await dbFetch(T.PANTRY_ITEMS,{eq:{purchase_id:item.purchase_id}});
+    if(!remaining.length) await dbDelete(T.PANTRY_PURCHASES,item.purchase_id);
+  }
+  renderPantry({tab:'pantry'});
+}
+
+function ctxPantryPurchase(event,id) {
+  showCtx(event,[
+    {label:'Delete purchase',danger:true,fn:async()=>{
+      if(!confirm('Delete this Pantry purchase and all its tracked items? Its linked Spending transaction will remain unchanged.')) return;
+      await dbDelete(T.PANTRY_PURCHASES,id);
+      renderPantry({tab:'history'});
+    }}
   ]);
 }
 
