@@ -221,6 +221,9 @@ button.financial-row:hover{background:var(--accent-light)}
 .pantry-insights span{display:block;margin-top:5px;font-size:10px;color:var(--text2);line-height:1.4}
 .pantry-insight{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
 .pantry-insight-value{margin-top:var(--space-2);font-size:clamp(22px,7vw,34px);font-weight:600;line-height:1.05;letter-spacing:-.04em;overflow-wrap:anywhere}
+.pantry-pattern-group+.pantry-pattern-group{border-top:1px solid var(--border)}
+.pantry-pattern-label{padding:12px var(--space-4) 8px;background:var(--bg);color:var(--text2);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.pantry-pattern-group .financial-row:last-child{border-bottom:0}
 .pantry-purchase-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--space-3)}
 .pantry-purchase-items>span,.pantry-purchase-items>button{display:inline-flex;max-width:100%;padding:5px 8px;border:0;border-radius:999px;background:var(--input-bg);font:500 10px/1.35 'Plus Jakarta Sans',sans-serif;color:var(--text2);overflow-wrap:anywhere}
 .pantry-purchase-items>button{cursor:pointer}
@@ -5895,9 +5898,15 @@ function renderFoodInsights(data) {
   const wastePercent = trackedItemSpend > 0 ? wasteValue / trackedItemSpend * 100 : 0;
   const usedCounts = new Map();
   data.mealItems.forEach(link => usedCounts.set(String(link.pantry_item_id), (usedCounts.get(String(link.pantry_item_id)) || 0) + 1));
-  const repeated = data.items.filter(item => (usedCounts.get(String(item.id)) || 0) > 1).sort((a,b) => (usedCounts.get(String(b.id))||0) - (usedCounts.get(String(a.id))||0))[0];
-  const wastedNames = data.items.filter(pantryHasWaste).reduce((map,item) => { const key=item.name.trim().toLowerCase(); map.set(key,(map.get(key)||0)+1); return map; }, new Map());
-  const frequentWaste = [...wastedNames.entries()].sort((a,b)=>b[1]-a[1])[0];
+  const repeatedItems = data.items.filter(item => (usedCounts.get(String(item.id)) || 0) > 1).sort((a,b) => (usedCounts.get(String(b.id))||0) - (usedCounts.get(String(a.id))||0) || String(a.name||'').localeCompare(String(b.name||'')));
+  const wastePatterns = [...data.items.filter(pantryHasWaste).reduce((map,item) => {
+    const key=String(item.name||'').trim().toLowerCase();
+    if(!map.has(key)) map.set(key,{key,name:item.name,count:0,partial:0,full:0});
+    const pattern=map.get(key);
+    pattern.count++;
+    if(pantryIsPartialWaste(item)) pattern.partial++; else pattern.full++;
+    return map;
+  },new Map()).values()].sort((a,b)=>b.count-a.count||String(a.name||'').localeCompare(String(b.name||'')));
   return `<section class="pantry-insights">
     <button type="button" onclick="showPantryInsight('groceries')"><strong>${fmt(grocerySpend)}</strong><span>Groceries this month · View spending</span></button>
     <button type="button" onclick="showPantryInsight('portions')"><strong>${portions}</strong><span>Home-cooked portions · View meals</span></button>
@@ -5909,7 +5918,16 @@ function renderFoodInsights(data) {
     <button type="button" class="financial-row" onclick="showPantryInsight('finished-month')"><div class="financial-row-main"><div class="financial-row-title">Items finished</div><div class="financial-row-meta">Includes items finished with partial waste</div></div><div class="financial-row-value">${monthItems.filter(item=>item.status==='Finished'||pantryIsPartialWaste(item)).length}</div></button>
     <button type="button" class="financial-row" onclick="showPantryInsight('waste-month')"><div class="financial-row-main"><div class="financial-row-title">Items with tracked waste</div><div class="financial-row-meta">Partial and fully wasted items this month</div></div><div class="financial-row-value">${monthItems.filter(pantryHasWaste).length}</div></button>
   </section>
-  ${(repeated || frequentWaste) ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Patterns</div><div class="money-panel-note">Based on your tracked Pantry activity</div></div></div>${repeated ? `<button type="button" class="financial-row" onclick="showPantryItemDetail('${repeated.id}')"><div class="financial-row-main"><div class="financial-row-title">${safeText(repeated.name)} stretches across meals</div><div class="financial-row-meta">Used in ${usedCounts.get(String(repeated.id))} logged meals · View item</div></div></button>` : ''}${frequentWaste ? `<button type="button" class="financial-row" onclick="showPantryInsight('waste-all')"><div class="financial-row-main"><div class="financial-row-title">Watch ${safeText(frequentWaste[0])}</div><div class="financial-row-meta">Waste recorded ${frequentWaste[1]} time${frequentWaste[1] === 1 ? '' : 's'} · View affected items</div></div></button>` : ''}</section>` : ''}`;
+  ${(repeatedItems.length || wastePatterns.length) ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Patterns</div><div class="money-panel-note">Useful signals from your tracked Pantry activity</div></div></div>${repeatedItems.length ? `<div class="pantry-pattern-group"><div class="pantry-pattern-label">Used across meals</div>${repeatedItems.map(item=>`<button type="button" class="financial-row" onclick="showPantryItemDetail('${item.id}')"><div class="financial-row-main"><div class="financial-row-title">${safeText(item.name)}</div><div class="financial-row-meta">Used in ${usedCounts.get(String(item.id))} logged meals · View item</div></div></button>`).join('')}</div>` : ''}${wastePatterns.length ? `<div class="pantry-pattern-group"><div class="pantry-pattern-label">Items with waste</div>${wastePatterns.map(pattern=>`<button type="button" class="financial-row" onclick="showPantryWastePattern('${encodeURIComponent(pattern.key).replace(/'/g,'%27')}')"><div class="financial-row-main"><div class="financial-row-title">${safeText(pattern.name)}</div><div class="financial-row-meta">${pattern.partial ? `${pattern.partial} finished with waste` : ''}${pattern.partial&&pattern.full?' · ':''}${pattern.full ? `${pattern.full} fully wasted` : ''} · View ${pattern.count===1?'record':'records'}</div></div><div class="financial-row-value">${pattern.count}<small>record${pattern.count===1?'':'s'}</small></div></button>`).join('')}</div>` : ''}</section>` : ''}`;
+}
+
+function showPantryWastePattern(encodedName) {
+  const data=window._pantryData;
+  if(!data) return;
+  const name=decodeURIComponent(encodedName);
+  const items=data.items.filter(item=>pantryHasWaste(item)&&String(item.name||'').trim().toLowerCase()===name);
+  const title=items[0]?.name ? `${items[0].name} · waste history` : 'Waste history';
+  showModal(safeText(title),`<section class="money-panel">${pantryInsightItemRows(items,data)}</section>`);
 }
 
 function renderPantryHistory(data) {
