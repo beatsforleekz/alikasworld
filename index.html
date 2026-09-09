@@ -187,6 +187,8 @@ button.financial-row:hover{background:var(--accent-light)}
 .pantry-tab.active{border-color:var(--accent);background:var(--accent-light);color:var(--text)}
 .pantry-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
 .pantry-item{min-width:0;padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
+.pantry-item.clickable{cursor:pointer;transition:border-color var(--transition),background var(--transition)}
+.pantry-item.clickable:hover,.pantry-item.clickable:focus-visible{border-color:var(--accent);background:var(--accent-light);outline:none}
 .pantry-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2)}
 .pantry-item h3{margin:6px 0 0;font-size:var(--font-sm);line-height:1.35;overflow-wrap:anywhere}
 .pantry-item p{margin:5px 0 0;font-size:11px;line-height:1.5;color:var(--text2);overflow-wrap:anywhere}
@@ -213,7 +215,9 @@ button.financial-row:hover{background:var(--accent-light)}
 .pantry-insight{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
 .pantry-insight-value{margin-top:var(--space-2);font-size:clamp(22px,7vw,34px);font-weight:600;line-height:1.05;letter-spacing:-.04em;overflow-wrap:anywhere}
 .pantry-purchase-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--space-3)}
-.pantry-purchase-items>span{display:inline-flex;max-width:100%;padding:5px 8px;border-radius:999px;background:var(--input-bg);font-size:10px;color:var(--text2);overflow-wrap:anywhere}
+.pantry-purchase-items>span,.pantry-purchase-items>button{display:inline-flex;max-width:100%;padding:5px 8px;border:0;border-radius:999px;background:var(--input-bg);font:500 10px/1.35 'Plus Jakarta Sans',sans-serif;color:var(--text2);overflow-wrap:anywhere}
+.pantry-purchase-items>button{cursor:pointer}
+.pantry-purchase-items>button:hover,.pantry-purchase-items>button:focus-visible{background:var(--accent-light);color:var(--text);outline:1px solid var(--accent)}
 .pantry-purchase-chip{display:inline-flex;gap:5px;align-items:center;max-width:100%;padding:5px 8px;border-radius:999px;background:var(--input-bg);font-size:10px;color:var(--text2)}
 .pantry-purchase-chip strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
 .pantry-form-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 10px}
@@ -407,6 +411,7 @@ button.financial-row:hover{background:var(--accent-light)}
 .modal-close{position:absolute;top:-2px;right:0;width:32px;height:32px;border:none;border-radius:999px;background:var(--accent-light);color:var(--text2);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif}
 .modal-actions{display:flex;gap:10px;margin-top:16px}
 .modal-actions .btn{margin-bottom:0}
+.modal-actions .btn:disabled{opacity:.55;cursor:wait;transform:none}
 .fg{margin-bottom:14px}
 .fg label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin-bottom:5px}
 .fg input,.fg select{width:100%;min-width:0;padding:11px 13px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none}
@@ -3365,7 +3370,15 @@ function showModal(title, bodyHTML, onSave) {
   document.getElementById('modal-close-btn')?.addEventListener('click', closeModal);
   document.getElementById('modal-cancel-btn')?.addEventListener('click', closeModal);
   if (!hasSave) return;
-  document.getElementById('modal-save-btn').addEventListener('click', async()=>{
+  const saveButton = document.getElementById('modal-save-btn');
+  let saveInProgress = false;
+  saveButton.addEventListener('click', async()=>{
+    if (saveInProgress) return;
+    saveInProgress = true;
+    saveButton.disabled = true;
+    saveButton.setAttribute('aria-busy', 'true');
+    const originalSaveLabel = saveButton.textContent;
+    saveButton.textContent = 'Saving…';
     const prevScrollY = window.scrollY;
     const previousSearches = [...document.querySelectorAll('.money-shell .search-input')].map(input => ({placeholder:input.placeholder, value:input.value}));
     try{
@@ -3385,7 +3398,13 @@ function showModal(title, bodyHTML, onSave) {
         restoreScroll();
         requestAnimationFrame(restoreScroll);
       });
-    } catch(e){ alert(e.message||'Error saving'); }
+    } catch(e){
+      saveInProgress = false;
+      saveButton.disabled = false;
+      saveButton.removeAttribute('aria-busy');
+      saveButton.textContent = originalSaveLabel;
+      alert(e.message||'Error saving');
+    }
   });
 }
 
@@ -5743,13 +5762,13 @@ function pantryItemCard(item, purchase) {
   const status = PANTRY_STATUSES.includes(item.status) ? item.status : 'Unused';
   const merchant = purchase?.merchant || 'Unlinked purchase';
   const meta = [item.quantity_description, item.category].filter(Boolean).map(safeText).join(' · ');
-  return `<article class="pantry-item">
-    <div class="pantry-item-head"><div><span class="money-status ${status === 'Finished' ? 'positive' : status === 'Wasted' ? 'danger' : status === 'Open' ? 'warning' : ''}">${status}</span><h3>${safeText(item.name)}</h3></div><button class="menu-btn" aria-label="Pantry item actions" onclick="ctxPantryItem(event,'${item.id}')">···</button></div>
+  return `<article class="pantry-item clickable" role="button" tabindex="0" onclick="showPantryItemDetail('${item.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();showPantryItemDetail('${item.id}')}" aria-label="View ${safeText(item.name)} details">
+    <div class="pantry-item-head"><div><span class="money-status ${status === 'Finished' ? 'positive' : status === 'Wasted' ? 'danger' : status === 'Open' ? 'warning' : ''}">${status}</span><h3>${safeText(item.name)}</h3></div><button class="menu-btn" aria-label="Pantry item actions" onclick="event.stopPropagation();ctxPantryItem(event,'${item.id}')">···</button></div>
     ${meta ? `<p>${meta}</p>` : ''}<p>${safeText(merchant)}${purchase?.purchase_date ? ` · ${fmtDate(purchase.purchase_date)}` : ''}${item.price !== null && item.price !== undefined ? ` · ${fmt(item.price)}` : ''}</p>
     ${item.notes ? `<p class="pantry-notes">${safeText(item.notes)}</p>` : ''}
     <div class="pantry-item-actions">
-      ${status === 'Unused' ? `<button class="pantry-status-btn" onclick="setPantryStatus('${item.id}','Open')">Open</button>` : ''}
-      ${!['Finished','Wasted'].includes(status) ? `<button class="pantry-status-btn" onclick="setPantryStatus('${item.id}','Finished')">Finished</button><button class="pantry-status-btn danger" onclick="showPantryWasteModal('${item.id}')">Wasted</button>` : ''}
+      ${status === 'Unused' ? `<button class="pantry-status-btn" onclick="event.stopPropagation();setPantryStatus('${item.id}','Open')">Open</button>` : ''}
+      ${!['Finished','Wasted'].includes(status) ? `<button class="pantry-status-btn" onclick="event.stopPropagation();setPantryStatus('${item.id}','Finished')">Finished</button><button class="pantry-status-btn danger" onclick="event.stopPropagation();showPantryWasteModal('${item.id}')">Wasted</button>` : ''}
     </div>
   </article>`;
 }
@@ -5774,7 +5793,7 @@ function renderPantryMeals(data) {
   });
   return data.meals.length ? `<div class="pantry-card-grid">${data.meals.map(meal => {
     const used = linksByMeal.get(String(meal.id)) || [];
-    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(meal.meal_date)}</span><h3>${safeText(meal.name)}</h3></div><button class="menu-btn" aria-label="Meal actions" onclick="ctxPantryMeal(event,'${meal.id}')">···</button></div><p><strong>${Number(meal.portions) || 0} portion${Number(meal.portions) === 1 ? '' : 's'}</strong></p>${used.length ? `<div class="pantry-purchase-items">${used.map(item => `<span>${safeText(item.name)}</span>`).join('')}</div>` : '<p>No tracked pantry items selected.</p>'}${meal.notes ? `<p class="pantry-notes">${safeText(meal.notes)}</p>` : ''}</article>`;
+    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(meal.meal_date)}</span><h3>${safeText(meal.name)}</h3></div><button class="menu-btn" aria-label="Meal actions" onclick="ctxPantryMeal(event,'${meal.id}')">···</button></div><p><strong>${Number(meal.portions) || 0} portion${Number(meal.portions) === 1 ? '' : 's'}</strong></p>${used.length ? `<div class="pantry-purchase-items">${used.map(item => `<button type="button" onclick="showPantryItemDetail('${item.id}')">${safeText(item.name)}</button>`).join('')}</div>` : '<p>No tracked pantry items selected.</p>'}${meal.notes ? `<p class="pantry-notes">${safeText(meal.notes)}</p>` : ''}</article>`;
   }).join('')}</div>` : moneyEmpty('No meals logged yet', 'Log a meal to connect pantry items with the portions you cooked.');
 }
 
@@ -5816,7 +5835,7 @@ function renderPantryHistory(data) {
     const items = data.items.filter(item => String(item.purchase_id) === String(purchase.id));
     const meals = [...new Map(items.flatMap(item => mealsByItem.get(String(item.id)) || []).map(meal => [String(meal.id), meal])).values()];
     const spend = spendMap.get(String(purchase.spending_transaction_id));
-    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<div class="pantry-purchase-items">${items.map(item => `<span>${safeText(item.name)} · ${safeText(item.status || 'Unused')}</span>`).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
+    return `<article class="pantry-item"><div class="pantry-item-head"><div><span class="money-status">${fmtDate(purchase.purchase_date)}</span><h3>${safeText(purchase.merchant || spend?.description || 'Pantry purchase')}</h3></div></div>${spend ? `<p>Linked spending · ${fmt(spend.amount)}</p>` : '<p>Manually added purchase</p>'}<div class="pantry-purchase-items">${items.map(item => `<button type="button" onclick="showPantryItemDetail('${item.id}')">${safeText(item.name)} · ${safeText(item.status || 'Unused')}</button>`).join('') || '<span>No tracked items</span>'}</div>${meals.length ? `<p class="pantry-notes">Meals: ${meals.map(meal => safeText(meal.name)).join(', ')}</p>` : '<p class="pantry-notes">No meals linked yet.</p>'}</article>`;
   }).join('')}</div>` : moneyEmpty('No purchase history yet', 'Pantry purchases linked from Spending or added here will appear in this timeline.');
 }
 
@@ -5832,6 +5851,41 @@ function ctxPantryItem(event, id) {
     {label:'Edit', fn:()=>showPantryItemModal(id)},
     {label:'Delete', danger:true, fn:async()=>{ if(confirm('Delete this tracked pantry item? This will not alter its spending transaction.')) { await dbDelete(T.PANTRY_ITEMS,id); renderPantry({tab:'pantry'}); } }}
   ]);
+}
+
+async function showPantryItemDetail(id) {
+  const data = window._pantryData || await loadPantryData();
+  const item = data.items.find(row => String(row.id) === String(id));
+  if (!item) return showToast('Pantry item could not be found.', 'error');
+  const purchase = data.purchases.find(row => String(row.id) === String(item.purchase_id));
+  const spending = data.spending.find(row => String(row.id) === String(purchase?.spending_transaction_id));
+  const mealMap = new Map(data.meals.map(meal => [String(meal.id), meal]));
+  const meals = data.mealItems
+    .filter(link => String(link.pantry_item_id) === String(item.id))
+    .map(link => mealMap.get(String(link.meal_id))).filter(Boolean)
+    .sort((a,b) => String(b.meal_date || '').localeCompare(String(a.meal_date || '')));
+  const status = PANTRY_STATUSES.includes(item.status) ? item.status : 'Unused';
+  const wasteDetail = status === 'Wasted' && item.waste_value != null
+    ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Estimated waste value</div><div class="financial-row-meta">Approximate value recorded when marked wasted</div></div><div class="financial-row-value">${fmt(item.waste_value)}</div></div>` : '';
+  showModal(safeText(item.name), `
+    <div class="pantry-linked-spend"><span class="money-status ${status === 'Finished' ? 'positive' : status === 'Wasted' ? 'danger' : status === 'Open' ? 'warning' : ''}">${status}</span><strong style="margin-top:8px">${safeText(purchase?.merchant || spending?.description || 'Unlinked purchase')}</strong><span>${purchase?.purchase_date ? fmtDate(purchase.purchase_date) : 'No purchase date'}${spending ? ` · Linked spend ${fmt(spending.amount)}` : ''}</span></div>
+    <section class="money-panel">
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Purchase price</div><div class="financial-row-meta">Tracked item value</div></div><div class="financial-row-value">${item.price == null ? '—' : fmt(item.price)}</div></div>
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Quantity</div><div class="financial-row-meta">${safeText(item.quantity_description || 'Not recorded')}</div></div></div>
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Category</div><div class="financial-row-meta">${safeText(item.category || 'Not recorded')}</div></div></div>
+      ${wasteDetail}
+    </section>
+    <div class="sec-label" style="margin-top:18px">Meals used in</div>
+    ${meals.length ? `<div class="pantry-purchase-items">${meals.map(meal => `<span>${safeText(meal.name)} · ${fmtDate(meal.meal_date)} · ${Number(meal.portions)||0} portion${Number(meal.portions)===1?'':'s'}</span>`).join('')}</div>` : '<p class="muted">Not linked to a meal yet.</p>'}
+    ${item.notes ? `<div class="sec-label" style="margin-top:18px">Notes</div><p class="muted">${safeText(item.notes)}</p>` : ''}
+    <button type="button" class="btn btn-secondary mt16" onclick="openPantryItemEdit('${item.id}')">Edit item</button>`);
+}
+
+function openPantryItemEdit(id) {
+  const overlay = document.querySelector('.overlay');
+  if (overlay?._closeModal) overlay._closeModal();
+  else overlay?.remove();
+  showPantryItemModal(id);
 }
 
 async function showPantryItemModal(id) {
@@ -5882,7 +5936,7 @@ function addPantryItemRow(values = {}) {
     <div class="fg"><label>Item name</label><input data-field="name" value="${safeText(values.name||'')}" placeholder="e.g. Prawns"/></div>
     <div class="pantry-form-grid"><div class="fg"><label>Price (£) <span>optional</span></label><input data-field="price" type="number" min="0" step="0.01" value="${values.price??''}"/></div><div class="fg"><label>Quantity <span>optional</span></label><input data-field="quantity" value="${safeText(values.quantity_description||'')}" placeholder="e.g. 225g"/></div></div>
     <div class="pantry-form-grid"><div class="fg"><label>Category <span>optional</span></label><input data-field="category" value="${safeText(values.category||'')}" placeholder="e.g. Protein"/></div><div class="fg"><label>Notes <span>optional</span></label><input data-field="notes" value="${safeText(values.notes||'')}"/></div></div>`;
-  container.appendChild(row);
+  container.prepend(row);
   row.querySelector('[data-field="name"]')?.focus();
 }
 
@@ -5903,18 +5957,19 @@ async function showPantryPurchaseModal(linkedSpend = null) {
 
 async function showPantryMealModal() {
   const data=window._pantryData || await loadPantryData();
-  const active=data.items.filter(item=>!['Finished','Wasted'].includes(item.status));
+  const statusOrder={Unused:0,Open:1,Finished:2,Wasted:3};
+  const selectable=[...data.items].sort((a,b)=>(statusOrder[a.status]??4)-(statusOrder[b.status]??4)||String(a.name||'').localeCompare(String(b.name||'')));
   showModal('Log meal', `
     <div class="fg"><label>Meal name</label><input id="f-meal-name" placeholder="e.g. Cajun Prawn Mac"/></div>
     <div class="pantry-form-grid"><div class="fg"><label>Date</label><input id="f-meal-date" type="date" value="${today()}"/></div><div class="fg"><label>Portions produced</label><input id="f-meal-portions" type="number" min="1" step="1" value="1"/></div></div>
-    <div class="fg"><label>Pantry items used</label>${active.length ? `<div class="ingredient-chips">${active.map(item=>`<label class="ingredient-chip"><input type="checkbox" value="${item.id}"/><span>${safeText(item.name)}</span></label>`).join('')}</div>` : '<p class="muted">No active pantry items. You can still log the meal.</p>'}</div>
+    <div class="fg"><label>Pantry items used</label>${selectable.length ? `<div class="ingredient-chips">${selectable.map(item=>`<label class="ingredient-chip"><input type="checkbox" value="${item.id}"/><span>${safeText(item.name)}${['Finished','Wasted'].includes(item.status) ? ` · ${safeText(item.status)}` : ''}</span></label>`).join('')}</div>` : '<p class="muted">No pantry items recorded. You can still log the meal.</p>'}</div>
     <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-meal-notes"></textarea></div>`, async()=>{
       const name=v('f-meal-name'); const portions=parseInt(v('f-meal-portions'));
       if(!name) throw new Error('Enter a meal name.');
       if(!portions||portions<1) throw new Error('Enter at least one portion.');
       const selected=[...document.querySelectorAll('.ingredient-chip input:checked')].map(input=>input.value);
       const meal=await dbInsert(T.PANTRY_MEALS,{name,meal_date:v('f-meal-date')||today(),portions,notes:v('f-meal-notes')||null});
-      for(const pantryItemId of selected) { await dbInsert(T.PANTRY_MEAL_ITEMS,{meal_id:meal.id,pantry_item_id:pantryItemId}); const item=active.find(row=>String(row.id)===String(pantryItemId)); if(item?.status==='Unused') await dbUpdate(T.PANTRY_ITEMS,pantryItemId,{status:'Open',updated_at:new Date().toISOString()}); }
+      for(const pantryItemId of selected) { await dbInsert(T.PANTRY_MEAL_ITEMS,{meal_id:meal.id,pantry_item_id:pantryItemId}); const item=selectable.find(row=>String(row.id)===String(pantryItemId)); if(item?.status==='Unused') await dbUpdate(T.PANTRY_ITEMS,pantryItemId,{status:'Open',updated_at:new Date().toISOString()}); }
       renderPantry({tab:'meals'});
     });
 }
