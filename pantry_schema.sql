@@ -8,7 +8,8 @@ create table if not exists public.pantry_purchases (
   user_id uuid not null references auth.users(id) on delete cascade,
   spending_transaction_id text,
   merchant text,
-  purchase_date date not null default current_date,
+  purchase_date date default current_date,
+  is_existing_stock boolean not null default false,
   created_at timestamptz not null default now(),
   unique (id, user_id)
 );
