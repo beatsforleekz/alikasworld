@@ -187,7 +187,20 @@ button.financial-row:hover{background:var(--accent-light)}
 .pantry-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
 .pantry-tab{min-width:0;min-height:44px;padding:9px 8px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--surface);color:var(--text2);font:600 var(--font-xs)/1.25 'Plus Jakarta Sans',sans-serif;cursor:pointer}
 .pantry-tab.active{border-color:var(--accent);background:var(--accent-light);color:var(--text)}
+.pantry-layout-control{display:flex;align-items:center;justify-content:flex-end;gap:var(--space-2)}
+.pantry-layout-control>span{color:var(--text2);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.pantry-layout-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;border-radius:12px;background:var(--tab-bg)}
+.pantry-layout-options button{min-width:62px;min-height:36px;padding:7px 9px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:600 10px/1 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.pantry-layout-options button.active{background:var(--surface-elevated);color:var(--text);box-shadow:0 1px 4px rgba(24,22,18,.08)}
 .pantry-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+.pantry-card-grid.pantry-layout-list{grid-template-columns:1fr}
+.pantry-layout-grid{gap:var(--space-2)}
+.pantry-layout-grid .pantry-item{padding:12px;border-radius:var(--radius-control)}
+.pantry-layout-grid .pantry-item h3{font-size:12px}
+.pantry-layout-grid .pantry-notes{display:none}
+.pantry-layout-grid .pantry-item-actions{gap:4px;margin-top:8px}
+.pantry-layout-grid .pantry-status-btn{min-height:32px;padding:0 7px}
+.pantry-layout-list .pantry-item{padding:12px}
 .pantry-item{min-width:0;padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-surface);background:var(--surface)}
 .pantry-item.clickable{cursor:pointer;transition:border-color var(--transition),background var(--transition)}
 .pantry-item.clickable:hover,.pantry-item.clickable:focus-visible{border-color:var(--accent);background:var(--accent-light);outline:none}
@@ -252,12 +265,16 @@ button.financial-row:hover{background:var(--accent-light)}
 
 @media (max-width:560px){
   .pantry-card-grid{grid-template-columns:1fr}
+  .pantry-card-grid.pantry-layout-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pantry-form-grid{grid-template-columns:1fr}
 }
 
 @media (min-width:960px){
   .pantry-tabs{grid-template-columns:repeat(4,minmax(0,1fr));max-width:760px}
   .pantry-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pantry-card-grid.pantry-layout-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .pantry-layout-list .pantry-item{display:grid;grid-template-columns:minmax(190px,.8fr) minmax(0,1.6fr) auto;align-items:center;gap:var(--space-4)}
+  .pantry-layout-list .pantry-item-details,.pantry-layout-list .pantry-item-actions{margin:0}
   .pantry-insights{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 
@@ -1905,9 +1922,6 @@ async function showBillModal(editId, table, isCo) {
       provider:               v('f-prov'),
       category:               v('f-cat'),
       monthly_amount:         num('f-amt'),
-      due_type:               'day_of_month',
-      due_day_number:         dayNum,
-      due_weekday:            null,
       due_day:                dayNum,
       notes:                  v('f-notes')||null,
     };
@@ -5775,6 +5789,20 @@ function openPantryTab(tab) {
   navigate('pantry', {tab});
 }
 
+const PANTRY_LAYOUT_KEY='alika-pantry-layout';
+
+function pantryLayoutMode() {
+  const mode=localStorage.getItem(PANTRY_LAYOUT_KEY);
+  return ['default','grid','list'].includes(mode) ? mode : 'default';
+}
+
+function setPantryLayout(mode) {
+  if(!['default','grid','list'].includes(mode)) return;
+  localStorage.setItem(PANTRY_LAYOUT_KEY,mode);
+  const view=document.querySelector('.pantry-view');
+  if(view&&window._pantryData) view.innerHTML=renderCurrentPantry(window._pantryData);
+}
+
 async function loadPantryData() {
   const [purchases, items, meals, mealItems, spending] = await Promise.all([
     dbFetch(T.PANTRY_PURCHASES, {order:['purchase_date',false]}),
@@ -5885,9 +5913,9 @@ function pantryItemCard(item, purchase, data) {
   const usageText = pantryUsageText(item, data);
   return `<article class="pantry-item clickable" role="button" tabindex="0" onclick="showPantryItemDetail('${item.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();showPantryItemDetail('${item.id}')}" aria-label="View ${safeText(item.name)} details">
     <div class="pantry-item-head"><div><span class="money-status ${pantryOutcomeClass(item)}">${outcome}</span><h3>${safeText(item.name)}</h3></div><button class="menu-btn" aria-label="Pantry item actions" onclick="event.stopPropagation();ctxPantryItem(event,'${item.id}')">···</button></div>
-    ${meta ? `<p>${meta}</p>` : ''}<p>${safeText(merchant)}${purchase?.is_existing_stock ? ' · Existing stock' : purchase?.purchase_date ? ` · ${fmtDate(purchase.purchase_date)}` : ''}${item.price !== null && item.price !== undefined ? ` · ${fmt(item.price)}` : ''}</p>
+    <div class="pantry-item-details">${meta ? `<p>${meta}</p>` : ''}<p>${safeText(merchant)}${purchase?.is_existing_stock ? ' · Existing stock' : purchase?.purchase_date ? ` · ${fmtDate(purchase.purchase_date)}` : ''}${item.price !== null && item.price !== undefined ? ` · ${fmt(item.price)}` : ''}</p>
     ${usageText ? `<p><strong>${safeText(usageText)}</strong></p>` : ''}
-    ${item.notes ? `<p class="pantry-notes">${safeText(item.notes)}</p>` : ''}
+    ${item.notes ? `<p class="pantry-notes">${safeText(item.notes)}</p>` : ''}</div>
     <div class="pantry-item-actions">
       ${status === 'Unused' ? `<button class="pantry-status-btn" onclick="event.stopPropagation();setPantryStatus('${item.id}','Open')">Open</button>` : ''}
       ${!['Finished','Wasted'].includes(status) ? `<button class="pantry-status-btn" onclick="event.stopPropagation();showPantryCloseModal('${item.id}')">Close item</button>` : ''}
@@ -5897,12 +5925,14 @@ function pantryItemCard(item, purchase, data) {
 
 function renderCurrentPantry(data) {
   const purchaseMap = new Map(data.purchases.map(row => [String(row.id), row]));
+  const layout=pantryLayoutMode();
   const active = data.items.filter(item => !['Finished','Wasted'].includes(item.status)).sort((a,b)=>(a.status==='Open'?0:1)-(b.status==='Open'?0:1)||String(b.created_at||'').localeCompare(String(a.created_at||'')));
   const finished = data.items.filter(item => item.status === 'Finished' && !pantryIsPartialWaste(item)).length;
   const partial = data.items.filter(pantryIsPartialWaste).length;
   const wasted = data.items.filter(item => item.status === 'Wasted' && !pantryIsPartialWaste(item)).length;
   return `<section class="pantry-insights" aria-label="Pantry summary"><button type="button" onclick="showPantryInsight('active')"><strong>${active.length}</strong><span>Current items · View list</span></button><button type="button" onclick="showPantryInsight('finished')"><strong>${finished}</strong><span>Finished · View list</span></button><button type="button" onclick="showPantryInsight('partial-waste')"><strong>${partial}</strong><span>Finished with waste · View list</span></button><button type="button" onclick="showPantryInsight('wasted')"><strong>${wasted}</strong><span>Fully wasted · View list</span></button></section>
-    ${active.length ? `<div class="pantry-card-grid">${active.map(item => pantryItemCard(item, purchaseMap.get(String(item.purchase_id)), data)).join('')}</div>` : moneyEmpty('Your current pantry is clear', 'Add a grocery purchase and track only the food that matters to you.')}`;
+    <div class="pantry-layout-control"><span>View</span><div class="pantry-layout-options" role="group" aria-label="Pantry layout"><button type="button" class="${layout==='default'?'active':''}" aria-pressed="${layout==='default'}" onclick="setPantryLayout('default')">Default</button><button type="button" class="${layout==='grid'?'active':''}" aria-pressed="${layout==='grid'}" onclick="setPantryLayout('grid')">Grid</button><button type="button" class="${layout==='list'?'active':''}" aria-pressed="${layout==='list'}" onclick="setPantryLayout('list')">List</button></div></div>
+    ${active.length ? `<div class="pantry-card-grid pantry-layout-${layout}">${active.map(item => pantryItemCard(item, purchaseMap.get(String(item.purchase_id)), data)).join('')}</div>` : moneyEmpty('Your current pantry is clear', 'Add a grocery purchase and track only the food that matters to you.')}`;
 }
 
 function renderPantryMeals(data) {
