@@ -23,6 +23,7 @@ create table if not exists public.pantry_items (
   quantity_description text, -- legacy free-text quantity retained for existing records
   quantity_count numeric(12,3) check (quantity_count is null or quantity_count > 0),
   quantity_unit text,
+  quantity_adjustment numeric(12,3) not null default 0,
   size_description text,
   category text,
   status text not null default 'Unused' check (status in ('Unused', 'Open', 'Finished', 'Wasted')),

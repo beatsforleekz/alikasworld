@@ -5892,7 +5892,8 @@ function pantryUsageSummary(item, data, excludeMealId = null) {
     return Number.isFinite(amount) && amount > 0 && (!link.quantity_unit || String(link.quantity_unit).toLowerCase() === quantity.unit);
   });
   const used = measured.reduce((sum, link) => sum + parseFloat(link.quantity_used), 0);
-  return {quantity, used, remaining:Math.max(0, quantity.total - used), measuredMeals:measured.length, unmeasuredMeals:links.length - measured.length};
+  const adjustment = parseFloat(item.quantity_adjustment) || 0;
+  return {quantity, used, adjustment, remaining:Math.max(0, quantity.total - used + adjustment), measuredMeals:measured.length, unmeasuredMeals:links.length - measured.length};
 }
 
 function pantryUsageText(item, data) {
@@ -6124,7 +6125,7 @@ async function showPantryItemDetail(id) {
     .sort((a,b) => String(b.meal.meal_date || '').localeCompare(String(a.meal.meal_date || '')));
   const outcome = pantryOutcomeLabel(item);
   const usage = pantryUsageSummary(item, data);
-  const usageDetail = usage ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Approximate quantity remaining</div><div class="financial-row-meta">${usage.measuredMeals ? `${formatPantryQuantity(usage.used)} ${safeText(usage.quantity.label)} logged as used` : 'No measured usage logged yet'}${usage.unmeasuredMeals ? ` · ${usage.unmeasuredMeals} meal${usage.unmeasuredMeals === 1 ? '' : 's'} used an unspecified amount` : ''}</div></div><div class="financial-row-value">${usage.unmeasuredMeals ? 'Up to ' : ''}${formatPantryQuantity(usage.remaining)}<small>${safeText(usage.quantity.label)} estimated</small></div></div>` : '';
+  const usageDetail = usage ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Approximate quantity remaining</div><div class="financial-row-meta">${usage.measuredMeals ? `${formatPantryQuantity(usage.used)} ${safeText(usage.quantity.label)} logged as used` : 'No measured usage logged yet'}${usage.unmeasuredMeals ? ` · ${usage.unmeasuredMeals} meal${usage.unmeasuredMeals === 1 ? '' : 's'} used an unspecified amount` : ''}${usage.adjustment ? ' · Manually corrected' : ''}</div></div><div class="financial-row-value">${usage.unmeasuredMeals ? 'Up to ' : ''}${formatPantryQuantity(usage.remaining)}<small>${safeText(usage.quantity.label)} estimated</small></div></div>` : '';
   const wasteDetail = pantryHasWaste(item)
     ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Waste recorded</div><div class="financial-row-meta">${safeText(pantryWasteAmountLabel(item))}</div></div><div class="financial-row-value">${item.waste_value == null ? '—' : fmt(item.waste_value)}<small>estimated waste</small></div></div>` : '';
   showModal(safeText(item.name), `
@@ -6151,14 +6152,20 @@ function openPantryItemEdit(id) {
 }
 
 async function showPantryItemModal(id) {
+  const data = window._pantryData || await loadPantryData();
   const item = (await dbFetch(T.PANTRY_ITEMS,{eq:{id}}))[0];
   if (!item) return;
   const editStatus = pantryIsPartialWaste(item) ? 'Finished' : item.status;
+  const existingQuantity=pantryQuantityInfo(item);
+  const existingUsage=pantryUsageSummary(item,data);
+  window._pantryEditQuantityUnit=existingQuantity?.unit||null;
+  window._pantryEditMeasuredUsed=existingUsage?.used||0;
   showModal('Edit pantry item', `
     <div class="fg"><label>Name</label><input id="f-pan-name" value="${safeText(item.name)}"/></div>
     <div class="pantry-form-grid"><div class="fg"><label>Price (£) <span>optional</span></label><input id="f-pan-price" type="number" min="0" step="0.01" value="${item.price ?? ''}"/></div><div class="fg"><label>Size / weight <span>optional</span></label><input id="f-pan-size" value="${safeText(item.size_description || '')}" placeholder="e.g. 700g or 500ml"/></div></div>
-    <div class="pantry-form-grid"><div class="fg"><label>Pack / count <span>optional</span></label><input id="f-pan-count" type="number" min="0.001" step="any" inputmode="decimal" value="${item.quantity_count ?? ''}" placeholder="e.g. 4"/></div><div class="fg"><label>Unit <span>optional</span></label><input id="f-pan-unit" value="${safeText(item.quantity_unit || '')}" placeholder="e.g. potatoes or tins"/></div></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Pack / count <span>optional</span></label><input id="f-pan-count" type="number" min="0.001" step="any" inputmode="decimal" value="${item.quantity_count ?? ''}" placeholder="e.g. 4" oninput="togglePantryRemainingEditor()"/></div><div class="fg"><label>Unit <span>optional</span></label><input id="f-pan-unit" value="${safeText(item.quantity_unit || '')}" placeholder="e.g. potatoes or tins" oninput="togglePantryRemainingEditor()"/></div></div>
     <small class="muted">Add both count and unit only when you want approximate remaining quantity.</small>
+    <div class="fg ${existingQuantity?'':'hidden'}" id="f-pan-remaining-wrap"><label>Remaining quantity <span>optional correction</span></label><div class="pantry-use-input"><input id="f-pan-remaining" type="number" min="0" step="any" inputmode="decimal" value="${existingUsage ? formatPantryQuantity(existingUsage.remaining) : ''}" data-manual-change="false" oninput="this.dataset.manualChange='true'"/><span id="f-pan-remaining-unit">${safeText(existingQuantity?.label||'')}</span></div><small>Adjust this directly if the meal log estimate does not match what is actually left.</small></div>
     ${item.quantity_description ? `<div class="fg"><label>Existing quantity note <span>kept for older records</span></label><input id="f-pan-qty" value="${safeText(item.quantity_description)}"/></div>` : '<input id="f-pan-qty" type="hidden" value=""/>'}
     <div class="pantry-form-grid"><div class="fg"><label>Category <span>optional</span></label><input id="f-pan-cat" value="${safeText(item.category || '')}"/></div><div class="fg"><label>Status</label><select id="f-pan-status">${PANTRY_STATUSES.map(status=>`<option ${editStatus===status?'selected':''}>${status}</option>`).join('')}</select></div></div>
     <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-pan-notes">${safeText(item.notes || '')}</textarea></div>`, async()=>{
@@ -6168,11 +6175,37 @@ async function showPantryItemModal(id) {
       const unit=v('f-pan-unit')||null;
       if((count===null)!==(unit===null)) throw new Error('Add both a pack/count and unit, or leave both blank.');
       if(count!==null&&count<=0) throw new Error('Pack/count must be greater than zero.');
-      const updates={name,price:v('f-pan-price')===''?null:num('f-pan-price'),quantity_description:v('f-pan-qty')||null,quantity_count:count,quantity_unit:unit,size_description:v('f-pan-size')||null,category:v('f-pan-cat')||null,status:nextStatus,notes:v('f-pan-notes')||null,updated_at:new Date().toISOString()};
+      const nextQuantity=count===null?null:pantryQuantityInfo({quantity_count:count,quantity_unit:unit});
+      const quantityChanged=count!==parseFloat(item.quantity_count)||nextQuantity?.unit!==existingQuantity?.unit;
+      let quantityAdjustment=quantityChanged?0:(parseFloat(item.quantity_adjustment)||0);
+      const remainingInput=document.getElementById('f-pan-remaining');
+      if(nextQuantity&&remainingInput?.dataset.manualChange==='true') {
+        const desired=parseFloat(remainingInput.value);
+        if(!Number.isFinite(desired)||desired<0) throw new Error('Enter a valid remaining quantity of zero or more.');
+        if(desired>count) throw new Error('Remaining quantity cannot be greater than the pack/count. Increase the pack/count first if needed.');
+        const draftUsage=pantryUsageSummary({...item,quantity_count:count,quantity_unit:unit,quantity_adjustment:0},data);
+        quantityAdjustment=desired-(count-(draftUsage?.used||0));
+      }
+      const updates={name,price:v('f-pan-price')===''?null:num('f-pan-price'),quantity_description:v('f-pan-qty')||null,quantity_count:count,quantity_unit:unit,quantity_adjustment:count===null?0:quantityAdjustment,size_description:v('f-pan-size')||null,category:v('f-pan-cat')||null,status:nextStatus,notes:v('f-pan-notes')||null,updated_at:new Date().toISOString()};
       if(['Unused','Open'].includes(nextStatus)) Object.assign(updates,{waste_fraction:null,waste_value:null});
       await dbUpdate(T.PANTRY_ITEMS,id,updates);
       renderPantry({tab:'pantry'});
     });
+}
+
+function togglePantryRemainingEditor() {
+  const count=parseFloat(v('f-pan-count'));
+  const unit=v('f-pan-unit');
+  const enabled=Number.isFinite(count)&&count>0&&!!unit;
+  document.getElementById('f-pan-remaining-wrap')?.classList.toggle('hidden',!enabled);
+  const input=document.getElementById('f-pan-remaining');
+  if(enabled&&input&&input.dataset.manualChange!=='true') {
+    const nextUnit=pantryQuantityInfo({quantity_count:count,quantity_unit:unit})?.unit;
+    const used=nextUnit===window._pantryEditQuantityUnit ? window._pantryEditMeasuredUsed||0 : 0;
+    input.value=formatPantryQuantity(Math.max(0,count-used));
+  }
+  const label=document.getElementById('f-pan-remaining-unit');
+  if(label) label.textContent=unit;
 }
 
 async function showPantryCloseModal(id) {
