@@ -6322,24 +6322,32 @@ async function showPantryMealModal(editId = null) {
       if(!name) throw new Error('Enter a meal name.');
       if(!portions||portions<1) throw new Error('Enter at least one portion.');
       const selected=[...(window._pantryMealSelected||new Set())];
+      const previous=new Set(existingItemIds);
+      const current=new Set(selected.map(String));
+      const usageRows=[...current].map(pantryItemId=>{
+        const item=selectable.find(row=>String(row.id)===String(pantryItemId));
+        if(!item) throw new Error('One of the selected Pantry items could not be found.');
+        const rawUsage=window._pantryMealUsage?.get(String(pantryItemId));
+        const quantityUsed=rawUsage===''||rawUsage==null ? null : parseFloat(rawUsage);
+        if(quantityUsed!==null&&(!Number.isFinite(quantityUsed)||quantityUsed<=0)) throw new Error(`Enter a positive amount used for ${item.name||'the selected item'}, or leave it blank.`);
+        const available=quantityUsed!==null?pantryUsageSummary(item,data,editId):null;
+        if(available&&quantityUsed>available.remaining+0.0001) {
+          throw new Error(`${item.name} has ${formatPantryQuantity(available.remaining)} ${available.quantity.label} remaining. Reduce the amount used or correct the Pantry item first.`);
+        }
+        const quantityUnit=quantityUsed===null ? null : (window._pantryMealUsageUnits?.get(String(pantryItemId)) || pantryQuantityInfo(item)?.unit || null);
+        return {pantryItemId,item,quantityUsed,quantityUnit};
+      });
       const mealRow={name,meal_date:v('f-meal-date')||today(),portions,notes:v('f-meal-notes')||null};
       let meal=existingMeal;
       if(editId) await dbUpdate(T.PANTRY_MEALS,editId,mealRow);
       else meal=await dbInsert(T.PANTRY_MEALS,mealRow);
       const mealId=editId||meal.id;
-      const previous=new Set(existingItemIds);
-      const current=new Set(selected.map(String));
       for(const pantryItemId of previous) {
         if(current.has(pantryItemId)) continue;
         const {error}=await getDB().from(T.PANTRY_MEAL_ITEMS).delete().eq('meal_id',mealId).eq('pantry_item_id',pantryItemId);
         if(error) throw error;
       }
-      for(const pantryItemId of current) {
-        const item=selectable.find(row=>String(row.id)===String(pantryItemId));
-        const rawUsage=window._pantryMealUsage?.get(String(pantryItemId));
-        const quantityUsed=rawUsage===''||rawUsage==null ? null : parseFloat(rawUsage);
-        if(quantityUsed!==null&&(!Number.isFinite(quantityUsed)||quantityUsed<=0)) throw new Error(`Enter a positive amount used for ${item?.name||'the selected item'}, or leave it blank.`);
-        const quantityUnit=quantityUsed===null ? null : (window._pantryMealUsageUnits?.get(String(pantryItemId)) || pantryQuantityInfo(item)?.unit || null);
+      for(const {pantryItemId,item,quantityUsed,quantityUnit} of usageRows) {
         const existingLink=existingLinks.find(link=>String(link.pantry_item_id)===String(pantryItemId));
         if(existingLink) await dbUpdate(T.PANTRY_MEAL_ITEMS,existingLink.id,{quantity_used:quantityUsed,quantity_unit:quantityUnit});
         else await dbInsert(T.PANTRY_MEAL_ITEMS,{meal_id:mealId,pantry_item_id:pantryItemId,quantity_used:quantityUsed,quantity_unit:quantityUnit});
@@ -6396,8 +6404,10 @@ function renderPantryMealSelection() {
     const label=quantity?.label||storedUnit;
     const value=window._pantryMealUsage?.get(String(id))??'';
     const before=quantity ? pantryUsageSummary(choice.item,data,window._pantryEditingMealId) : null;
-    const hint=quantity ? `${formatPantryQuantity(quantity.total)} ${quantity.label} purchased${before?.used ? ` · ${formatPantryQuantity(before.used)} logged before` : ''}` : 'Amount can stay approximate';
-    return `<div class="pantry-selected-chip ${unit?'':'approximate'}"><div class="pantry-use-copy"><strong>${safeText(choice.item.name)}</strong><small>${safeText(hint)}</small></div>${unit?`<label class="pantry-use-input"><input type="number" min="0.001" step="any" inputmode="decimal" value="${safeText(value)}" placeholder="Used" aria-label="Amount of ${safeText(choice.item.name)} used" oninput="setPantryMealIngredientUsage('${choice.id}',this.value)"/><span>${safeText(label)}</span></label>`:''}<button type="button" class="pantry-selected-remove" aria-label="Remove ${safeText(choice.item.name)}" onclick="removePantryMealIngredient('${choice.id}')">×</button></div>`;
+    const hint=quantity&&before
+      ? `${before.unmeasuredMeals?'Up to':'About'} ${formatPantryQuantity(before.remaining)} ${before.quantity.label} remaining before this meal${before.adjustment?' · manually corrected':''}`
+      : 'Amount can stay approximate';
+    return `<div class="pantry-selected-chip ${unit?'':'approximate'}"><div class="pantry-use-copy"><strong>${safeText(choice.item.name)}</strong><small>${safeText(hint)}</small></div>${unit?`<label class="pantry-use-input"><input type="number" min="0.001" max="${before?.remaining??''}" step="any" inputmode="decimal" value="${safeText(value)}" placeholder="Used" aria-label="Amount of ${safeText(choice.item.name)} used" oninput="setPantryMealIngredientUsage('${choice.id}',this.value)"/><span>${safeText(label)}</span></label>`:''}<button type="button" class="pantry-selected-remove" aria-label="Remove ${safeText(choice.item.name)}" onclick="removePantryMealIngredient('${choice.id}')">×</button></div>`;
   }).join('') : '<span class="muted">No pantry items selected yet.</span>';
 }
 
