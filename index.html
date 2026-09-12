@@ -5919,6 +5919,7 @@ function pantryItemCard(item, purchase, data) {
     ${item.notes ? `<p class="pantry-notes">${safeText(item.notes)}</p>` : ''}</div>
     <div class="pantry-item-actions">
       ${status === 'Unused' ? `<button class="pantry-status-btn" onclick="event.stopPropagation();setPantryStatus('${item.id}','Open')">Open</button>` : ''}
+      ${status === 'Open' ? `<button class="pantry-status-btn" onclick="event.stopPropagation();setPantryStatus('${item.id}','Unused')">Set unused</button>` : ''}
       ${!['Finished','Wasted'].includes(status) ? `<button class="pantry-status-btn" onclick="event.stopPropagation();showPantryCloseModal('${item.id}')">Close item</button>` : ''}
     </div>
   </article>`;
