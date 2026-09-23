@@ -676,6 +676,7 @@ const T = {
   VARIABLE_SPENDING:  'variable_spending',
   CATEGORY_BUDGETS:   'category_budgets',
   DEBT_MASTER:        'debt_master',
+  DEBT_TRANSACTIONS:  'debt_transactions',
   DEBT_HISTORY:       'debt_history',
   DEBT_TOTAL_HISTORY: 'debt_total_history',
   COMPANY_ACCOUNTS:   'company_accounts',
@@ -959,6 +960,7 @@ async function navigate(route, params = {}) {
 
   // Destroy any existing chart
   if (window._debtChart) { window._debtChart.destroy(); window._debtChart = null; }
+  if (window._spendingChart) { window._spendingChart.destroy(); window._spendingChart = null; }
 
   root().innerHTML = '<div class="spinner"></div>';
 
@@ -1078,7 +1080,7 @@ async function renderDashboard() {
   const thisMonthSpending = variableSpending.filter(r => isThisMonth(r.date));
   const totalIncome    = thisMonthIncome.reduce((s,r) => s+(parseFloat(r.gross_amount)||0),0);
   const totalFixed     = fixedCosts.reduce((s,r) => s+(parseFloat(r.monthly_amount)||0),0);
-  const activeDebts    = debts.filter(d => d.status?.toLowerCase() !== 'cleared');
+  const activeDebts    = debts.filter(d => debtBal(d) > 0);
   const totalDebt      = activeDebts.reduce((s,d) => s+debtBal(d),0);
   const budgetTarget   = categoryBudgets.reduce((s,r) => s+(parseFloat(r.monthly_target)||0),0);
   const totalSpent     = thisMonthSpending.reduce((s,r) => s+(parseFloat(r.amount)||0),0);
@@ -1419,7 +1421,7 @@ async function renderFinanceLegacy() {
   }, 0);
   const budgetRem    = budgetTarget - totalSpent;
 
-  const activeDebts  = debts.filter(d => d.status?.toLowerCase() !== 'cleared');
+  const activeDebts  = debts.filter(d => debtBal(d) > 0);
   const totalDebt    = activeDebts.reduce((s,d) => s+debtBal(d),0);
   const { totalEstInt, totalEstMin, totalUtil, highRisk } = calcDamageAndRisk(debts);
 
@@ -1654,7 +1656,7 @@ async function renderFinance() {
   const overdueIncome = expectedIncome.filter(row => incomeDisplayStatus(row) === 'Overdue');
   const overdueBills = fixedCosts.filter(row => billFinancialState(row, now).overdue);
 
-  const activeDebts = debts.filter(row => (row.status || '').toLowerCase() !== 'cleared' && debtBal(row) > 0);
+  const activeDebts = debts.filter(row => debtBal(row) > 0);
   const totalDebt = activeDebts.reduce((sum, row) => sum + debtBal(row), 0);
   const {totalEstMin, totalUtil, highRisk} = calcDamageAndRisk(debts);
   const priorityDebt = [...activeDebts].sort((a,b) => (a.attack_order || 999) - (b.attack_order || 999))[0] || highRisk;
@@ -1933,6 +1935,44 @@ async function showBillModal(editId, table, isCo) {
 // ════════════════════════════════════════════════════════════
 // SPENDING PAGE
 // ════════════════════════════════════════════════════════════
+function spendingMonthKey(value) {
+  const match=String(value||'').match(/^(\d{4})-(\d{2})/);
+  return match?`${match[1]}-${match[2]}`:'';
+}
+
+function spendingMonthLabel(key, short=false) {
+  if(!/^\d{4}-\d{2}$/.test(key)) return 'Unknown month';
+  return new Date(`${key}-01T12:00:00`).toLocaleDateString('en-GB',short?{month:'short'}:{month:'long',year:'numeric'});
+}
+
+function spendingHistorySummary(spending, now=new Date()) {
+  const monthKey=(year,month)=>`${year}-${String(month+1).padStart(2,'0')}`;
+  const shifted=offset=>new Date(now.getFullYear(),now.getMonth()+offset,1,12);
+  const keys=Array.from({length:6},(_,index)=>{const d=shifted(index-5);return monthKey(d.getFullYear(),d.getMonth());});
+  const totals=new Map(keys.map(key=>[key,0]));
+  const counts=new Map(keys.map(key=>[key,0]));
+  spending.forEach(row=>{
+    const key=spendingMonthKey(row.date);
+    if(!totals.has(key)) return;
+    totals.set(key,totals.get(key)+(parseFloat(row.amount)||0));
+    counts.set(key,counts.get(key)+1);
+  });
+  const currentKey=keys.at(-1);
+  const previousKey=keys.at(-2);
+  const elapsedDay=now.getDate();
+  const currentComparable=spending.filter(row=>spendingMonthKey(row.date)===currentKey&&parseInt(String(row.date).slice(8,10))<=elapsedDay).reduce((sum,row)=>sum+(parseFloat(row.amount)||0),0);
+  const previousComparable=spending.filter(row=>spendingMonthKey(row.date)===previousKey&&parseInt(String(row.date).slice(8,10))<=elapsedDay).reduce((sum,row)=>sum+(parseFloat(row.amount)||0),0);
+  const comparison=previousComparable>0?currentComparable-previousComparable:null;
+  const comparisonPct=comparison===null?null:(comparison/previousComparable)*100;
+  const completedTotals=keys.slice(-4,-1).map(key=>totals.get(key)||0);
+  const completedWithData=completedTotals.filter(total=>total>0);
+  const completedAverage=completedWithData.length?completedWithData.reduce((sum,total)=>sum+total,0)/completedWithData.length:null;
+  const lastCompletedTotal=totals.get(keys.at(-2))||0;
+  const priorCompletedTotal=totals.get(keys.at(-3))||0;
+  const completedComparison=priorCompletedTotal>0?lastCompletedTotal-priorCompletedTotal:null;
+  return {keys,totals,counts,currentKey,previousKey,currentComparable,previousComparable,comparison,comparisonPct,completedAverage,completedAverageCount:completedWithData.length,completedComparison,lastCompletedTotal,priorCompletedTotal,elapsedDay};
+}
+
 async function renderSpending() {
   const [spending, budgets] = await Promise.all([
     dbFetch(T.VARIABLE_SPENDING, {order:['date',false]}),
@@ -1943,6 +1983,15 @@ async function renderSpending() {
   const monthSpent = monthRows.reduce((sum,row) => sum + (parseFloat(row.amount)||0), 0);
   const target = budgets.reduce((sum,row) => sum + (parseFloat(row.monthly_target)||0), 0);
   const remaining = target - monthSpent;
+  const history=spendingHistorySummary(spending);
+  const comparisonText=history.comparison===null
+    ? 'Add spending in this month and last month to compare progress.'
+    : Math.abs(history.comparison)<0.005
+      ? `Level with the same point last month at ${fmt(history.currentComparable)}.`
+      : `${history.comparison<0?'Down':'Up'} ${fmt(Math.abs(history.comparison))} (${Math.abs(history.comparisonPct).toFixed(0)}%) versus the same point last month.`;
+  const comparisonTone=history.comparison===null||Math.abs(history.comparison)<0.005?'':history.comparison<0?'positive':'danger';
+  const completedComparisonText=history.completedComparison===null?'':` Last completed month was ${history.completedComparison<0?'down':history.completedComparison>0?'up':'level'}${history.completedComparison?` ${fmt(Math.abs(history.completedComparison))}`:''} versus the month before.`;
+  window._spendingRows=spending;
 
   root().innerHTML = `
 <div class="page money-shell">
@@ -1953,6 +2002,18 @@ async function renderSpending() {
     <div class="money-summary-cell"><div class="money-summary-label">Spent</div><div class="money-summary-value">${fmt(monthSpent)}</div><div class="money-summary-note">This month</div></div>
     <div class="money-summary-cell"><div class="money-summary-label">Budget target</div><div class="money-summary-value">${fmt(target)}</div><div class="money-summary-note">Across ${budgets.length} categories</div></div>
     <div class="money-summary-cell"><div class="money-summary-label">Remaining</div><div class="money-summary-value ${remaining < 0 ? 'danger' : 'positive'}">${fmt(remaining)}</div><div class="money-summary-note">Against targets</div></div>
+  </section>
+
+  <section class="money-panel">
+    <div class="money-panel-head"><div><div class="money-panel-title">Spending history</div><div class="money-panel-note">Six-month view of all recorded spending</div></div>${history.completedAverage!==null?`<div class="financial-row-value">${fmt(history.completedAverage)}<small>${history.completedAverageCount}-month average</small></div>`:''}</div>
+    <div style="padding:var(--space-4);border-bottom:1px solid var(--border)">
+      <div class="chart-wrap"><canvas id="spending-history-chart"></canvas></div>
+      <div class="reconciliation-box ${comparisonTone==='positive'?'is-balanced':comparisonTone==='danger'?'is-unbalanced':''}" style="margin-top:12px">
+        <div style="font-size:12px;font-weight:650;color:${comparisonTone==='positive'?'var(--positive)':comparisonTone==='danger'?'var(--danger)':'var(--text)'}">${history.comparison===null?'Comparison building':history.comparison<0?'Spending is lower so far':history.comparison>0?'Spending is higher so far':'Spending is unchanged so far'}</div>
+        <div style="margin-top:3px;font-size:11px;color:var(--text2)">${comparisonText} Compared through day ${history.elapsedDay} of each month.${completedComparisonText}</div>
+      </div>
+    </div>
+    ${[...history.keys].reverse().map((key,index)=>`<button type="button" class="financial-row" onclick="showSpendingMonth('${key}')"><span class="financial-row-main"><span class="financial-row-top">${index===0?'<span class="money-status warning">Current</span>':''}<span class="financial-row-title">${spendingMonthLabel(key)}</span></span><span class="financial-row-meta">${history.counts.get(key)||0} transaction${history.counts.get(key)===1?'':'s'}${index===0?' · month in progress':''}</span></span><span class="financial-row-value">${fmt(history.totals.get(key)||0)}</span><span class="app-list-chevron">›</span></button>`).join('')}
   </section>
 
   <div class="money-tools">
@@ -1970,6 +2031,32 @@ async function renderSpending() {
     </div>`).join('') : moneyEmpty('No spending recorded', 'Add spending to begin tracking your monthly pattern.')}
   </section>
 </div>`;
+
+  if(window._spendingChart){window._spendingChart.destroy();window._spendingChart=null;}
+  const chartCanvas=document.getElementById('spending-history-chart');
+  if(chartCanvas){
+    const chartTheme=getComputedStyle(document.documentElement);
+    const chartAccent=chartTheme.getPropertyValue('--accent').trim()||'#496554';
+    const chartMuted=chartTheme.getPropertyValue('--muted').trim()||'#6F6B63';
+    window._spendingChart=new Chart(chartCanvas.getContext('2d'),{
+      type:'bar',
+      data:{labels:history.keys.map((key,index)=>`${spendingMonthLabel(key,true)}${index===history.keys.length-1?'*':''}`),datasets:[{data:history.keys.map(key=>history.totals.get(key)||0),backgroundColor:history.keys.map((key,index)=>index===history.keys.length-1?chartAccent:'rgba(111,107,99,.28)'),borderRadius:6,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:context=>fmt(context.raw),afterLabel:context=>context.dataIndex===history.keys.length-1?'Current month in progress':''}}},scales:{x:{ticks:{color:chartMuted,font:{size:11}},grid:{display:false}},y:{beginAtZero:true,ticks:{color:chartMuted,font:{size:11},callback:value=>'£'+Number(value).toLocaleString('en-GB')},grid:{color:'rgba(111,107,99,.12)'}}}}
+    });
+  }
+}
+
+function showSpendingMonth(key) {
+  const rows=(window._spendingRows||[]).filter(row=>spendingMonthKey(row.date)===key).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const categories={};
+  rows.forEach(row=>{const category=row.category||'Uncategorised';categories[category]=(categories[category]||0)+(parseFloat(row.amount)||0);});
+  const total=rows.reduce((sum,row)=>sum+(parseFloat(row.amount)||0),0);
+  const categoryRows=Object.entries(categories).sort((a,b)=>b[1]-a[1]).map(([category,amount])=>`<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">${safeText(category)}</div></div><div class="financial-row-value">${fmt(amount)}</div></div>`).join('');
+  const transactionRows=rows.map(row=>`<div class="financial-row"><div class="financial-row-main"><div class="financial-row-top"><span class="money-status">${safeText(row.category||'Uncategorised')}</span><span class="financial-row-title">${safeText(row.description||'Spending')}</span></div><div class="financial-row-meta">${fmtDate(row.date)}${row.counts_toward_target===false?' · Excluded from target':''}</div></div><div class="financial-row-value">${fmt(row.amount)}</div></div>`).join('');
+  showModal(spendingMonthLabel(key),`
+    <div class="money-summary" style="margin-bottom:14px"><div class="money-summary-cell" style="grid-column:span 2"><div class="money-summary-label">Total spending</div><div class="money-summary-value">${fmt(total)}</div></div><div class="money-summary-cell"><div class="money-summary-label">Transactions</div><div class="money-summary-value">${rows.length}</div></div></div>
+    ${rows.length?`<div class="surface-group"><div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="money-panel-title">By category</div></div>${categoryRows}</div><div class="surface-group" style="margin-top:14px"><div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="money-panel-title">Transactions</div></div>${transactionRows}</div>`:moneyEmpty('No spending recorded','There are no transactions saved for this month.')}
+  `);
 }
 
 function ctxSpend(e, id, cats) {
@@ -2148,8 +2235,8 @@ async function showExpectedModal(editId) {
 // ════════════════════════════════════════════════════════════
 async function renderDebtLegacy() {
   const debts = await dbFetch(T.DEBT_MASTER, {order:['attack_order',true]});
-  const active  = debts.filter(d => d.status?.toLowerCase() !== 'cleared');
-  const cleared = debts.filter(d => d.status?.toLowerCase() === 'cleared');
+  const active  = debts.filter(d => debtBal(d) > 0);
+  const cleared = debts.filter(d => debtBal(d) <= 0);
 
   // ── Snapshot calculations — aligned with Finance page ─────
   // Use same logic as Finance page: activeDebts for balance, calcDamageAndRisk(all debts) for util
@@ -2358,13 +2445,27 @@ async function renderDebtLegacy() {
   };
 }
 
+function debtTransactionRow(transaction, showAccount = true) {
+  const isPayment = transaction.transaction_type === 'Payment';
+  const title = transaction.description || (isPayment ? 'Payment made' : 'New spend');
+  return `<div class="financial-row">
+    <button type="button" class="financial-row-main" onclick="showDebtTransactionModal(null,null,'${transaction.id}')" style="border:0;background:transparent;color:inherit;text-align:left;font-family:inherit;cursor:pointer">
+      <div class="financial-row-top"><span class="money-status ${isPayment?'positive':'danger'}">${isPayment?'Payment':'Spend'}</span><span class="financial-row-title">${safeText(title)}</span></div>
+      <div class="financial-row-meta">${fmtDate(transaction.transaction_date)}${showAccount?` · ${safeText(transaction.account_name||'Debt account')}`:''}${transaction.notes?` · ${safeText(transaction.notes)}`:''}</div>
+    </button>
+    <div class="financial-row-value" style="color:${isPayment?'var(--positive)':'var(--danger)'}">${isPayment?'−':'+'}${fmt(transaction.amount)}</div>
+    <button class="menu-btn" aria-label="More transaction actions" onclick="ctxDebtTransaction(event,'${transaction.id}')">···</button>
+  </div>`;
+}
+
 async function renderDebt() {
-  const [debts, totalHistory] = await Promise.all([
+  const [debts, totalHistory, transactions] = await Promise.all([
     dbFetch(T.DEBT_MASTER, {order:['attack_order',true]}),
-    dbFetch(T.DEBT_TOTAL_HISTORY, {order:['statement_date',true]})
+    dbFetch(T.DEBT_TOTAL_HISTORY, {order:['statement_date',true]}),
+    dbFetch(T.DEBT_TRANSACTIONS, {order:['transaction_date',false]})
   ]);
-  const active = debts.filter(d => (d.status || '').toLowerCase() !== 'cleared' && debtBal(d) > 0);
-  const cleared = debts.filter(d => (d.status || '').toLowerCase() === 'cleared' || debtBal(d) <= 0);
+  const active = debts.filter(d => debtBal(d) > 0);
+  const cleared = debts.filter(d => debtBal(d) <= 0);
   const totalDebt = active.reduce((sum,d) => sum + debtBal(d), 0);
   const {totalEstMin, totalUtil, highRisk} = calcDamageAndRisk(debts);
   const priority = [...active].sort((a,b) => (a.attack_order || 999) - (b.attack_order || 999))[0] || highRisk || null;
@@ -2402,6 +2503,7 @@ async function renderDebt() {
   const priorityMinimum = priority ? estMin(priority) : 0;
   const defaultOverpay = priority ? Math.max(0, (parseFloat(priority.payments_made)||0) - priorityMinimum) : 0;
   window._debtRows = debts;
+  window._debtTransactions = transactions;
   window._debtCtx = {totalDebt, totalLimit, totalUtil, focusBal:priorityBalance, focusMinP:priorityMinimum};
 
   root().innerHTML = `
@@ -2430,6 +2532,7 @@ async function renderDebt() {
     </div>
 
     <div class="money-layout">
+      <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Recent activity</div><div class="money-panel-note">Individual spending and payments</div></div><button class="money-panel-link" onclick="showDebtTransactionModal()">Record transaction</button></div>${transactions.length ? transactions.slice(0,8).map(row=>debtTransactionRow(row,true)).join('') : moneyEmpty('No transactions yet', 'Record new spending and payments instead of updating account totals manually.')}</section>
       ${priority ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Repayment focus</div><div class="money-panel-note">Based on your recorded attack order</div></div></div><button type="button" class="financial-row" onclick="showDebtDetail('${priority.id}')"><span class="financial-row-main"><span class="financial-row-top"><span class="money-status warning">Next</span><span class="financial-row-title">${safeText(priority.account_name)}</span></span><span class="financial-row-meta">${priority.apr_percent || 0}% ${safeText(priority.apr_type || 'APR')} · minimum ${fmt(priorityMinimum)}</span></span><span class="financial-row-value">${fmt(priorityBalance)}</span></button>
         <div style="padding:var(--space-4);border-top:1px solid var(--border)"><label for="debt-overpay-input" style="display:block;font-size:11px;font-weight:650;color:var(--text2);margin-bottom:7px">Monthly overpayment scenario</label><div style="display:flex;align-items:center;gap:8px"><span>£</span><input id="debt-overpay-input" class="money-filter-control" type="number" min="0" step="10" value="${defaultOverpay.toFixed(0)}" style="width:110px" oninput="debtCalcPayoff(this.value)"/><span style="font-size:11px;color:var(--text3)">per month</span></div><div id="debt-payoff-panel" style="margin-top:12px;padding:12px;border-radius:var(--radius-control);background:var(--bg);border:1px solid var(--border)">${defaultOverpay > 0 ? '<div id="debt-payoff-est" style="font-size:12px;color:var(--text2)">Calculating…</div>' : '<div id="debt-payoff-est" style="font-size:12px;color:var(--text3)">Enter an amount to see the estimated impact</div>'}</div></div></section>` : ''}
       <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">History</div><div class="money-panel-note">Recorded balances over time</div></div><button class="money-panel-link" onclick="navigate('debt-history')">Open History</button></div>${previousChange !== null ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Latest recorded change</div><div class="financial-row-meta">Compared with the previous recorded period</div></div><div class="financial-row-value" style="color:${previousChange <= 0 ? 'var(--positive)' : 'var(--danger)'}">${previousChange > 0 ? '+' : '−'}${fmt(Math.abs(previousChange))}</div></div>` : moneyEmpty('No comparison yet', 'Two recorded periods are needed for a reliable change.')}</section>
@@ -2447,6 +2550,7 @@ function showDebtDetail(id) {
   const limit = parseFloat(debt.credit_limit)||0;
   const utilisation = limit > 0 ? (balance / limit) * 100 : null;
   const minimum = estMin(debt);
+  const transactions = (window._debtTransactions || []).filter(row => String(row.debt_id) === String(id));
   showModal(safeText(debt.account_name || 'Debt account'), `
     <div class="money-summary" style="margin-bottom:16px"><div class="money-summary-cell"><div class="money-summary-label">Balance</div><div class="money-summary-value danger">${fmt(balance)}</div></div><div class="money-summary-cell"><div class="money-summary-label">Minimum</div><div class="money-summary-value">${fmt(minimum)}</div></div><div class="money-summary-cell"><div class="money-summary-label">Utilisation</div><div class="money-summary-value">${utilisation !== null ? utilisation.toFixed(0)+'%' : '—'}</div></div></div>
     <div class="surface-group">
@@ -2457,6 +2561,14 @@ function showDebtDetail(id) {
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Target payment</div></div><div class="financial-row-value">${fmt(debt.target_payment)}</div></div>
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Repayment order</div></div><div class="financial-row-value">${debt.attack_order || '—'}</div></div>
     </div>
+    <div class="financial-actions" style="margin-top:14px;flex-wrap:wrap">
+      <button type="button" class="finance-action primary" onclick="showDebtTransactionModal('${debt.id}','Payment')">Record payment</button>
+      <button type="button" class="finance-action" onclick="showDebtTransactionModal('${debt.id}','Spend')">Add new spend</button>
+    </div>
+    <div class="surface-group" style="margin-top:14px">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="money-panel-title">Transactions</div><div class="money-panel-note">Each entry updates this balance automatically</div></div>
+      ${transactions.length ? transactions.map(row=>debtTransactionRow(row,false)).join('') : moneyEmpty('No individual transactions', 'Use the buttons above to start tracking activity.')}
+    </div>
     ${debt.notes ? `<div style="margin-top:14px;font-size:12px;line-height:1.55;color:var(--text2)">${safeText(debt.notes)}</div>` : ''}
     <button type="button" class="btn btn-primary" style="margin-top:16px" onclick="document.querySelector('.overlay')?.remove();showDebtModal('${debt.id}')">Edit account</button>
   `);
@@ -2464,10 +2576,65 @@ function showDebtDetail(id) {
 
 function ctxDebt(e, id) {
   showCtx(e,[
+    {label:'Record Payment', fn:()=>showDebtTransactionModal(id,'Payment')},
+    {label:'Add New Spend',  fn:()=>showDebtTransactionModal(id,'Spend')},
     {label:'Edit',         fn:()=>showDebtModal(id)},
     {label:'Mark Cleared', fn:async()=>{await dbUpdate(T.DEBT_MASTER,id,{status:'Cleared'});await renderDebt();}},
-    {label:'Delete',       danger:true, fn:async()=>{if(confirm('Delete?')){await dbDelete(T.DEBT_MASTER,id);await renderDebt();}}}
+    {label:'Delete',       danger:true, fn:()=>deleteDebtAccount(id)}
   ]);
+}
+
+async function deleteDebtAccount(id) {
+  if(!confirm('Delete this debt account and its transaction records?')) return;
+  const {error}=await getDB().from(T.DEBT_TRANSACTIONS).delete().eq('debt_id',String(id));
+  if(error) throw error;
+  await dbDelete(T.DEBT_MASTER,id);
+  await renderDebt();
+}
+
+function ctxDebtTransaction(e,id) {
+  showCtx(e,[
+    {label:'Edit', fn:()=>showDebtTransactionModal(null,null,id)},
+    {label:'Delete', danger:true, fn:()=>deleteDebtTransaction(id)}
+  ]);
+}
+
+async function deleteDebtTransaction(id) {
+  if(!confirm('Delete this debt transaction? The account balance will update automatically.')) return;
+  await dbDelete(T.DEBT_TRANSACTIONS,id);
+  document.querySelector('.overlay')?._closeModal?.();
+  await renderDebt();
+}
+
+function showDebtTransactionModal(debtId=null, defaultType='Spend', editId=null) {
+  const debts=window._debtRows||[];
+  const existing=editId?(window._debtTransactions||[]).find(row=>String(row.id)===String(editId)):null;
+  const selectedDebtId=existing?.debt_id||debtId||'';
+  const transactionType=existing?.transaction_type||defaultType||'Spend';
+  const accountOptions=debts.map(debt=>`<option value="${safeText(debt.id)}" ${String(debt.id)===String(selectedDebtId)?'selected':''}>${safeText(debt.account_name||'Debt account')}</option>`).join('');
+  if(!debts.length) return showToast('Add a debt account before recording transactions.','error');
+  showModal(`${existing?'Edit':'Record'} debt transaction`,`
+    <div class="fg"><label>Account</label><select id="f-debt-tx-account"><option value="">Select account…</option>${accountOptions}</select></div>
+    <div class="fg"><label>Type</label><select id="f-debt-tx-type"><option value="Spend" ${transactionType==='Spend'?'selected':''}>New spend</option><option value="Payment" ${transactionType==='Payment'?'selected':''}>Payment made</option></select></div>
+    <div class="pantry-form-grid"><div class="fg"><label>Amount (£)</label><input id="f-debt-tx-amount" type="number" min="0.01" step="0.01" inputmode="decimal" value="${existing?.amount??''}"/></div><div class="fg"><label>Date</label><input id="f-debt-tx-date" type="date" value="${existing?.transaction_date?.substring(0,10)||today()}"/></div></div>
+    <div class="fg"><label>Description <span>optional</span></label><input id="f-debt-tx-description" data-suggest-table="${T.DEBT_TRANSACTIONS}" data-suggest-field="description" value="${safeText(existing?.description||'')}" placeholder="e.g. Grocery shop or monthly payment"/></div>
+    <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-debt-tx-notes" data-suggest-table="${T.DEBT_TRANSACTIONS}" data-suggest-field="notes">${safeText(existing?.notes||'')}</textarea></div>
+    <div class="reconciliation-box is-balanced"><div style="font-size:12px;font-weight:650;color:var(--positive)">Balance updates automatically</div><div style="margin-top:3px;font-size:11px;color:var(--text2)">New spend increases the balance. Payments reduce it.</div></div>
+  `,async()=>{
+    const selectedId=v('f-debt-tx-account');
+    const debt=debts.find(row=>String(row.id)===String(selectedId));
+    const amount=num('f-debt-tx-amount');
+    if(!debt) throw new Error('Select a debt account.');
+    if(!amount||amount<=0) throw new Error('Enter an amount greater than zero.');
+    const nextType=v('f-debt-tx-type');
+    let balanceBeforeTransaction=debtBal(debt);
+    if(existing&&String(existing.debt_id)===String(debt.id)) balanceBeforeTransaction+=existing.transaction_type==='Payment'?(parseFloat(existing.amount)||0):-(parseFloat(existing.amount)||0);
+    if(nextType==='Payment'&&amount>balanceBeforeTransaction+0.005) throw new Error(`Payment cannot exceed the ${fmt(Math.max(0,balanceBeforeTransaction))} balance available before this transaction.`);
+    const row={debt_id:String(debt.id),account_name:debt.account_name||'Debt account',transaction_type:nextType,amount,transaction_date:v('f-debt-tx-date')||today(),description:v('f-debt-tx-description')||null,notes:v('f-debt-tx-notes')||null,updated_at:new Date().toISOString()};
+    if(existing) await dbUpdate(T.DEBT_TRANSACTIONS,existing.id,row);
+    else { delete row.updated_at; await dbInsert(T.DEBT_TRANSACTIONS,row); }
+    await renderDebt();
+  });
 }
 
 function debtCalcPayoff(overpayInput) {
@@ -2554,8 +2721,8 @@ async function showDebtModal(editId, defaultStatus='Active') {
     </select></div>
     <div class="fg"><label>Credit Limit (£)</label><input id="f-limit" type="number" step="0.01" value="${ex?.credit_limit||''}"/></div>
     <div class="fg"><label>Opening Balance (£)</label><input id="f-open" type="number" step="0.01" value="${ex?.opening_balance||''}"/></div>
-    <div class="fg"><label>New Spend (£)</label><input id="f-spend" type="number" step="0.01" value="${ex?.new_spend||0}"/></div>
-    <div class="fg"><label>Payments Made (£)</label><input id="f-paid" type="number" step="0.01" value="${ex?.payments_made||0}"/></div>
+    <div class="fg"><label>Total New Spend (£) <span>auto-updated by transactions</span></label><input id="f-spend" type="number" step="0.01" value="${ex?.new_spend||0}"/></div>
+    <div class="fg"><label>Total Payments Made (£) <span>auto-updated by transactions</span></label><input id="f-paid" type="number" step="0.01" value="${ex?.payments_made||0}"/></div>
     <div class="fg"><label>Min Payment %</label><input id="f-minp" type="number" step="0.01" value="${ex?.min_payment_percent||''}"/></div>
     <div class="fg"><label>Target Payment (£)</label><input id="f-tgt" type="number" step="0.01" value="${ex?.target_payment||''}"/></div>
     <div class="fg"><label>Attack Order</label><input id="f-ord" type="number" value="${ex?.attack_order||''}"/></div>
@@ -4151,7 +4318,7 @@ async function renderProgress() {
   const highestOverspend = overspendEntries[0] || null;
 
   // ── Finance ──
-  const activeDebts   = debts.filter(d => d.status?.toLowerCase() !== 'cleared');
+  const activeDebts   = debts.filter(d => debtBal(d) > 0);
   const totalDebt     = activeDebts.reduce((s,d) => s+debtBal(d), 0);
   const budgetTarget  = categoryBudgets.reduce((s,r) => s+(parseFloat(r.monthly_target)||0), 0);
   const totalSpent    = variableSpending.filter(r=>isThisMonth(r.date)).reduce((s,r) => s+(parseFloat(r.amount)||0), 0);
