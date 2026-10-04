@@ -2447,13 +2447,14 @@ async function renderDebtLegacy() {
 
 function debtTransactionRow(transaction, showAccount = true) {
   const isPayment = transaction.transaction_type === 'Payment';
-  const title = transaction.description || (isPayment ? 'Payment made' : 'New spend');
+  const isInterest = transaction.transaction_type === 'Interest';
+  const title = transaction.description || (isPayment ? 'Payment made' : isInterest ? 'Interest / fee' : 'New spend');
   return `<div class="financial-row">
     <button type="button" class="financial-row-main" onclick="showDebtTransactionModal(null,null,'${transaction.id}')" style="border:0;background:transparent;color:inherit;text-align:left;font-family:inherit;cursor:pointer">
-      <div class="financial-row-top"><span class="money-status ${isPayment?'positive':'danger'}">${isPayment?'Payment':'Spend'}</span><span class="financial-row-title">${safeText(title)}</span></div>
+      <div class="financial-row-top"><span class="money-status ${isPayment?'positive':isInterest?'warning':'danger'}">${isPayment?'Payment':isInterest?'Interest':'Spend'}</span><span class="financial-row-title">${safeText(title)}</span></div>
       <div class="financial-row-meta">${fmtDate(transaction.transaction_date)}${showAccount?` · ${safeText(transaction.account_name||'Debt account')}`:''}${transaction.notes?` · ${safeText(transaction.notes)}`:''}</div>
     </button>
-    <div class="financial-row-value" style="color:${isPayment?'var(--positive)':'var(--danger)'}">${isPayment?'−':'+'}${fmt(transaction.amount)}</div>
+    <div class="financial-row-value" style="color:${isPayment?'var(--positive)':isInterest?'var(--warning)':'var(--danger)'}">${isPayment?'−':'+'}${fmt(transaction.amount)}</div>
     <button class="menu-btn" aria-label="More transaction actions" onclick="ctxDebtTransaction(event,'${transaction.id}')">···</button>
   </div>`;
 }
@@ -2477,6 +2478,7 @@ async function renderDebt() {
     const month = row.statement_date.substring(0,7);
     if (!historyByMonth[month] || row.statement_date > historyByMonth[month].statement_date) historyByMonth[month] = row;
   });
+  buildAutomaticDebtHistory(debts,transactions).totals.forEach((total,month)=>{historyByMonth[month]={statement_date:`${month}-28`,total_debt:total};});
   const recordedTotals = Object.values(historyByMonth).sort((a,b) => a.statement_date.localeCompare(b.statement_date));
   const previousChange = recordedTotals.length >= 2 ? (parseFloat(recordedTotals.at(-1).total_debt)||0) - (parseFloat(recordedTotals.at(-2).total_debt)||0) : null;
 
@@ -2514,7 +2516,7 @@ async function renderDebt() {
   <section class="debt-hero">
     <div class="money-eyebrow">Total debt remaining</div>
     <div class="debt-total">${fmt(totalDebt)}</div>
-    ${previousChange !== null ? `<div style="margin-top:8px;font-size:12px;opacity:.72">${previousChange <= 0 ? 'Down' : 'Up'} ${fmt(Math.abs(previousChange))} since the previous recorded period</div>` : '<div style="margin-top:8px;font-size:12px;opacity:.62">Add history entries to track period changes</div>'}
+    ${previousChange !== null ? `<div style="margin-top:8px;font-size:12px;opacity:.72">${previousChange <= 0 ? 'Down' : 'Up'} ${fmt(Math.abs(previousChange))} since the previous recorded period</div>` : '<div style="margin-top:8px;font-size:12px;opacity:.62">Record debt activity to build history automatically</div>'}
     <div class="debt-support">
       <div><div class="debt-support-label">Minimum exposure</div><div class="debt-support-value">${fmt(totalEstMin)}</div></div>
       <div><div class="debt-support-label">Priority</div><div class="debt-support-value">${priority ? safeText(priority.account_name) : 'None'}</div></div>
@@ -2532,7 +2534,7 @@ async function renderDebt() {
     </div>
 
     <div class="money-layout">
-      <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Recent activity</div><div class="money-panel-note">Individual spending and payments</div></div><button class="money-panel-link" onclick="showDebtTransactionModal()">Record transaction</button></div>${transactions.length ? transactions.slice(0,8).map(row=>debtTransactionRow(row,true)).join('') : moneyEmpty('No transactions yet', 'Record new spending and payments instead of updating account totals manually.')}</section>
+      <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Recent activity</div><div class="money-panel-note">Individual spending, payments and interest</div></div><button class="money-panel-link" onclick="showDebtTransactionModal()">Record transaction</button></div>${transactions.length ? transactions.slice(0,8).map(row=>debtTransactionRow(row,true)).join('') : moneyEmpty('No transactions yet', 'Record new spending and payments instead of updating account totals manually.')}</section>
       ${priority ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Repayment focus</div><div class="money-panel-note">Based on your recorded attack order</div></div></div><button type="button" class="financial-row" onclick="showDebtDetail('${priority.id}')"><span class="financial-row-main"><span class="financial-row-top"><span class="money-status warning">Next</span><span class="financial-row-title">${safeText(priority.account_name)}</span></span><span class="financial-row-meta">${priority.apr_percent || 0}% ${safeText(priority.apr_type || 'APR')} · minimum ${fmt(priorityMinimum)}</span></span><span class="financial-row-value">${fmt(priorityBalance)}</span></button>
         <div style="padding:var(--space-4);border-top:1px solid var(--border)"><label for="debt-overpay-input" style="display:block;font-size:11px;font-weight:650;color:var(--text2);margin-bottom:7px">Monthly overpayment scenario</label><div style="display:flex;align-items:center;gap:8px"><span>£</span><input id="debt-overpay-input" class="money-filter-control" type="number" min="0" step="10" value="${defaultOverpay.toFixed(0)}" style="width:110px" oninput="debtCalcPayoff(this.value)"/><span style="font-size:11px;color:var(--text3)">per month</span></div><div id="debt-payoff-panel" style="margin-top:12px;padding:12px;border-radius:var(--radius-control);background:var(--bg);border:1px solid var(--border)">${defaultOverpay > 0 ? '<div id="debt-payoff-est" style="font-size:12px;color:var(--text2)">Calculating…</div>' : '<div id="debt-payoff-est" style="font-size:12px;color:var(--text3)">Enter an amount to see the estimated impact</div>'}</div></div></section>` : ''}
       <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">History</div><div class="money-panel-note">Recorded balances over time</div></div><button class="money-panel-link" onclick="navigate('debt-history')">Open History</button></div>${previousChange !== null ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Latest recorded change</div><div class="financial-row-meta">Compared with the previous recorded period</div></div><div class="financial-row-value" style="color:${previousChange <= 0 ? 'var(--positive)' : 'var(--danger)'}">${previousChange > 0 ? '+' : '−'}${fmt(Math.abs(previousChange))}</div></div>` : moneyEmpty('No comparison yet', 'Two recorded periods are needed for a reliable change.')}</section>
@@ -2558,12 +2560,14 @@ function showDebtDetail(id) {
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Credit limit</div></div><div class="financial-row-value">${limit ? fmt(limit) : '—'}</div></div>
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">New spending</div></div><div class="financial-row-value">${fmt(debt.new_spend)}</div></div>
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Payments made</div></div><div class="financial-row-value">${fmt(debt.payments_made)}</div></div>
+      <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Interest / fees</div></div><div class="financial-row-value">${fmt(debt.interest_charged)}</div></div>
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Target payment</div></div><div class="financial-row-value">${fmt(debt.target_payment)}</div></div>
       <div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Repayment order</div></div><div class="financial-row-value">${debt.attack_order || '—'}</div></div>
     </div>
     <div class="financial-actions" style="margin-top:14px;flex-wrap:wrap">
       <button type="button" class="finance-action primary" onclick="showDebtTransactionModal('${debt.id}','Payment')">Record payment</button>
       <button type="button" class="finance-action" onclick="showDebtTransactionModal('${debt.id}','Spend')">Add new spend</button>
+      <button type="button" class="finance-action subtle" onclick="showDebtReconcileModal('${debt.id}')">Reconcile balance</button>
     </div>
     <div class="surface-group" style="margin-top:14px">
       <div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="money-panel-title">Transactions</div><div class="money-panel-note">Each entry updates this balance automatically</div></div>
@@ -2578,6 +2582,7 @@ function ctxDebt(e, id) {
   showCtx(e,[
     {label:'Record Payment', fn:()=>showDebtTransactionModal(id,'Payment')},
     {label:'Add New Spend',  fn:()=>showDebtTransactionModal(id,'Spend')},
+    {label:'Reconcile Balance', fn:()=>showDebtReconcileModal(id)},
     {label:'Edit',         fn:()=>showDebtModal(id)},
     {label:'Mark Cleared', fn:async()=>{await dbUpdate(T.DEBT_MASTER,id,{status:'Cleared'});await renderDebt();}},
     {label:'Delete',       danger:true, fn:()=>deleteDebtAccount(id)}
@@ -2601,9 +2606,11 @@ function ctxDebtTransaction(e,id) {
 
 async function deleteDebtTransaction(id) {
   if(!confirm('Delete this debt transaction? The account balance will update automatically.')) return;
+  const returnToHistory=loadViewState()?.route==='debt-history';
   await dbDelete(T.DEBT_TRANSACTIONS,id);
   document.querySelector('.overlay')?._closeModal?.();
-  await renderDebt();
+  if(returnToHistory)await renderDebtHistory({group:window._debtHistoryGroup||'month'});
+  else await renderDebt();
 }
 
 function showDebtTransactionModal(debtId=null, defaultType='Spend', editId=null) {
@@ -2611,15 +2618,16 @@ function showDebtTransactionModal(debtId=null, defaultType='Spend', editId=null)
   const existing=editId?(window._debtTransactions||[]).find(row=>String(row.id)===String(editId)):null;
   const selectedDebtId=existing?.debt_id||debtId||'';
   const transactionType=existing?.transaction_type||defaultType||'Spend';
+  const returnToHistory=loadViewState()?.route==='debt-history';
   const accountOptions=debts.map(debt=>`<option value="${safeText(debt.id)}" ${String(debt.id)===String(selectedDebtId)?'selected':''}>${safeText(debt.account_name||'Debt account')}</option>`).join('');
   if(!debts.length) return showToast('Add a debt account before recording transactions.','error');
   showModal(`${existing?'Edit':'Record'} debt transaction`,`
     <div class="fg"><label>Account</label><select id="f-debt-tx-account"><option value="">Select account…</option>${accountOptions}</select></div>
-    <div class="fg"><label>Type</label><select id="f-debt-tx-type"><option value="Spend" ${transactionType==='Spend'?'selected':''}>New spend</option><option value="Payment" ${transactionType==='Payment'?'selected':''}>Payment made</option></select></div>
+    <div class="fg"><label>Type</label><select id="f-debt-tx-type"><option value="Spend" ${transactionType==='Spend'?'selected':''}>New spend</option><option value="Payment" ${transactionType==='Payment'?'selected':''}>Payment made</option><option value="Interest" ${transactionType==='Interest'?'selected':''}>Interest</option></select></div>
     <div class="pantry-form-grid"><div class="fg"><label>Amount (£)</label><input id="f-debt-tx-amount" type="number" min="0.01" step="0.01" inputmode="decimal" value="${existing?.amount??''}"/></div><div class="fg"><label>Date</label><input id="f-debt-tx-date" type="date" value="${existing?.transaction_date?.substring(0,10)||today()}"/></div></div>
     <div class="fg"><label>Description <span>optional</span></label><input id="f-debt-tx-description" data-suggest-table="${T.DEBT_TRANSACTIONS}" data-suggest-field="description" value="${safeText(existing?.description||'')}" placeholder="e.g. Grocery shop or monthly payment"/></div>
     <div class="fg"><label>Notes <span>optional</span></label><textarea id="f-debt-tx-notes" data-suggest-table="${T.DEBT_TRANSACTIONS}" data-suggest-field="notes">${safeText(existing?.notes||'')}</textarea></div>
-    <div class="reconciliation-box is-balanced"><div style="font-size:12px;font-weight:650;color:var(--positive)">Balance updates automatically</div><div style="margin-top:3px;font-size:11px;color:var(--text2)">New spend increases the balance. Payments reduce it.</div></div>
+    <div class="reconciliation-box is-balanced"><div style="font-size:12px;font-weight:650;color:var(--positive)">Balance updates automatically</div><div style="margin-top:3px;font-size:11px;color:var(--text2)">Spend and interest increase the balance. Payments reduce it.</div></div>
   `,async()=>{
     const selectedId=v('f-debt-tx-account');
     const debt=debts.find(row=>String(row.id)===String(selectedId));
@@ -2633,8 +2641,46 @@ function showDebtTransactionModal(debtId=null, defaultType='Spend', editId=null)
     const row={debt_id:String(debt.id),account_name:debt.account_name||'Debt account',transaction_type:nextType,amount,transaction_date:v('f-debt-tx-date')||today(),description:v('f-debt-tx-description')||null,notes:v('f-debt-tx-notes')||null,updated_at:new Date().toISOString()};
     if(existing) await dbUpdate(T.DEBT_TRANSACTIONS,existing.id,row);
     else { delete row.updated_at; await dbInsert(T.DEBT_TRANSACTIONS,row); }
-    await renderDebt();
+    if(returnToHistory)await renderDebtHistory({group:window._debtHistoryGroup||'month'});
+    else await renderDebt();
   });
+}
+
+function showDebtReconcileModal(debtId) {
+  const debt=(window._debtRows||[]).find(row=>String(row.id)===String(debtId));
+  if(!debt)return showToast('Debt account could not be found.','error');
+  const calculated=Math.max(0,debtBal(debt));
+  const returnToHistory=loadViewState()?.route==='debt-history';
+  showModal('Reconcile debt balance',`
+    <div class="reconciliation-box" style="margin-bottom:14px"><div class="money-summary-label">Calculated balance</div><div class="money-summary-value" style="font-size:24px">${fmt(calculated)}</div><div class="money-summary-note">Based on recorded spending, payments and interest</div></div>
+    <div class="fg"><label>Actual account balance (£)</label><input id="f-debt-actual-balance" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Balance shown by the provider" oninput="updateDebtInterestShortfall(${calculated})"/></div>
+    <div class="fg"><label>Interest / fees (£) <span>calculated from the gap, editable</span></label><input id="f-debt-interest-gap" type="number" min="0" step="0.01" inputmode="decimal" value="0" oninput="updateDebtInterestShortfall(${calculated},true)"/></div>
+    <div class="fg"><label>Date</label><input id="f-debt-interest-date" type="date" value="${today()}"/></div>
+    <div id="debt-interest-shortfall" class="reconciliation-box"><div style="font-size:12px;color:var(--text2)">Enter the real balance to calculate any missing interest or fees.</div></div>
+  `,async()=>{
+    if(v('f-debt-actual-balance')==='')throw new Error('Enter the actual balance shown by the provider.');
+    const actual=num('f-debt-actual-balance');
+    const interest=num('f-debt-interest-gap');
+    if(actual<0)throw new Error('Enter a valid actual balance.');
+    if(actual<calculated-0.005&&interest<=0)throw new Error('The actual balance is lower than the calculated balance. Record any missing payment or correct the account instead.');
+    if(interest<=0){showToast('No positive interest or fee difference to record.');return;}
+    await dbInsert(T.DEBT_TRANSACTIONS,{debt_id:String(debt.id),account_name:debt.account_name||'Debt account',transaction_type:'Interest',amount:interest,transaction_date:v('f-debt-interest-date')||today(),description:'Interest / fees reconciliation',notes:`Actual balance checked: ${fmt(actual)}`});
+    if(returnToHistory)await renderDebtHistory({group:window._debtHistoryGroup||'month'});
+    else await renderDebt();
+  });
+}
+
+function updateDebtInterestShortfall(calculated,interestEdited=false) {
+  const actualInput=document.getElementById('f-debt-actual-balance');
+  const interestInput=document.getElementById('f-debt-interest-gap');
+  const box=document.getElementById('debt-interest-shortfall');
+  if(!actualInput||!interestInput||!box)return;
+  const actual=parseFloat(actualInput.value);
+  if(!Number.isFinite(actual)){box.className='reconciliation-box';box.innerHTML='<div style="font-size:12px;color:var(--text2)">Enter the real balance to calculate any missing interest or fees.</div>';return;}
+  const gap=actual-calculated;
+  if(!interestEdited)interestInput.value=gap>0?gap.toFixed(2):'0';
+  box.className=`reconciliation-box ${Math.abs(gap)<0.005?'is-balanced':'is-unbalanced'}`;
+  box.innerHTML=gap>0?`<div style="font-size:12px;font-weight:650;color:var(--warning)">${fmt(gap)} shortfall detected</div><div style="margin-top:3px;font-size:11px;color:var(--text2)">This is prefilled as interest/fees. Adjust it above if the provider balance includes something else.</div>`:gap<0?`<div style="font-size:12px;font-weight:650;color:var(--danger)">Actual balance is ${fmt(Math.abs(gap))} lower</div><div style="margin-top:3px;font-size:11px;color:var(--text2)">Check for a missing payment or account correction.</div>`:'<div style="font-size:12px;font-weight:650;color:var(--positive)">Balance matches</div><div style="margin-top:3px;font-size:11px;color:var(--text2)">No missing interest or fees detected.</div>';
 }
 
 function debtCalcPayoff(overpayInput) {
@@ -2741,12 +2787,58 @@ async function showDebtModal(editId, defaultStatus='Active') {
 // ════════════════════════════════════════════════════════════
 // DEBT HISTORY PAGE
 // ════════════════════════════════════════════════════════════
+function buildAutomaticDebtHistory(debts, transactions, now=new Date()) {
+  const validTransactions=(transactions||[]).filter(row=>spendingMonthKey(row.transaction_date)&&['Spend','Payment','Interest'].includes(row.transaction_type)&&(parseFloat(row.amount)||0)>0);
+  if(!validTransactions.length) return {rows:[],totals:new Map(),firstMonth:null};
+  const currentMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const firstMonth=validTransactions.map(row=>spendingMonthKey(row.transaction_date)).sort()[0];
+  const months=[];
+  const cursor=new Date(`${firstMonth}-01T12:00:00`);
+  const finalMonth=new Date(`${currentMonth}-01T12:00:00`);
+  while(cursor<=finalMonth){months.push(`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`);cursor.setMonth(cursor.getMonth()+1);}
+  const running=new Map((debts||[]).map(debt=>[String(debt.id),Math.max(0,debtBal(debt))]));
+  const debtById=new Map((debts||[]).map(debt=>[String(debt.id),debt]));
+  validTransactions.filter(row=>spendingMonthKey(row.transaction_date)>currentMonth).forEach(row=>{
+    const id=String(row.debt_id), amount=parseFloat(row.amount)||0;
+    running.set(id,Math.max(0,(running.get(id)||0)-(row.transaction_type==='Payment'?-amount:amount)));
+  });
+  const rows=[];
+  const totals=new Map();
+  [...months].reverse().forEach(month=>{
+    totals.set(month,[...running.values()].reduce((sum,balance)=>sum+Math.max(0,balance),0));
+    const monthTransactions=validTransactions.filter(row=>spendingMonthKey(row.transaction_date)===month);
+    const byDebt=new Map();
+    monthTransactions.forEach(row=>{const id=String(row.debt_id);if(!byDebt.has(id))byDebt.set(id,[]);byDebt.get(id).push(row);});
+    byDebt.forEach((accountTransactions,debtId)=>{
+      const debt=debtById.get(debtId);
+      const spend=accountTransactions.filter(row=>row.transaction_type==='Spend').reduce((sum,row)=>sum+(parseFloat(row.amount)||0),0);
+      const payments=accountTransactions.filter(row=>row.transaction_type==='Payment').reduce((sum,row)=>sum+(parseFloat(row.amount)||0),0);
+      const interest=accountTransactions.filter(row=>row.transaction_type==='Interest').reduce((sum,row)=>sum+(parseFloat(row.amount)||0),0);
+      const closing=Math.max(0,running.get(debtId)||0);
+      const opening=Math.max(0,closing-spend-interest+payments);
+      const isCurrent=month===currentMonth;
+      const endDay=isCurrent?now.getDate():new Date(Number(month.slice(0,4)),Number(month.slice(5,7)),0).getDate();
+      rows.push({id:`auto-${debtId}-${month}`,automatic:true,debt_id:debtId,account:debt?.account_name||accountTransactions[0]?.account_name||'Debt account',statement_date:`${month}-${String(endDay).padStart(2,'0')}`,opening_balance:opening,new_spend:spend,payments_made:payments,interest_and_fees:interest,closing_balance:closing,transaction_count:accountTransactions.length,notes:'Generated from individual debt transactions'});
+      running.set(debtId,opening);
+    });
+  });
+  return {rows,totals,firstMonth};
+}
+
 async function renderDebtHistory(params = {}) {
-  const [history, totalHist, debts] = await Promise.all([
+  const [savedHistory, totalHist, debts, transactions] = await Promise.all([
     dbFetch(T.DEBT_HISTORY,       {order:['statement_date',true]}),
     dbFetch(T.DEBT_TOTAL_HISTORY, {order:['statement_date',true]}),
     dbFetch(T.DEBT_MASTER,        {order:['account_name',true]}),
+    dbFetch(T.DEBT_TRANSACTIONS,  {order:['transaction_date',true]}),
   ]);
+  const automatic=buildAutomaticDebtHistory(debts,transactions);
+  window._debtRows=debts;
+  window._debtTransactions=transactions;
+  window._debtSavedHistory=savedHistory;
+  const automaticKeys=new Set(automatic.rows.map(row=>`${String(row.account).trim().toLowerCase()}|${spendingMonthKey(row.statement_date)}`));
+  const legacyHistory=savedHistory.filter(row=>!automaticKeys.has(`${String(row.account||'').trim().toLowerCase()}|${spendingMonthKey(row.statement_date)}`));
+  const history=[...automatic.rows,...legacyHistory];
 
   const groupMode = params.group === 'account' ? 'account' : (window._debtHistoryGroup === 'account' ? 'account' : 'month');
   window._debtHistoryGroup = groupMode;
@@ -2770,12 +2862,12 @@ async function renderDebtHistory(params = {}) {
     const balanced = Math.abs(difference) < 0.01;
     return `<div class="financial-row">
       <div class="financial-row-main">
-        <div class="financial-row-top">${balanced ? '<span class="money-status positive">Balanced</span>' : '<span class="money-status danger">Check balance</span>'}<span class="financial-row-title">${safeText(showAccount ? (row.account || 'No account') : fmtDate(row.statement_date))}</span></div>
-        <div class="financial-row-meta">${showAccount ? fmtDate(row.statement_date) : safeText(row.account || 'No account')} · Opened ${fmt(row.opening_balance)} · Spend ${fmt(row.new_spend)} · Interest ${fmt(row.interest_and_fees)} · Payments ${fmt(row.payments_made)}</div>
+        <div class="financial-row-top">${row.automatic?'<span class="money-status positive">Automatic</span>':balanced ? '<span class="money-status positive">Balanced</span>' : '<span class="money-status danger">Check balance</span>'}<span class="financial-row-title">${safeText(showAccount ? (row.account || 'No account') : fmtDate(row.statement_date))}</span></div>
+        <div class="financial-row-meta">${showAccount ? fmtDate(row.statement_date) : safeText(row.account || 'No account')} · Opened ${fmt(row.opening_balance)} · Spend ${fmt(row.new_spend)} · Interest ${fmt(row.interest_and_fees)} · Payments ${fmt(row.payments_made)}${row.automatic?` · ${row.transaction_count} entr${row.transaction_count===1?'y':'ies'}`:''}</div>
         ${!balanced ? `<div class="financial-row-meta" style="color:var(--danger)">Expected close ${fmt(expected)} · Difference ${fmt(Math.abs(difference))}</div>` : ''}
       </div>
       <div class="financial-row-value">${fmt(closing)}<small>closing balance</small></div>
-      <button class="menu-btn" aria-label="Delete history entry" onclick="delHistEntry('${row.id}')">···</button>
+      ${row.automatic?`<button class="menu-btn" aria-label="Manage ${safeText(row.account)} history" onclick="ctxAutomaticDebtHistory(event,'${row.debt_id}','${spendingMonthKey(row.statement_date)}')">···</button>`:`<button class="menu-btn" aria-label="Manage history entry" onclick="ctxDebtHistoryEntry(event,'${row.id}')">···</button>`}
     </div>`;
   }
   function monthLabel(key) {
@@ -2784,59 +2876,34 @@ async function renderDebtHistory(params = {}) {
   }
   const groupedHistoryHTML = groupMode === 'account'
     ? Object.entries(byAccount).sort(([a],[b])=>a.localeCompare(b)).map(([account,rows])=>`<section class="acct-group money-panel" data-acct="${safeText((account+' '+rows.map(r=>r.statement_date||'').join(' ')).toLowerCase())}"><div class="money-panel-head"><div><div class="money-panel-title">${safeText(account)}</div><div class="money-panel-note">${rows.length} recorded period${rows.length===1?'':'s'}</div></div></div>${rows.map(row=>historyRow(row,false)).join('')}</section>`).join('')
-    : Object.entries(byMonth).sort(([a],[b])=>b.localeCompare(a)).map(([month,rows])=>`<section class="acct-group money-panel" data-acct="${safeText((month+' '+monthLabel(month)+' '+rows.map(r=>r.account||'').join(' ')).toLowerCase())}"><div class="money-panel-head"><div><div class="money-panel-title">${monthLabel(month)}</div><div class="money-panel-note">${rows.length} transaction${rows.length===1?'':'s'} recorded</div></div></div>${rows.map(row=>historyRow(row,true)).join('')}</section>`).join('');
+    : Object.entries(byMonth).sort(([a],[b])=>b.localeCompare(a)).map(([month,rows])=>`<section class="acct-group money-panel" data-acct="${safeText((month+' '+monthLabel(month)+' '+rows.map(r=>r.account||'').join(' ')).toLowerCase())}"><div class="money-panel-head"><div><div class="money-panel-title">${monthLabel(month)}</div><div class="money-panel-note">${rows.length} account period${rows.length===1?'':'s'}</div></div></div>${rows.map(row=>historyRow(row,true)).join('')}</section>`).join('');
 
-  // ── Build month-aggregated chart data ──
-  // Priority: use debt_total_history if available (already one-row-per-month totals).
-  // Fallback: aggregate debt_history by YYYY-MM — for each month take the LATEST
-  // closing_balance per account, then sum across accounts to get total for that month.
-  let chartLabels = [], chartData = [];
-
-  if (totalHist && totalHist.length) {
-    // Aggregate by month (YYYY-MM) — use the latest entry per month
-    const byMonth = {};
-    totalHist.forEach(r => {
-      if (!r.statement_date) return;
-      const ym = r.statement_date.substring(0, 7); // "YYYY-MM"
-      if (!byMonth[ym] || r.statement_date > byMonth[ym].statement_date) {
-        byMonth[ym] = r;
-      }
-    });
-    const sorted = Object.entries(byMonth).sort((a,b)=>a[0].localeCompare(b[0]));
-    chartLabels = sorted.map(([ym]) => {
-      const d = new Date(ym + '-01');
-      return d.toLocaleDateString('en-GB', {month:'short', year:'numeric'});
-    });
-    chartData = sorted.map(([,r]) => parseFloat(r.total_debt)||0);
-
-  } else if (history && history.length) {
-    // For each YYYY-MM, pick the LATEST entry per account, then sum closing_balances
-    const accountsByMonth = {}; // { "YYYY-MM": { accountName: latestClosingBalance } }
-    history.forEach(r => {
-      if (!r.statement_date || !r.account) return;
-      const ym = r.statement_date.substring(0, 7);
-      if (!accountsByMonth[ym]) accountsByMonth[ym] = {};
-      // Keep only the latest date entry per account per month
-      const existing = accountsByMonth[ym][r.account];
-      if (!existing || r.statement_date > existing.date) {
-        accountsByMonth[ym][r.account] = { date: r.statement_date, bal: parseFloat(r.closing_balance)||0 };
-      }
-    });
-    const sorted = Object.entries(accountsByMonth).sort((a,b)=>a[0].localeCompare(b[0]));
-    chartLabels = sorted.map(([ym]) => {
-      const d = new Date(ym + '-01');
-      return d.toLocaleDateString('en-GB', {month:'short', year:'numeric'});
-    });
-    chartData = sorted.map(([,accts]) => Object.values(accts).reduce((s,v)=>s+v.bal, 0));
-  }
+  // Preserve older saved totals, then let the transaction ledger become the
+  // source of truth from its first recorded month onward.
+  const chartTotals=new Map();
+  totalHist.forEach(row=>{const month=spendingMonthKey(row.statement_date);if(month)chartTotals.set(month,parseFloat(row.total_debt)||0);});
+  const savedAccountsByMonth={};
+  savedHistory.forEach(row=>{
+    const month=spendingMonthKey(row.statement_date);
+    if(!month||!row.account)return;
+    if(!savedAccountsByMonth[month])savedAccountsByMonth[month]={};
+    const existing=savedAccountsByMonth[month][row.account];
+    if(!existing||row.statement_date>existing.date)savedAccountsByMonth[month][row.account]={date:row.statement_date,balance:parseFloat(row.closing_balance)||0};
+  });
+  Object.entries(savedAccountsByMonth).forEach(([month,accounts])=>{if(!chartTotals.has(month))chartTotals.set(month,Object.values(accounts).reduce((sum,row)=>sum+row.balance,0));});
+  automatic.totals.forEach((total,month)=>chartTotals.set(month,total));
+  const sortedChart=[...chartTotals.entries()].sort(([a],[b])=>a.localeCompare(b));
+  const chartLabels=sortedChart.map(([month])=>new Date(`${month}-01T12:00:00`).toLocaleDateString('en-GB',{month:'short',year:'numeric'}));
+  const chartData=sortedChart.map(([,total])=>total);
 
   root().innerHTML = `
 <div class="page money-shell">
-  ${moneyPageHead('Debt history', 'Recorded balances over time. Comparisons are shown only when supported by saved history.', `showHistoryModal(${JSON.stringify(debts.map(d=>d.account_name)).replace(/"/g,"'")})`, 'Add entry')}
+  ${moneyPageHead('Debt history', 'Balances over time, generated automatically from debt activity.')}
   ${moneySectionNav('debt')}
+  <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Automatic history</div><div class="money-panel-note">New spending, payments and interest build this history for you</div></div><span class="money-status ${transactions.length?'positive':''}">${transactions.length} entr${transactions.length===1?'y':'ies'}</span></div><div style="padding:var(--space-4);font-size:12px;line-height:1.55;color:var(--text2)">${transactions.length?'Opening and closing balances are recalculated from your individual debt transactions, including Interest entries. Edit or delete a transaction and history updates automatically.':'Record new spending, a payment or interest on the Debt page to start automatic history.'}</div></section>
   <section class="money-panel" style="padding:16px">
     <div class="money-panel-title">Total debt by recorded period</div>
-    <div class="money-panel-note" style="margin-bottom:12px">One primary series using saved history</div>
+    <div class="money-panel-note" style="margin-bottom:12px">Saved legacy totals followed by automatic transaction history</div>
     <div class="chart-wrap"><canvas id="debt-chart"></canvas></div>
     <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--text2)">
       <div style="width:10px;height:2px;border-radius:2px;background:var(--accent)"></div>Total debt
@@ -2848,9 +2915,10 @@ async function renderDebtHistory(params = {}) {
       <option value="month" ${groupMode==='month'?'selected':''}>Group by month</option>
       <option value="account" ${groupMode==='account'?'selected':''}>Group by account</option>
     </select>
+    <button class="finance-action subtle" onclick="showHistoryModal(${JSON.stringify(debts.map(d=>d.account_name)).replace(/"/g,"'")})">Add manual statement</button>
   </div>
   <div id="hist-groups" class="debt-history-groups">
-    ${groupedHistoryHTML || moneyEmpty('No history recorded', 'Add a history entry to begin tracking debt over time.')}
+    ${groupedHistoryHTML || moneyEmpty('No history recorded', 'Record debt spending or payments to build history automatically.')}
   </div>
 </div>`;
 
@@ -2859,7 +2927,7 @@ async function renderDebtHistory(params = {}) {
   const canvas = document.getElementById('debt-chart');
   if (!canvas) return;
   if (!chartLabels.length) {
-    canvas.parentElement.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📈</div><div class="empty-state-msg">No history yet</div><div>Add history entries to see your progress</div></div>';
+    canvas.parentElement.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📈</div><div class="empty-state-msg">No history yet</div><div>Record debt spending or payments to see progress</div></div>';
     return;
   }
   const chartTheme = getComputedStyle(document.documentElement);
@@ -2906,18 +2974,43 @@ async function delHistEntry(id) {
   renderDebtHistory();
 }
 
-function showHistoryModal(accounts) {
-  const opts = (Array.isArray(accounts)?accounts:[]).map(a=>`<option value="${a}">${a}</option>`).join('');
-  showModal('Add Debt History',`
+function ctxDebtHistoryEntry(event,id) {
+  const accounts=(window._debtRows||[]).map(row=>row.account_name).filter(Boolean);
+  showCtx(event,[
+    {label:'Edit',fn:()=>showHistoryModal(accounts,id)},
+    {label:'Delete',danger:true,fn:()=>delHistEntry(id)}
+  ]);
+}
+
+function ctxAutomaticDebtHistory(event,debtId,month) {
+  showCtx(event,[
+    {label:'Review Transactions',fn:()=>showDebtHistoryTransactions(debtId,month)},
+    {label:'Reconcile Balance / Interest',fn:()=>showDebtReconcileModal(debtId)}
+  ]);
+}
+
+function showDebtHistoryTransactions(debtId,month) {
+  const debt=(window._debtRows||[]).find(row=>String(row.id)===String(debtId));
+  const rows=(window._debtTransactions||[]).filter(row=>String(row.debt_id)===String(debtId)&&spendingMonthKey(row.transaction_date)===month).sort((a,b)=>String(b.transaction_date||'').localeCompare(String(a.transaction_date||'')));
+  showModal(`${debt?.account_name||'Debt'} · ${spendingMonthLabel(month)}`,`
+    <div class="reconciliation-box" style="margin-bottom:14px"><div style="font-size:12px;font-weight:650;color:var(--text)">Edit the source transactions</div><div style="margin-top:3px;font-size:11px;color:var(--text2)">Correcting an amount, type or date automatically rebuilds this history period.</div></div>
+    <div class="surface-group">${rows.length?rows.map(row=>debtTransactionRow(row,false)).join(''):moneyEmpty('No transactions found','This automatic period no longer has source entries.')}</div>
+  `);
+}
+
+function showHistoryModal(accounts,editId=null) {
+  const existing=editId?(window._debtSavedHistory||[]).find(row=>String(row.id)===String(editId)):null;
+  const opts = (Array.isArray(accounts)?accounts:[]).map(a=>`<option value="${safeText(a)}" ${a===existing?.account?'selected':''}>${safeText(a)}</option>`).join('');
+  showModal(`${existing?'Edit':'Add'} Debt History`,`
     <div class="fg"><label>Account</label><select id="f-acc"><option value="">Select…</option>${opts}</select></div>
-    <div class="fg"><label>Statement Date</label><input id="f-date" type="date" value="${today()}"/></div>
-    <div class="fg"><label>Opening Balance (£)</label><input id="f-open" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
-    <div class="fg"><label>New Spend (£)</label><input id="f-spend" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
-    <div class="fg"><label>Payments Made (£)</label><input id="f-paid" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
-    <div class="fg"><label>Interest &amp; Fees (£)</label><input id="f-int" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
-    <div class="fg"><label>Closing Balance (£)</label><input id="f-close" type="number" step="0.01" value="0" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>Statement Date</label><input id="f-date" type="date" value="${existing?.statement_date?.substring(0,10)||today()}"/></div>
+    <div class="fg"><label>Opening Balance (£)</label><input id="f-open" type="number" step="0.01" value="${existing?.opening_balance??0}" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>New Spend (£)</label><input id="f-spend" type="number" step="0.01" value="${existing?.new_spend??0}" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>Payments Made (£)</label><input id="f-paid" type="number" step="0.01" value="${existing?.payments_made??0}" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>Interest &amp; Fees (£)</label><input id="f-int" type="number" step="0.01" value="${existing?.interest_and_fees??0}" oninput="updateDebtHistoryReconciliation()"/></div>
+    <div class="fg"><label>Closing Balance (£)</label><input id="f-close" type="number" step="0.01" value="${existing?.closing_balance??0}" oninput="updateDebtHistoryReconciliation()"/></div>
     <div id="debt-history-reconciliation" class="reconciliation-box" style="margin-bottom:14px"></div>
-    <div class="fg"><label>Notes</label><input id="f-notes" value=""/></div>
+    <div class="fg"><label>Notes</label><input id="f-notes" value="${safeText(existing?.notes||'')}"/></div>
   `, async()=>{
     const acc=v('f-acc');
     if(!acc) throw new Error('Select an account before saving.');
@@ -2926,7 +3019,8 @@ function showHistoryModal(accounts) {
     if (Math.abs(row.closing_balance - expectedClose) >= 0.01) {
       throw new Error(`Closing balance must be ${fmt(expectedClose)}. Review the recorded spend, interest and payments before saving.`);
     }
-    await dbInsert(T.DEBT_HISTORY,row);
+    if(existing)await dbUpdate(T.DEBT_HISTORY,existing.id,row);
+    else await dbInsert(T.DEBT_HISTORY,row);
     renderDebtHistory({group:window._debtHistoryGroup || 'month'});
   });
   updateDebtHistoryReconciliation();

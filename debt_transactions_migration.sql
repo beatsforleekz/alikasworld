@@ -8,7 +8,7 @@ create table if not exists public.debt_transactions (
   user_id uuid not null references auth.users(id) on delete cascade,
   debt_id text not null,
   account_name text not null,
-  transaction_type text not null check (transaction_type in ('Spend', 'Payment')),
+  transaction_type text not null check (transaction_type in ('Spend', 'Payment', 'Interest')),
   amount numeric(12,2) not null check (amount > 0),
   transaction_date date not null default current_date,
   description text,
@@ -40,7 +40,8 @@ begin
   if tg_op in ('UPDATE', 'DELETE') then
     update public.debt_master
        set new_spend = greatest(0, coalesce(new_spend, 0) - case when old.transaction_type = 'Spend' then old.amount else 0 end),
-           payments_made = greatest(0, coalesce(payments_made, 0) - case when old.transaction_type = 'Payment' then old.amount else 0 end)
+           payments_made = greatest(0, coalesce(payments_made, 0) - case when old.transaction_type = 'Payment' then old.amount else 0 end),
+           interest_charged = greatest(0, coalesce(interest_charged, 0) - case when old.transaction_type = 'Interest' then old.amount else 0 end)
      where id::text = old.debt_id
        and user_id = old.user_id;
   end if;
@@ -49,7 +50,8 @@ begin
     update public.debt_master
        set new_spend = coalesce(new_spend, 0) + case when new.transaction_type = 'Spend' then new.amount else 0 end,
            payments_made = coalesce(payments_made, 0) + case when new.transaction_type = 'Payment' then new.amount else 0 end,
-           status = case when new.transaction_type = 'Spend' and lower(coalesce(status, '')) = 'cleared' then 'Active' else status end
+           interest_charged = coalesce(interest_charged, 0) + case when new.transaction_type = 'Interest' then new.amount else 0 end,
+           status = case when new.transaction_type in ('Spend', 'Interest') and lower(coalesce(status, '')) = 'cleared' then 'Active' else status end
      where id::text = new.debt_id
        and user_id = new.user_id;
 
