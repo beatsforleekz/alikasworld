@@ -2449,7 +2449,8 @@ function debtTransactionRow(transaction, showAccount = true) {
   const isPayment = transaction.transaction_type === 'Payment';
   const isInterest = transaction.transaction_type === 'Interest';
   const title = transaction.description || (isPayment ? 'Payment made' : isInterest ? 'Interest / fee' : 'New spend');
-  return `<div class="financial-row">
+  const searchText=[transaction.transaction_type,title,transaction.account_name,transaction.description,transaction.notes,transaction.transaction_date].filter(Boolean).join(' ').toLowerCase();
+  return `<div class="financial-row bill-row debt-transaction-row" data-s="${safeText(searchText)}">
     <button type="button" class="financial-row-main" onclick="showDebtTransactionModal(null,null,'${transaction.id}')" style="border:0;background:transparent;color:inherit;text-align:left;font-family:inherit;cursor:pointer">
       <div class="financial-row-top"><span class="money-status ${isPayment?'positive':isInterest?'warning':'danger'}">${isPayment?'Payment':isInterest?'Interest':'Spend'}</span><span class="financial-row-title">${safeText(title)}</span></div>
       <div class="financial-row-meta">${fmtDate(transaction.transaction_date)}${showAccount?` · ${safeText(transaction.account_name||'Debt account')}`:''}${transaction.notes?` · ${safeText(transaction.notes)}`:''}</div>
@@ -2534,7 +2535,7 @@ async function renderDebt() {
     </div>
 
     <div class="money-layout">
-      <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Recent activity</div><div class="money-panel-note">Individual spending, payments and interest</div></div><button class="money-panel-link" onclick="showDebtTransactionModal()">Record transaction</button></div>${transactions.length ? transactions.slice(0,8).map(row=>debtTransactionRow(row,true)).join('') : moneyEmpty('No transactions yet', 'Record new spending and payments instead of updating account totals manually.')}</section>
+      <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Recent activity</div><div class="money-panel-note">Individual spending, payments and interest</div></div><div class="financial-actions" style="flex-wrap:wrap;justify-content:flex-end">${transactions.length?'<button class="money-panel-link" onclick="showAllDebtTransactions()">See all</button>':''}<button class="money-panel-link" onclick="showDebtTransactionModal()">Record transaction</button></div></div>${transactions.length ? transactions.slice(0,8).map(row=>debtTransactionRow(row,true)).join('') : moneyEmpty('No transactions yet', 'Record new spending and payments instead of updating account totals manually.')}</section>
       ${priority ? `<section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">Repayment focus</div><div class="money-panel-note">Based on your recorded attack order</div></div></div><button type="button" class="financial-row" onclick="showDebtDetail('${priority.id}')"><span class="financial-row-main"><span class="financial-row-top"><span class="money-status warning">Next</span><span class="financial-row-title">${safeText(priority.account_name)}</span></span><span class="financial-row-meta">${priority.apr_percent || 0}% ${safeText(priority.apr_type || 'APR')} · minimum ${fmt(priorityMinimum)}</span></span><span class="financial-row-value">${fmt(priorityBalance)}</span></button>
         <div style="padding:var(--space-4);border-top:1px solid var(--border)"><label for="debt-overpay-input" style="display:block;font-size:11px;font-weight:650;color:var(--text2);margin-bottom:7px">Monthly overpayment scenario</label><div style="display:flex;align-items:center;gap:8px"><span>£</span><input id="debt-overpay-input" class="money-filter-control" type="number" min="0" step="10" value="${defaultOverpay.toFixed(0)}" style="width:110px" oninput="debtCalcPayoff(this.value)"/><span style="font-size:11px;color:var(--text3)">per month</span></div><div id="debt-payoff-panel" style="margin-top:12px;padding:12px;border-radius:var(--radius-control);background:var(--bg);border:1px solid var(--border)">${defaultOverpay > 0 ? '<div id="debt-payoff-est" style="font-size:12px;color:var(--text2)">Calculating…</div>' : '<div id="debt-payoff-est" style="font-size:12px;color:var(--text3)">Enter an amount to see the estimated impact</div>'}</div></div></section>` : ''}
       <section class="money-panel"><div class="money-panel-head"><div><div class="money-panel-title">History</div><div class="money-panel-note">Recorded balances over time</div></div><button class="money-panel-link" onclick="navigate('debt-history')">Open History</button></div>${previousChange !== null ? `<div class="financial-row"><div class="financial-row-main"><div class="financial-row-title">Latest recorded change</div><div class="financial-row-meta">Compared with the previous recorded period</div></div><div class="financial-row-value" style="color:${previousChange <= 0 ? 'var(--positive)' : 'var(--danger)'}">${previousChange > 0 ? '+' : '−'}${fmt(Math.abs(previousChange))}</div></div>` : moneyEmpty('No comparison yet', 'Two recorded periods are needed for a reliable change.')}</section>
@@ -2602,6 +2603,19 @@ function ctxDebtTransaction(e,id) {
     {label:'Edit', fn:()=>showDebtTransactionModal(null,null,id)},
     {label:'Delete', danger:true, fn:()=>deleteDebtTransaction(id)}
   ]);
+}
+
+function showAllDebtTransactions() {
+  const transactions=window._debtTransactions||[];
+  showModal('All debt transactions',`
+    <div class="money-tools" style="margin-bottom:14px"><div class="search-wrap money-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="search-input" placeholder="Search transactions" oninput="filterAllDebtTransactions(this)"/></div><span class="money-status">${transactions.length}</span></div>
+    <div class="surface-group">${transactions.length?transactions.map(row=>debtTransactionRow(row,true)).join(''):moneyEmpty('No debt transactions','Record spending, payments or interest to see them here.')}</div>
+  `);
+}
+
+function filterAllDebtTransactions(input) {
+  const query=String(input?.value||'').trim().toLowerCase();
+  input?.closest('.modal')?.querySelectorAll('.debt-transaction-row').forEach(row=>{row.style.display=!query||String(row.dataset.s||'').includes(query)?'':'none';});
 }
 
 async function deleteDebtTransaction(id) {
